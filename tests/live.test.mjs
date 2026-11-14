@@ -2,8 +2,8 @@
 // browser: yes
 // quick: yes
 // covers: js/live.js, js/season.js, js/content.js, index.html, first-visit.html
-/* "Open now" badges (hours, closures, Eastern Time, daylight saving), the next-season countdown and the notice bar.
- * Oct 2 2026 is a Friday; New York is UTC-4 until Nov 1, then UTC-5. */
+/* "Open now" badges (hours, closures, Eastern Time, daylight saving), the winter hours of the Christmas tree weekends with "Not official yet" next to them, the
+ * next-season countdown and the notice bar. Oct 2 2026 is a Friday; New York is UTC-4 until Nov 1, then UTC-5. */
 import { run, open, ok, okSoon } from './lib.mjs';
 
 await run('live', async ({ browser, base, errs }) => {
@@ -46,6 +46,41 @@ await run('live', async ({ browser, base, errs }) => {
   await p.clock.runFor(61000);
   const between = await tagged();
   ok('the day after fall: the "now" tag is gone, "next" stays on Winter, and the countdown and the top bar say the same (Next up)', !between.now && between.crop === 'Christmas trees at The GreenHouse' && between.cd.includes(between.crop) && between.bar.includes(between.crop), JSON.stringify(between));
+
+  // Winter: the Christmas tree weekends (the last weekend in November and the first weekend in December, Saturday and Sunday only; this year Nov 28-29 and Dec 5-6).
+  // The GreenHouse and Wise Pie are open 11 am to 8 pm with "Not official yet" right after the hours; the farm is open with no reservation and says no hours.
+  const badges = () => p.evaluate(() => Array.from(document.querySelectorAll('[data-live]')).filter((e) => !e.hidden).map((e) => {
+    const tx = e.querySelector('.live-text'), last = tx && tx.lastElementChild;
+    return { k: e.dataset.live, text: e.textContent.replace(/\s+/g, ' ').trim(), label: !!(last && last.classList.contains('not-official')), labels: e.querySelectorAll('.not-official').length };
+  }));
+  const at = async (iso) => { await p.clock.setSystemTime(new Date(iso)); await p.clock.runFor(61000); };
+  await at('2026-11-28T12:00:00-05:00');
+  let b = await badges();
+  const by = (k) => b.filter((x) => x.k === k);
+  ok('Sat Nov 28 noon (the first tree day): The GreenHouse badges (hero, "Two places", The GreenHouse section) say "Open now, until 8 pm Not official yet", the label is the last thing after the hours',
+    by('greenhouse').length >= 3 && by('greenhouse').every((x) => x.text === 'Open now, until 8 pm Not official yet' && x.label && x.labels === 1), JSON.stringify(by('greenhouse')));
+  ok('...and Wise Pie says the same, with the label (no pizza hours of its own: it follows The GreenHouse)', by('pizza').length >= 2 && by('pizza').every((x) => x.text === 'Open now, until 8 pm Not official yet' && x.label), JSON.stringify(by('pizza')));
+  ok('...and the farm badges say "Open today. No reservation needed" with no label and no hours', by('farm').length >= 2 && by('farm').every((x) => x.text === 'Open today. No reservation needed' && !x.label && x.labels === 0), JSON.stringify(by('farm')));
+  await p.evaluate(() => WISE_ACRES.setLang('es'));
+  await okSoon('in Spanish the label is "Aún no es oficial", still right after the hours', () => badges().then((l) => l.filter((x) => x.k === 'greenhouse' || x.k === 'pizza')), (l) => l.length >= 5 && l.every((x) => /Abierto ahora, hasta las 8 p\. ?m\.? Aún no es oficial$/.test(x.text) && x.label));
+  await p.evaluate(() => WISE_ACRES.setLang('en'));
+  // the pumpkin patch page and the first-visit page are written for reservations: they leave the farm badge out while the winter season is in progress, and show it in fall
+  for (const pg of ['pumpkin-patch.html', 'first-visit.html']) {
+    const q = await open(browser, base, pg, errs, { time: '2026-11-28T12:00:00-05:00' }), q2 = await open(browser, base, pg, errs, { time: '2026-10-02T12:00:00-04:00' });
+    const shown = (x) => x.evaluate(() => [...document.querySelectorAll('[data-live=farm]')].filter((e) => !e.hidden).map((e) => e.textContent.replace(/\s+/g, ' ').trim()));
+    ok(pg + ': on a tree day the farm badge is left out (data-live-not="winter"), on a fall day it says "Reserved visits today"', (await shown(q)).length === 0 && (await shown(q2)).join() === 'Reserved visits today', JSON.stringify([await shown(q), await shown(q2)]));
+    await q.context().close(); await q2.context().close();
+  }
+  await at('2026-12-02T12:00:00-05:00');
+  b = await badges();
+  ok('Wed Dec 2 (inside the season, between the weekends): The GreenHouse and Wise Pie say when they open next (Saturday, 11 am), the farm says its next open day, the label stays with the 11 am',
+    by('greenhouse').every((x) => x.text === 'Closed today. Opens Saturday at 11 am Not official yet') && by('pizza').every((x) => x.text === 'Closed today. Opens Saturday at 11 am Not official yet') && by('farm').every((x) => x.text === 'Closed today. Next open day: Saturday'), JSON.stringify(b));
+  await at('2026-12-06T21:00:00-05:00');
+  b = await badges();
+  ok('Sun Dec 6 at 9 pm (the last tree day is over): the usual hours speak again ("Opens Friday at 10 am"), no label anywhere, no farm badge', by('greenhouse').every((x) => x.text === 'Closed now. Opens Friday at 10 am' && x.labels === 0) && by('pizza').every((x) => x.text === 'Closed now. Opens Friday at 4 pm' && x.labels === 0) && by('farm').length === 0 && b.every((x) => x.labels === 0), JSON.stringify(b));
+  await at('2026-11-10T12:00:00-05:00');
+  b = await badges();
+  ok('Tue Nov 10 (fall is over, the trees are not on yet): the usual hours, no label, no farm badge', by('greenhouse').every((x) => x.text === 'Closed today. Opens Friday at 10 am' && x.labels === 0) && by('farm').length === 0, JSON.stringify(b));
 
   // notice bar: shows, expires by date, and can be written per language
   await p.evaluate(() => { WISE_ACRES.notice = 'Closed Sunday for rain.'; WISE_ACRES.live.refresh(); });

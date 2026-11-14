@@ -167,7 +167,7 @@
    * Build a season
    * ------------------------------------------------------------------ */
   // data-only="fall winter": shown only while one of those seasons is on screen. Add data-in-season to show it only
-  // while that season is really happening (not in the weeks before or after, when the nearest season is shown).
+  // while that season is really happening (not in the weeks between seasons, when the season that starts next is shown).
   // data-out-of-season="spring" is the opposite: hidden while that season is really happening ("Tell me when it opens").
   function applyOnly(id) {
     const now = W.seasons.live().map((s) => s.id), live = now.includes(id);

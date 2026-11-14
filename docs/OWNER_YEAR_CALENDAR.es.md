@@ -78,26 +78,19 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 - **Dónde:** `index.html`, en `data-release="2026-10-27"`: copien esa fila completa y cambien sus cuatro fechas (README, fila "Open a new pizza weekend").
 - **Si se olvidan:** se vende pizza, pero no hay cuenta regresiva, ni "Remind me", ni etiqueta: los visitantes solo ven "New weekends open every Tuesday at 5:00 PM".
 
-### lun 9 nov 2026: termina la temporada de otoño
+### lun 9 nov 2026: termina la temporada de otoño, y la página pasa al invierno
 
-- **Por sí solo:** no hay ninguna temporada en curso. La insignia de la granja desaparece, la barra superior dice "Next up: Christmas trees at The GreenHouse", la línea principal pasa a la de todo el año, las filas de pizza ya no están y el botón "Fall schedule" de la página de calabazas se oculta. La página conserva su aspecto de otoño hasta el mié 18 nov 2026, y los botones "Reserve" siguen apareciendo.
-- **Ustedes, a más tardar el dom 1 nov 2026:** respondan **d23** (¿está abierta la granja después del 8 de noviembre?) y **d25** (botones Reserve cuando no se puede reservar nada). Si siguen abiertos, Claude mueve el fin del otoño; ustedes agregan filas de pizza y abren los horarios en Bookeo.
-- **Dónde:** `js/season.js`, en `id: 'fall'` (la fecha de fin está en esa línea; pídanselo a Claude).
-- **Si se olvidan:** del 9 al 17 de noviembre los visitantes ven "Reserve a fall visit" sin la insignia de la granja, y pueden reservar horarios que no existen.
+- **Por sí solo:** no hay ninguna temporada en curso. La insignia de la granja desaparece, la barra superior dice "Next up: Christmas trees at The GreenHouse, usually the last weekend in November", las filas de pizza ya no están y el botón "Fall schedule" de la página de calabazas se oculta. La página se abre con el aspecto de invierno, la temporada que empieza después: el botón "Visit The GreenHouse" de la primera pantalla reemplaza a "Reserve your visit", y los botones "Reserve" de la granja casi todos desaparecen. El titular y la línea de abajo siguen siendo los de todo el año hasta que empiecen los árboles.
+- **Ustedes, a más tardar el dom 1 nov 2026:** respondan **d23** (¿está abierta la granja después del 8 de noviembre?). Respondan también **d01** (qué ven los visitantes en invierno), **d09** (el horario de invierno de The GreenHouse) y **d69** ("Every tree is lit!" aparece demasiado pronto). Si siguen abiertos, Claude mueve el fin del otoño; ustedes agregan filas de pizza y abren los horarios en Bookeo. Si cambia el horario de invierno, cámbienlo en los dos lugares: los ajustes y las palabras.
+- **Dónde:** `js/season.js`, en `id: 'fall'` (la fecha de fin está en esa línea; pídanselo a Claude); `js/content.js`, en `greenhouse: { days: [5, 6, 0]` (las insignias verdes), luego las palabras (README, fila "Change opening hours"; README, sección "Change a fact everywhere"), y después `python3 tools/check_facts.py hours`.
+- **Si se olvidan:** desde el 9 de noviembre los botones "Reserve" de la granja casi todos desaparecen, aunque ustedes siguen aceptando reservas. Las insignias mantienen el horario de siempre hasta que empiecen los árboles, y luego el horario de invierno.
 
-### mié 18 nov 2026: el aspecto de invierno
+### sáb 28 nov 2026: empiezan los fines de semana de los árboles de Navidad
 
-- **Por sí solo:** la página se vuelve invernal. El botón de la primera pantalla "Visit The GreenHouse" reemplaza a "Reserve your visit", y los botones "Reserve" de la granja casi todos desaparecen.
-- **Ustedes, a más tardar el mar 17 nov 2026:** respondan **d01** (qué ven los visitantes en invierno), **d09** (el horario de invierno de The GreenHouse) y **d69** ("Every tree is lit!" aparece demasiado pronto). Si el horario de invierno es distinto de viernes a domingo, de 10 a. m. a 8 p. m., cámbienlo en los dos lugares: los ajustes y las palabras.
-- **Dónde:** `js/content.js`, en `greenhouse: { days: [5, 6, 0]` (las insignias verdes), luego las palabras (README, fila "Change opening hours"; README, sección "Change a fact everywhere"), y después `python3 tools/check_facts.py hours`.
-- **Si se olvidan:** las insignias y el texto siguen diciendo de viernes a domingo, de 10 a 8, todo el invierno. Eso solo está mal si su horario realmente cambia.
-
-### vie 27 nov 2026: empieza la temporada de árboles de Navidad (el viernes después de Acción de Gracias)
-
-- **Por sí solo:** la temporada de invierno está en curso hasta el 8 de diciembre: la barra superior dice "In season: Christmas trees at The GreenHouse", el titular pasa a ser "Wise Acres Christmas trees", y el cuadro "This week" muestra los árboles "In season". El jue 26 nov 2026 (Día de Acción de Gracias) no es día de apertura, así que no necesita cierre. En el menú de arriba, la línea "Christmas trees" conserva la negrita y el puntito rojo hasta el 8 de diciembre, y un lector de pantalla deja de decir "Coming soon" después de ella.
-- **Ustedes, a más tardar el mié 25 nov 2026:** confirmen las fechas y los precios de los árboles (**d50**, **d54**). Agreguen una nota breve a `week` ("Trees arrive Friday"; `updated` es hoy).
-- **Dónde:** `js/content.js`, en `week: {},` (2 lugares: el ajuste y la nota que habla de él); `index.html`, en `data-t="t53cf41e8"` (las fechas de los árboles en la Shop). README, fila "Say what is ripe / spots left this week".
-- **Si se olvidan:** el sitio dice que los árboles están en temporada desde el 27 de noviembre sin importar sus existencias, y la línea de la Shop dice "Prices coming soon".
+- **Por sí solo:** la temporada de invierno está en curso del sáb 28 nov 2026 al dom 6 dic 2026: los dos fines de semana de árboles (el 28 y 29 de noviembre, el 5 y 6 de diciembre) y los cinco días entre ellos. La barra superior dice "In season: Christmas trees at The GreenHouse" y el titular pasa a ser "Wise Acres Christmas trees". El cuadro "This week" muestra los árboles "In season" solo en los cuatro días de árboles (los demás días dice "Usually starts Dec 5"). The GreenHouse y Wise Pie dicen que están abiertos de 11 a. m. a 8 p. m. en esos cuatro días, con la pequeña etiqueta "Not official yet" junto al horario, y la insignia de la granja dice "Open today. No reservation needed". El vie 27 nov 2026 no es un día de árboles. En el menú de arriba, la línea "Christmas trees" conserva la negrita y el puntito rojo hasta el 6 de diciembre, y un lector de pantalla deja de decir "Coming soon" después de ella.
+- **Ustedes, a más tardar el mié 25 nov 2026:** confirmen las fechas y los precios de los árboles (**d50**, **d54**) y los horarios que dicen "Not official yet" (**d09**, **d51**). Agreguen una nota breve a `week` ("Trees this weekend"; `updated` es hoy).
+- **Dónde:** `js/content.js`, en `week: {},` (2 lugares: el ajuste y la nota que habla de él); `index.html`, en `data-t="t59d83261"` (las fechas de los árboles en la Shop). README, fila "Say what is ripe / spots left this week".
+- **Si se olvidan:** el sitio dice que los árboles están en temporada desde el 28 de noviembre sin importar sus existencias, y la línea de la Shop dice "Prices coming soon".
 
 ### mar 1 dic 2026: se oculta el cuadro del calendario
 
@@ -106,12 +99,12 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 - **Dónde:** `index.html`, en `data-t="t6fab8a7b"` (la oración con el enlace); `pages/pumpkin-patch.html`, en `data-until="2026-11-30"` (2 lugares).
 - **Si se olvidan:** nada. La oración vuelve sola cuando vuelve un cuadro del calendario.
 
-### mié 9 dic 2026: la temporada de árboles termina en el calendario del sitio
+### lun 7 dic 2026: terminan los fines de semana de los árboles, y la página pasa a la primavera
 
-- **Por sí solo:** el último día de árboles en el código es el 8 de diciembre. Desde el mié 9 dic 2026 no hay ninguna temporada en curso: la barra superior dice "Next up: Strawberries, usually mid-April", el titular es el de todo el año, y los árboles salen del cuadro "This week". En el menú de arriba, la línea "Christmas trees" vuelve a ser una línea normal, y el botón GreenHouse pierde su puntito rojo.
-- **Ustedes, a más tardar el vie 4 dic 2026:** si venden árboles después del 8 de diciembre, o se les acaban antes, díganlo (pregunta **d50**). Mientras Claude mueve la fecha de fin, usen la barra de aviso y `week` (`crops: { trees: 'peak' }`, o `'off'` cuando ya no haya).
-- **Dónde:** `js/season.js`, en `id: 'winter'`; `js/content.js`, en `notice: '',`.
-- **Si se olvidan:** el sitio deja de decir que los árboles están en temporada el 9 de diciembre mientras ustedes todavía los venden, o sigue diciéndolo cuando ya se acabaron.
+- **Por sí solo:** el último día de árboles del código es el dom 6 dic 2026. Desde el lun 7 dic 2026 no hay ninguna temporada en curso, y la página se abre con el aspecto de primavera, la temporada que empieza después. La barra superior dice "Next up: Strawberries, usually mid-April", el titular es el de todo el año, y los árboles salen del cuadro "This week". "Reserve your visit" y "Reserve a strawberry visit" vuelven, y la nota "No reservation? Visit The GreenHouse next door" se muestra otra vez. The GreenHouse y Wise Pie vuelven a decir su horario de siempre, de viernes a domingo, y la insignia de la granja desaparece. En el menú de arriba, la línea "Christmas trees" vuelve a ser una línea normal, y el botón GreenHouse pierde su puntito rojo.
+- **Ustedes, a más tardar el vie 4 dic 2026:** si venden árboles otros días, o se agotan antes, díganlo (pregunta **d50**). Hasta que Claude cambie la regla, usen la barra de avisos y `week` (`crops: { trees: 'peak' }`, o `'off'` cuando se acaben). Respondan **d25** (botones Reserve cuando no se puede reservar nada) y abran los horarios de primavera en Bookeo, o los botones llevarán a un calendario vacío durante cuatro meses.
+- **Dónde:** `js/season.js`, en `id: 'winter'`; `js/content.js`, en `notice: '',`; Bookeo; los botones Reserve están en `index.html` (README, fila "Change the booking link" si cambia la dirección).
+- **Si se olvidan:** el sitio deja de decir que los árboles están en temporada el 7 de diciembre mientras ustedes todavía los venden, o sigue diciéndolo cuando ya se acabaron. Del 7 de diciembre al 14 de abril los botones "Reserve" aparecen mientras no se puede reservar nada.
 
 ### vie 25 dic 2026: el día de Navidad es día de apertura (también el sáb 26 dic 2026 y el dom 27 dic 2026)
 
@@ -128,13 +121,6 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 - **Si se olvidan:** en 2027 las preguntas frecuentes todavía dicen "Yes, and it's new this year!", y las páginas dicen "Fall 2026 prices" todo el invierno, la primavera y el verano. Es cierto, pero se ve viejo.
 
 ## 4. El calendario de 2027
-
-### mié 10 feb 2027: el aspecto de primavera
-
-- **Por sí solo:** la página cambia a primavera. "Reserve your visit" y "Reserve a strawberry visit" vuelven, y la nota "No reservation? Visit The GreenHouse next door" aparece otra vez. La barra superior dice "Next up: Strawberries, usually mid-April".
-- **Ustedes, a más tardar el mar 9 feb 2027:** respondan **d25** (botones Reserve cuando no se puede reservar nada). Abran los horarios de primavera en Bookeo, o los botones llevarán a un calendario vacío durante nueve semanas.
-- **Dónde:** Bookeo; los botones Reserve están en `index.html` (README, fila "Change the booking link" si la dirección cambia).
-- **Si se olvidan:** del 10 de febrero al 14 de abril los botones "Reserve" aparecen mientras no se puede reservar nada.
 
 ### jue 25 mar 2027: las fresas aparecen en el cuadro "This week"
 
@@ -153,13 +139,13 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 ### jue 15 abr 2027: empieza la temporada de fresas (según el calendario, no según el clima)
 
 - **Por sí solo:** la barra superior dice "In season: Strawberries", la primera pantalla dice "It's strawberry season!" y el cuadro "This week" dice "In season". Nada en el sitio sigue el clima.
-- **Ustedes, a más tardar el jue 8 abr 2027:** respondan **d41** (cargo por cancelación en la página de fresas), **d54** (precios) y **d26** (¿cuándo hay flores para cortar?). Si el campo está atrasado o adelantado, avísenlo con la barra de aviso y `week` (`crops: { strawberries: 'soon' }`). Abran los horarios de Bookeo. Si reciben visitas con reserva en primavera, agreguen los días a `hours` (`farm`) para que aparezca la insignia de la granja: `farm:       { fall: [4, 5, 6, 0], spring: [4, 5, 6, 0] }`.
-- **Dónde:** `js/content.js`, en `farm:       { fall: [4, 5, 6, 0] }` (hoy solo el otoño tiene días de la granja), `notice: '',` y `week: {},` (2 lugares).
+- **Ustedes, a más tardar el jue 8 abr 2027:** respondan **d41** (cargo por cancelación en la página de fresas), **d54** (precios) y **d26** (¿cuándo hay flores para cortar?). Si el campo está atrasado o adelantado, avísenlo con la barra de aviso y `week` (`crops: { strawberries: 'soon' }`). Abran los horarios de Bookeo. Si reciben visitas con reserva en primavera, agreguen los días a `hours` (`farm`) para que aparezca la insignia de la granja: `farm:       { fall: [4, 5, 6, 0], spring: [4, 5, 6, 0], winter: [6, 0] }`.
+- **Dónde:** `js/content.js`, en `farm:       { fall: [4, 5, 6, 0], winter: [6, 0] }` (hoy solo el otoño y los fines de semana de los árboles de Navidad tienen días de la granja), `notice: '',` y `week: {},` (2 lugares).
 - **Si se olvidan:** la primera pantalla dice que es temporada de fresas un día en que el campo no está listo; sin días de la granja en primavera no hay insignia de la granja (es un hueco, no un error).
 
 ### mar 8 jun 2027 al mar 15 jun 2027: termina la primavera, empieza el verano
 
-- **Por sí solo:** el último día de la temporada de fresas es el 7 de junio. El mar 8 jun 2027 no hay ninguna temporada en curso; el aspecto cambia a verano el sáb 12 jun 2027; el mar 15 jun 2027 empieza la temporada de arándanos y girasoles ("It's blueberry season!").
+- **Por sí solo:** el último día de la temporada de fresas es el 7 de junio. El mar 8 jun 2027 no hay ninguna temporada en curso y la página se abre con el aspecto de verano, la temporada que empieza después; el mar 15 jun 2027 empieza la temporada de arándanos y girasoles ("It's blueberry season!").
 - **Ustedes, a más tardar el lun 7 jun 2027:** respondan **d59** (programas de verano), **d58** (¿botanas y bebidas en primavera y verano?) y **d68** (la insignia de girasoles solo funciona en pantallas grandes). Abran los horarios de verano en Bookeo; agreguen días de la granja de verano a `hours` si quieren la insignia (`summer: [4, 5, 6, 0]`, en el mismo lugar); actualicen `week`.
 - **Dónde:** `js/season.js`, en `id: 'summer'` (las fechas están en esa línea; pídanselo a Claude); `js/content.js`, en `week: {},` (2 lugares).
 - **Si se olvidan:** lo mismo que con las fresas: palabras del calendario en un día en que quizá los arándanos no estén listos.
@@ -171,24 +157,17 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 - **Dónde:** `js/content.js`, en `closures: [],`.
 - **Si se olvidan:** "Open now" en un día cerrado.
 
-### dom 11 jul 2027: termina la temporada de verano
+### dom 11 jul 2027: termina la temporada de verano, y empieza el aspecto de otoño, dos meses antes de la temporada
 
-- **Por sí solo:** la barra superior dice "Next up: Pumpkins & tomatoes, usually mid-September" y el cuadro "This week" se vacía.
-- **Ustedes:** nada todavía. Empiecen a reunir los datos del otoño de 2027 (vean la entrada del jue 12 ago 2027).
-- **Dónde:** nada todavía.
-- **Si se olvidan:** nada todavía.
-
-### jue 12 ago 2027: empieza el aspecto de otoño, un mes antes de la temporada
-
-- **Por sí solo:** la página cambia a otoño: "Reserve a fall visit" y las líneas de otoño aparecen, aunque la temporada empieza el lun 13 sep 2027.
-- **Ustedes, a más tardar el mié 11 ago 2027:** tengan listos los datos del otoño de 2027.
+- **Por sí solo:** no hay ninguna temporada en curso. La barra superior dice "Next up: Pumpkins & tomatoes, usually mid-September", y el cuadro "This week" se vacía. La página cambia a otoño, la temporada que empieza después: "Reserve a fall visit" y las líneas de otoño aparecen, aunque la temporada empieza el lun 13 sep 2027.
+- **Ustedes, a más tardar el sáb 10 jul 2027:** tengan listos los datos del otoño de 2027.
   1. Los precios y las etiquetas que dicen 2026 (pregunta **d24**, con **d54** y **d16**).
   2. Los días especiales (Home School Day y los demás), con un `data-until` en cada línea, y el título del cuadro.
   3. El calendario: las palabras y el último día del bloque "No pizza", el último día del botón de la página de calabazas (deben coincidir) y las primeras filas de pizza.
   4. La imagen nueva del menú, con un nombre de archivo nuevo.
   5. Los horarios de Bookeo; los tomates y el sendero embrujado (**d48**); el horario de otoño (**d51**); la cena tailandesa (**d08**).
 - **Dónde:** `python3 tools/check_facts.py year` enumera los lugares con 2026. `index.html`, en `data-t="t7f10df40"` (título de los días especiales), `data-t="t65d35823"` (título del calendario), `data-t="tb848cce7"` (las palabras de "No pizza") y `data-t="t4f7c68ac"` (título Fall Menu); `pages/pumpkin-patch.html`, en `data-until="2026-11-30"` (2 lugares). README, sección "A new year, a new season"; README, fila "Open a new pizza weekend". Cada oración en inglés que cambien necesita sus cuatro traducciones (README, sección "Change one sentence and its translations, step by step").
-- **Si se olvidan:** desde el 12 de agosto los visitantes ven una página de otoño con precios de 2026 y sin cuadro del calendario.
+- **Si se olvidan:** desde el 11 de julio los visitantes ven una página de otoño con precios de 2026 y sin cuadro del calendario.
 
 ### lun 23 ago 2027 al dom 12 sep 2027: el cuadro "This week" cuenta hacia atrás solo
 
@@ -204,9 +183,9 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 - **Dónde:** `index.html`, en `data-release-time="17:00"`; README, fila "Open a new pizza weekend".
 - **Si se olvidan:** sin filas que queden de 2026, no hay cuenta regresiva ni etiqueta todo el otoño. El cuadro del calendario muestra solo sus líneas "No pizza", o permanece oculto si no renovaron su último día en agosto.
 
-### lun 27 sep 2027: el menú de arriba muestra que la temporada de árboles está cerca
+### mar 28 sep 2027: el menú de arriba muestra que la temporada de árboles está cerca
 
-- **Por sí solo:** en el menú de arriba, la línea "Christmas trees" (lista GreenHouse) se pone en negrita con un puntito rojo, y también el botón GreenHouse. La temporada de árboles empieza en 60 días (vie 26 nov 2027). Un lector de pantalla dice "Coming soon" después de la línea hasta entonces.
+- **Por sí solo:** en el menú de arriba, la línea "Christmas trees" (lista GreenHouse) se pone en negrita con un puntito rojo, y también el botón GreenHouse. La temporada de árboles empieza en 60 días (sáb 27 nov 2027). Un lector de pantalla dice "Coming soon" después de la línea hasta entonces.
 - **Ustedes:** nada.
 - **Dónde:** `index.html`, en `data-coming="winter"`; `js/main.js`, en `const COMING_DAYS = 60;`.
 - **Si se olvidan:** nada.
@@ -214,20 +193,20 @@ Antes del día del lanzamiento (la fecha aún no está fijada): las decisiones d
 ### lun 8 nov 2027 al mar 9 nov 2027: termina la temporada de otoño (como el lun 9 nov 2026)
 
 - **Por sí solo:** la insignia de la granja desaparece el lun 8 nov 2027; ninguna temporada en curso el mar 9 nov 2027; las filas ya no están.
-- **Ustedes, a más tardar el lun 1 nov 2027:** otra vez las preguntas **d23** y **d25**, si la respuesta fue solo para 2026.
+- **Ustedes, a más tardar el lun 1 nov 2027:** otra vez la pregunta **d23**, si la respuesta fue solo para 2026.
 - **Dónde:** `js/season.js`, en `id: 'fall'`.
 - **Si se olvidan:** lo mismo que el 9 de noviembre de 2026.
 
-### jue 18 nov 2027 al vie 26 nov 2027: aspecto de invierno, Acción de Gracias (jue 25 nov 2027), árboles desde el viernes siguiente
+### sáb 27 nov 2027: empiezan los fines de semana de los árboles de Navidad (el 27 y 28 de noviembre, el 4 y 5 de diciembre)
 
-- **Por sí solo:** aspecto de invierno el jue 18 nov 2027; la temporada de árboles empieza el vie 26 nov 2027.
+- **Por sí solo:** la página tiene su aspecto de invierno desde el mar 9 nov 2027; la temporada de invierno está en curso del sáb 27 nov 2027 al dom 5 dic 2027.
 - **Ustedes, a más tardar el mié 24 nov 2027:** las fechas y los precios de los árboles, el horario de invierno, la nota de `week`, como el 25 de noviembre de 2026.
 - **Dónde:** `js/content.js`, en `greenhouse: { days: [5, 6, 0]` y `week: {},` (2 lugares).
 - **Si se olvidan:** lo mismo que en 2026.
 
-### jue 9 dic 2027 y vie 24 dic 2027 al vie 31 dic 2027: terminan los árboles, Navidad, fin de año
+### lun 6 dic 2027 y vie 24 dic 2027 al vie 31 dic 2027: terminan los árboles, Navidad, fin de año
 
-- **Por sí solo:** la temporada de árboles termina el jue 9 dic 2027. El vie 24 dic 2027, el sáb 25 dic 2027 y el dom 26 dic 2027 son días de apertura (The GreenHouse y Wise Pie abren de viernes a domingo). En el menú de arriba, la línea "Christmas trees" vuelve a ser una línea normal, y el botón GreenHouse pierde su puntito rojo.
+- **Por sí solo:** la temporada de árboles termina el lun 6 dic 2027. El vie 24 dic 2027, el sáb 25 dic 2027 y el dom 26 dic 2027 son días de apertura (The GreenHouse y Wise Pie abren de viernes a domingo). En el menú de arriba, la línea "Christmas trees" vuelve a ser una línea normal, y el botón GreenHouse pierde su puntito rojo.
 - **Ustedes, a más tardar el mié 22 dic 2027:** cierres y un aviso para los días en que estén cerrados; las etiquetas "new" y "Fall 2027" para el próximo enero (vean el vie 1 ene 2027).
 - **Dónde:** `js/content.js`, en `closures: [],` y `noticeUntil: '',`.
 - **Si se olvidan:** "Open now" en un día cerrado.
@@ -256,7 +235,7 @@ Estas líneas siguen en la página todos los días hasta que ustedes las editen.
 - **"Prices coming soon"** en la Shop y en las listas de precios. Rellenen cada una cuando tengan el precio (**d54**). Busquen esas palabras en `index.html`.
 - **Visitas escolares "Now booking"** (`index.html`, en `data-t="td727517c"` y `data-t="t61e401ae"`): aparecen todo el año (**d27**). Cámbienlas cuando las visitas no estén recibiendo reservas.
 - **Las etiquetas "2026"** ("Fall 2026 reservations", "Fall Menu 2026", "Prices are for fall 2026", la página de calabazas). `python3 tools/check_facts.py year` las enumera. El nombre de la imagen del menú lleva 2026: agreguen la nueva con un nombre nuevo (README, sección "A new year, a new season").
-- **"Usually mid-April to early June" y las demás fechas habituales en las palabras.** Se repiten cada año (busquen `mid-April`, `mid- to late June`, `Mid-September` y `Friday after Thanksgiving`: la tabla Season by season, las tarjetas de temporada, las preguntas frecuentes, las páginas de fresas y de calabazas). Cámbienlas solo cuando cambien las fechas habituales, en las palabras y en `js/season.js` a la vez (pídanselo a Claude: una prueba las compara).
+- **"Usually mid-April to early June" y las demás fechas habituales en las palabras.** Se repiten cada año (busquen `mid-April`, `mid- to late June`, `Mid-September` y `the last weekend in November`: la tabla Season by season, las tarjetas de temporada, las preguntas frecuentes, las páginas de fresas y de calabazas). Cámbienlas solo cuando cambien las fechas habituales, en las palabras y en `js/season.js` a la vez (pídanselo a Claude: una prueba las compara).
 - **Fotos con palabras que se fechan** (Pascua, Día del Padre, "waiting all summer", "berries & sunflowers"): están en la galería todo el año (**d13**, **d32**).
 - **Las reseñas** que agregaron, con su `date` en texto libre.
 - **Precios e impuestos.** El sitio muestra solo los precios que ustedes escribieron, y ningún impuesto sobre las ventas. Cuando cambie un precio, sigan el README, sección "Change a fact everywhere", y luego `python3 tools/check_facts.py price`. Bookeo y Square muestran lo que se cobra al pagar.
@@ -272,7 +251,7 @@ Pongan cada fecha en el calendario de su teléfono dos veces: 60 días antes y 1
 - **Search Console.** El sitio sigue verificado mientras su etiqueta siga en `index.html` (busquen las palabras "GOOGLE SEARCH CONSOLE"); el informe Sitemaps debe decir "Success" (`docs/LAUNCH_CHECKLIST.md`, sección "3.10").
 - **Perfil de Empresa de Google.** Los horarios, los horarios de feriados, la dirección del sitio web y el enlace de reservas coinciden con el sitio (sección "3.12").
 - **Cuentas de pago.** Su plan de host, Mailchimp, Bookeo, Square y cualquier servicio de analítica: la fecha de renovación, y que una dirección de reservas o de pedidos anticipados que cambie también se cambie en el sitio (README, fila "Change the booking link").
-- **Las traducciones.** Una vez al año, en agosto antes de que empiece el aspecto de otoño, pidan a una persona nativa que lea lo que cambió (preguntas **d37** y **d71**).
+- **Las traducciones.** Una vez al año, en junio antes de que empiece el aspecto de otoño, pidan a una persona nativa que lea lo que cambió (preguntas **d37** y **d71**).
 - **Fechas de cierre viejas.** En enero borren de `closures` las fechas pasadas, si quieren (las fechas pasadas pueden quedarse).
 
 ## 8. Preguntas que esperan una fecha
@@ -283,16 +262,16 @@ Ninguna de estas se decide aquí. Cada una es una tarjeta de su panel; esta list
 |---|---|---|
 | d60 ¿Cierre por lluvia el 4 de octubre? | sáb 3 oct 2026 | las insignias del domingo |
 | d23 ¿Está abierta la granja después del 8 de noviembre? | dom 1 nov 2026 | la temporada de otoño termina el 8 de noviembre |
-| d25 Botones Reserve cuando no se puede reservar nada | dom 1 nov 2026 (otra vez mar 9 feb 2027) | los botones aparecen entre temporadas |
-| d01 Qué ven los visitantes en invierno, d09 El horario de invierno de The GreenHouse, d69 "Every tree is lit!" aparece demasiado pronto | mar 17 nov 2026 | el aspecto de invierno empieza el 18 de noviembre |
-| d50 Fechas de los árboles de Navidad, d54 Precios de calabazas, bayas, flores y árboles | mié 25 nov 2026 | la temporada de árboles empieza el 27 de noviembre |
+| d01 Qué ven los visitantes en invierno, d09 El horario de invierno de The GreenHouse, d69 "Every tree is lit!" aparece demasiado pronto | dom 1 nov 2026 | el aspecto de invierno empieza el 9 de noviembre |
+| d50 Fechas de los árboles de Navidad, d54 Precios de calabazas, bayas, flores y árboles | mié 25 nov 2026 | la temporada de árboles empieza el 28 de noviembre |
+| d25 Botones Reserve cuando no se puede reservar nada | vie 4 dic 2026 | la página abre en primavera el 7 de diciembre y los botones aparecen mientras no se puede reservar nada |
 | d66 ¿Dejar de decir "new this year" desde enero? | vie 18 dic 2026 | el año nuevo |
 | d26 ¿Cuándo hay flores para cortar?, d41 Cargo por cancelación en la página de fresas | jue 8 abr 2027 | la temporada de fresas empieza el 15 de abril |
 | d58 ¿Botanas y bebidas en primavera y verano?, d59 ¿Todavía tienen programas de verano?, d68 La insignia de girasoles solo funciona en pantallas grandes | lun 7 jun 2027 | la temporada de verano empieza el 15 de junio |
-| d24 Precios, calendario y menú de otoño 2027 | mié 11 ago 2027 | el aspecto de otoño empieza el 12 de agosto |
+| d24 Precios, calendario y menú de otoño 2027 | sáb 10 jul 2027 | el aspecto de otoño empieza el 11 de julio |
 | d48 Sendero embrujado y tomates para cosechar este otoño, d51 ¿Son correctos los horarios de otoño?, d08 Cena tailandesa | lun 6 sep 2027 | la temporada de otoño empieza el 13 de septiembre |
 | d27 Letrero de visitas escolares, d13 Fotos con palabras o con personas, d32 Fotos con palabras que se fechan | cualquier momento | aparecen todo el año |
-| d37 Hablantes nativos para las traducciones, d71 ¿Tono cercano o formal en las traducciones? | cualquier momento | antes de la próxima revisión de agosto |
+| d37 Hablantes nativos para las traducciones, d71 ¿Tono cercano o formal en las traducciones? | cualquier momento | antes de la próxima revisión de junio |
 
 Tarjetas sin fecha: d61, d62, d63, d64, d65, d67, d70, d72, d73.
 
@@ -304,22 +283,17 @@ La prueba `node tests/owner-calendar.test.mjs` compara cada fila de abajo con lo
 
 | Fecha | Día | Qué cambia |
 |---|---|---|
-| `2026-11-09` | lun 9 nov 2026 | termina la temporada de otoño (último día: 8 nov); ninguna temporada en curso |
-| `2026-11-18` | mié 18 nov 2026 | aspecto de invierno |
-| `2026-11-27` | vie 27 nov 2026 | empieza la temporada de árboles (el viernes después de Acción de Gracias) |
-| `2026-12-09` | mié 9 dic 2026 | termina la temporada de árboles (último día: 8 dic) |
-| `2027-02-10` | mié 10 feb 2027 | aspecto de primavera |
+| `2026-11-09` | lun 9 nov 2026 | termina la temporada de otoño (último día: 8 nov); ninguna temporada en curso; la página se abre con el invierno |
+| `2026-11-28` | sáb 28 nov 2026 | empiezan los fines de semana de los árboles de Navidad (el primer día de árboles) |
+| `2026-12-07` | lun 7 dic 2026 | terminan los fines de semana de los árboles (el último día de árboles es el 6 dic); la página se abre con la primavera |
 | `2027-04-15` | jue 15 abr 2027 | empieza la temporada de fresas |
-| `2027-06-08` | mar 8 jun 2027 | termina la temporada de fresas (último día: 7 jun) |
-| `2027-06-12` | sáb 12 jun 2027 | aspecto de verano |
+| `2027-06-08` | mar 8 jun 2027 | termina la temporada de fresas (último día: 7 jun); la página se abre con el verano |
 | `2027-06-15` | mar 15 jun 2027 | empieza la temporada de arándanos y girasoles |
-| `2027-07-11` | dom 11 jul 2027 | termina la temporada de verano (último día: 10 jul) |
-| `2027-08-12` | jue 12 ago 2027 | aspecto de otoño |
+| `2027-07-11` | dom 11 jul 2027 | termina la temporada de verano (último día: 10 jul); la página se abre con el otoño |
 | `2027-09-13` | lun 13 sep 2027 | empieza la temporada de otoño |
-| `2027-11-09` | mar 9 nov 2027 | termina la temporada de otoño (último día: 8 nov) |
-| `2027-11-18` | jue 18 nov 2027 | aspecto de invierno |
-| `2027-11-26` | vie 26 nov 2027 | empieza la temporada de árboles (el viernes después de Acción de Gracias) |
-| `2027-12-09` | jue 9 dic 2027 | termina la temporada de árboles (último día: 8 dic) |
+| `2027-11-09` | mar 9 nov 2027 | termina la temporada de otoño (último día: 8 nov); la página se abre con el invierno |
+| `2027-11-27` | sáb 27 nov 2027 | empiezan los fines de semana de los árboles de Navidad (el primer día de árboles) |
+| `2027-12-06` | lun 6 dic 2027 | terminan los fines de semana de los árboles (el último día de árboles es el 5 dic); la página se abre con la primavera |
 
 ### Las líneas que tienen un último día (un `data-until`) o un día de apertura (un `data-release`)
 
@@ -341,9 +315,9 @@ Una línea con `data-until="D"` se oculta el día después de D. Una fila de piz
 ### Datos en los que se apoya esta página
 
 - Las filas de pizza abren los martes a las 5:00 PM (`data-release-time="17:00"` en `index.html`).
-- The GreenHouse abre de viernes a domingo, de 10 a. m. a 8 p. m., y Wise Pie de 4 p. m. a 8 p. m.; la granja tiene insignia solo en otoño, de jueves a domingo (`hours` en `js/content.js`).
+- The GreenHouse abre de viernes a domingo, de 10 a. m. a 8 p. m., y Wise Pie de 4 p. m. a 8 p. m.; la granja tiene insignia en otoño, de jueves a domingo. En los fines de semana de los árboles de Navidad The GreenHouse y Wise Pie abren sábado y domingo, de 11 a. m. a 8 p. m., y la granja abre sábado y domingo sin reserva (`hours` en `js/content.js`).
 - "This week at the farm" dura 14 días después de `updated` y desaparece desde el día 15 (`expireDays: 14` en `js/features.js`).
-- El Domingo de Pascua de 2027 es el dom 28 mar 2027; Acción de Gracias es el jue 26 nov 2026 y el jue 25 nov 2027.
+- El Domingo de Pascua de 2027 es el dom 28 mar 2027. Los fines de semana de los árboles de Navidad son el último sábado de noviembre con su domingo y el primer sábado de diciembre con su domingo. En 2026 son sáb 28 nov 2026 y dom 29 nov 2026, luego sáb 5 dic 2026 y dom 6 dic 2026. En 2027 son sáb 27 nov 2027 y dom 28 nov 2027, luego sáb 4 dic 2027 y dom 5 dic 2027.
 - Año del pie de página: `data-year` en `index.html`; cambia a medianoche del 1 de enero (hora del Este).
 
 *Cómo se mantiene al día esta página.* `node tests/owner-calendar.test.mjs` comprueba estas cosas:

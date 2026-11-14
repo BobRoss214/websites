@@ -448,7 +448,7 @@ function phases(res) {
 function liveLine(home) {
   const crop = { spring: 'strawberries', summer: 'blueberries and sunflowers', fall: 'pumpkins and tomatoes', winter: 'Christmas trees' };
   if (home.live.length) return SEASON_WORD[home.season] + ' look, ' + home.live.map((x) => SEASON_WORD[x].toLowerCase() + ' (' + crop[x] + ')').join(' and ') + ' in season';
-  return SEASON_WORD[home.season] + ' look, but no season in progress (the page is dressed as the nearest one)';
+  return SEASON_WORD[home.season] + ' look, but no season in progress (the page opens on the season that starts next)';
 }
 
 function describePhase(res, ph) {
@@ -481,7 +481,7 @@ function minorLines(res, run) {
 
 /* Why things switch. Matched by what changed. */
 const REASONS = {
-  season: ['The season dates changed over (typical dates; between seasons the nearest season is used)', 'SEASONS in js/season.js'],
+  season: ['The season dates changed over (typical dates; between seasons the season that starts next is used)', 'SEASONS in js/season.js'],
   topbar: ['The top bar and the countdown follow the season dates', 'SEASONS in js/season.js; js/live.js'],
   until: ['A line’s last day has passed, so it hides itself', 'data-until="…" on that line in the page file'],
   release: ['The weekly pizza release: the page counts down to the next Tuesday row, and stops after the last row', 'data-release rows of the schedule table in index.html (opening time: data-release-time)'],
@@ -563,7 +563,6 @@ export const RULES = {
   empty: { title: 'An empty heading or an empty box is showing', fix: 'Give the box a data-until-empty (it then hides itself when everything in it has gone), or hide its heading with it.' },
   past: { title: 'A date that has already passed is written on the page as if it were still to come', fix: 'Give the line a data-until (the last day it is true) so it hides itself, or write it without a date (“every weekend in fall”).' },
   seasonWord: { title: 'A line says “It’s … season!”, or a “now” tag sits on a season, that is not in progress', fix: 'Decide what the page should say between seasons, then use data-only/data-in-season on the lines that name a season (js/season.js decides what is “in season”).' },
-  noSeason: { title: 'The page wears a season’s look while no season is in progress (the look follows the nearest season, not the date)', fix: 'Decide whether between seasons the page should keep the nearest season’s look (today) or a neutral look; the farm Reserve buttons could carry data-in-season so they hide when no season is open.' },
   reserveClosed: { title: 'The farm’s “Reserve” buttons show while no season is in progress', fix: 'Add data-in-season to those buttons (they then hide between seasons and “Tell me when” shows instead), or keep them if the farm takes reservations all year. Owner decision.' },
   contradict: { title: 'Two lines say different things', fix: 'Make both lines follow the same date, or take the stale one out.' },
   never: { title: 'A “New” or “Now booking” tag that never switches off', fix: 'Give the tag a data-until, or check that it is still true in every month.' },
@@ -593,7 +592,6 @@ export function problemsOf(run, day) {
   if (home.countdown && /HAPPENING NOW/i.test(home.countdown) !== home.live.length > 0) add('contradict', 'index.html', 'the countdown box says ' + (/HAPPENING NOW/i.test(home.countdown) ? '“happening now”' : 'nothing is happening') + ' but the season code disagrees');
   const farmReserve = home.reserve.filter((r) => /^Reserve (your visit|the farm|a (fall|spring|summer|strawberry) visit)$/i.test(r.text));
   if (!home.live.some((x) => x !== 'winter') && farmReserve.length) add('reserveClosed', 'index.html', 'shown: ' + list(Array.from(new Set(farmReserve.map((r) => quote(r.text)))).sort()) + (home.live.length ? ' (only winter, the Christmas trees, is in progress)' : ' (no season in progress)'));
-  if (!home.live.length) add('noSeason', 'index.html', 'dressed as ' + SEASON_WORD[home.season] + ' (the nearest season) with no season in progress');
   const tomatoTag = home.tags.some((t) => /tomatoes/i.test(t)) && home.dated.some((d) => /tomatoes/i.test(d));
   if (tomatoTag && home.week && !home.week.crops.some((c) => /Tomatoes.*In season/.test(c))) add('contradict', 'index.html', 'the “New: u-pick tomatoes & basil” tag is shown but the week box does not list tomatoes as in season (' + (home.week.crops.find((c) => /Tomatoes/.test(c)) || 'not listed') + ')');
   if (/farm.*Reserved visits today/i.test(home.badges.join('|')) && !home.live.includes('fall')) add('contradict', 'index.html', 'the farm badge says “Reserved visits today” but fall is not in progress');
@@ -670,7 +668,7 @@ export function buildDoc(res) {
   L.push('Found by checking every day’s pages against a few plain rules (listed in `RULES` in `tools/season_calendar.mjs`). Nothing here is decided for the owner: each item says what a visitor sees and what could be done. An item can be on purpose (for example, the farm may take reservations between seasons).');
   L.push('');
   const pr = problemRanges(res);
-  const order = ['hiddenTarget', 'blank', 'empty', 'past', 'seasonWord', 'contradict', 'reserveClosed', 'noSeason', 'errors'];
+  const order = ['hiddenTarget', 'blank', 'empty', 'past', 'seasonWord', 'contradict', 'reserveClosed', 'errors'];
   let any = false;
   for (const rule of order) {
     const items = pr.filter((x) => x.rule === rule);

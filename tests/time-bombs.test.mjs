@@ -102,13 +102,16 @@ function zoneCheck() {
     return ((m === 2 && (d > a || (d === a && hh >= 3))) || (m > 2 && m < 10) || (m === 10 && (d < b || (d === b && hh < 1)))) ? 4 : 5;
   };
   const etToUtc = (y, m, d, hh, mm, ss = 0) => new Date(Date.UTC(y, m, d, hh + etOffset(y, m, d, hh), mm, ss));
-  const thanksgiving = (y) => 1 + ((4 - new Date(Date.UTC(y, 10, 1)).getUTCDay() + 7) % 7) + 21;
+  // the Christmas tree weekends, by a walk over the calendar: the LAST Saturday of November and the Sunday after it, the FIRST Saturday of December and the Sunday after it
+  const saturdays = (y, m) => { const out = []; for (let d = 1; d <= 31; d++) { const x = new Date(Date.UTC(y, m, d)); if (x.getUTCMonth() !== m) break; if (x.getUTCDay() === 6) out.push(d); } return out; };
+  const treeFirstDay = (y) => { const s = saturdays(y, 10); return [10, s[s.length - 1]]; };   // the winter season starts on the last Saturday of November
+  const treeLastDay = (y) => [11, saturdays(y, 11)[0] + 1];                                       // ...and ends on the Sunday after the first Saturday of December
   const dow = (y, m, d) => new Date(Date.UTC(y, m, d)).getUTCDay();
   const mdOf = (dt) => [dt.getMonth(), dt.getDate()];
 
   // seasons: the rule, the first and the last day, at the first and last second, 2026 to 2030 (2028 is a leap year)
   for (let y = 2026; y <= 2030; y++) {
-    const rules = { spring: [[3, 15], [5, 7]], summer: [[5, 15], [6, 10]], fall: [[8, 13], [10, 8]], winter: [[10, thanksgiving(y) + 1], [11, 8]] };
+    const rules = { spring: [[3, 15], [5, 7]], summer: [[5, 15], [6, 10]], fall: [[8, 13], [10, 8]], winter: [treeFirstDay(y), treeLastDay(y)] };
     for (const s of W.seasons.list) {
       const [[sm, sd], [em, ed]] = rules[s.id], st = mdOf(s.start(y)), en = mdOf(s.end(y));
       chk(st[0] === sm && st[1] === sd && en[0] === em && en[1] === ed, `${s.id} ${y}: starts ${st} ends ${en}`);
@@ -358,11 +361,11 @@ const SCENARIOS = [
   },
   async ({ browser, base, rec, errs }) => {
     let p, a, b;
-    p = await open(browser, base, 'index.html', errs, { time: '2026-11-26T23:59:20-05:00', timezoneId: 'Asia/Shanghai' });   // Thanksgiving night: the Christmas trees start on Friday
+    p = await open(browser, base, 'index.html', errs, { time: '2026-11-27T23:59:20-05:00', timezoneId: 'Asia/Shanghai' });   // the Friday night before the first tree Saturday (Saturday noon in Shanghai): the winter season starts at the farm's midnight
     a = await snap(p);
     await jump(p, 100);
     b = await snap(p);
-    rec('Shanghai, the night of Thanksgiving: at the farm\'s midnight the Christmas trees (winter) are "happening now"', a.fsNow[3] === false && b.fsNow[3] === true && b.badges[3] === true, JSON.stringify([a.fsNow, b.fsNow]));
+    rec('Shanghai, the Friday night before the first tree Saturday (Nov 27 at the farm): at the farm\'s midnight the Christmas trees (winter) are "happening now"', a.fsNow[3] === false && b.fsNow[3] === true && b.badges[3] === true, JSON.stringify([a.fsNow, b.fsNow]));
     await p.context().close();
   },
   async ({ browser, base, rec, errs }) => {

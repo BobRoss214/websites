@@ -40,9 +40,10 @@
 
   <!-- ================= ANNOUNCEMENT ================= -->
   <div data-ta-aria-label="t9598093b" class="announce" role="region" aria-label="Announcement">
-    <p data-t="tf45d455e"><span class="ann-season" data-ann-season data-no-i18n></span><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg>
-      <strong>The farm is reservation-only.</strong> The GreenHouse next door needs no reservation.
-      <a href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve your time <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    <p><span class="ann-season" data-ann-season data-no-i18n></span><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg>
+      <span data-t="ta8eeccae" data-only="spring summer fall"><strong>The farm is reservation-only.</strong> The GreenHouse next door needs no reservation.</span>
+      <a data-t="t108d546d" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve your time <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      <span data-t="t1dbd95b4" data-only="winter" hidden><strong>Christmas trees:</strong> the last weekend in November and the first weekend in December, Saturday and Sunday only (<span data-tree-dates>Nov 28&ndash;29 and Dec 5&ndash;6</span>). The farm and The GreenHouse are open then. No reservation needed.</span>
     </p>
   </div>
 
@@ -216,9 +217,9 @@
 
   <nav data-ta-aria-label="t82b6bfe1" class="action-bar" id="action-bar" aria-label="Quick actions">
     <a data-t="t8e6ed827" class="btn btn-red" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-calendar"/></svg> Reserve</a>
-    <a data-t="te149bcbe" class="btn btn-red" data-only="winter" hidden href="index.html#greenhouse"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> GreenHouse</a>
+    <a data-t="te149bcbe" class="btn btn-red" id="ab-gh" data-only="winter" hidden href="index.html#greenhouse"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> GreenHouse</a>
     <a data-t="t4b3f3cb5" class="btn btn-white" data-only="spring summer fall" href="https://www.google.com/maps/dir/?api=1&amp;destination=4701+Hartis+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
-    <a data-t="t4b3f3cb5" class="btn btn-white" data-only="winter" hidden href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
+    <a data-t="t4b3f3cb5" class="btn btn-white" id="ab-gh-dir" aria-labelledby="ab-gh-dir ab-gh" data-only="winter" hidden href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
     <a data-t="t64c30157" class="btn btn-white" href="mailto:cathy@wiseacresorganic.com"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg> Email</a>
   </nav>
 
@@ -384,6 +385,7 @@
   <script src="js/demo-data.js"></script>
   <script src="js/demo-store.js"></script>
   <script src="js/demo-ui.js"></script>
+  <script src="js/demo-live.js"></script>
   <script src="js/demo-pizza-editor.js"></script>
   <script src="js/demo-kitchen.js"></script>
 </body>

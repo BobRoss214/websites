@@ -114,4 +114,116 @@ const done = ask('q3', 'o1', 'accepted', {}, { reply: { by: 'kitchen', answer: '
 const c4 = K.buildModel({ ...state, requests: [done] }, MENU).cards.find((c) => c.id === 'o1');
 ok('an answered request leaves one line on the card and a short history with the times as written by the farm clock', c4.status === 'confirmed' && /said OK/.test(c4.req.last.text) && c4.req.trail.map((t) => t.at).join() === '9:00 am,9:30 am,10:05 am', JSON.stringify(c4.req.trail));
 
+/* ---------------------------------------------------------------- the tickets, the timers, the keys, the answers (the kitchen display) */
+const Store = require('../js/demo-store.js');
+ok('the counters\' clock: 125 seconds is 2:05, the last second shows 0:01 (rounded up), a wait is rounded down', K.fmtClock(125000) === '2:05' && K.fmtClock(1) === '0:01' && K.fmtClock(0) === '0:00' && K.fmtElapsed(125999) === '2:05' && K.fmtElapsed(999) === '0:00');
+const tm = (left, total = 180000) => K.timerOf(left, total);
+ok('the timer is green while more than half is left, amber from half down, red at 15 percent and below', tm(100000).stage === 'green' && tm(90000).stage === 'amber' && tm(28000).stage === 'amber' && tm(27000).stage === 'red' && tm(1000).stage === 'red');
+ok('its words: "1:40 left", and when the time is up "Late 0:45" (late by that much), late is true only at zero and below', tm(100000).text === '1:40 left' && tm(-45000).text === 'Late 0:45' && tm(-45000).late === true && tm(-45000).stage === 'red' && tm(1000).late === false && tm(0).late === true && tm(100000).pct > 0.5);
+ok('the bar never goes below empty or above full', tm(-9999).pct === 0 && tm(999999).pct === 1 && K.timerOf(5000, 0).pct === 0);
+const Mt = K.buildModel({ ...state, orders: [...orders, { ...order('o9', 'v1', '13:30', [line('cheese', 1)]), live: true, fam: 'Nora’s family', familyName: 'Nora’s family', num: 204, arrived: 5000 }, { ...order('o10', 'v1', '13:45', [line('cheese', 1)], { status: 'confirmed' }), live: true, base: true, familyName: 'Omar’s family' }] }, MENU);
+const T = K.ticketsOf(Mt, { orderSecs: 180, changeSecs: 120 }), tk = (id) => T.find((t) => t.id === id);
+ok('a change that waits is a ticket of the rail (key r:<request>, 2:00); a new order is one too (key o:<order>, 3:00)', tk('o1').zone === 'rail' && tk('o1').kind === 'change' && tk('o1').key === 'r:q1' && tk('o1').secs === 120 && tk('o2').zone === 'rail' && tk('o2').kind === 'order' && tk('o2').key === 'o:o2' && tk('o2').secs === 180);
+ok('the answer-by times come from the settings', K.ticketsOf(Mt, { orderSecs: 60, changeSecs: 30 }).filter((t) => t.zone === 'rail').every((t) => t.secs === (t.kind === 'change' ? 30 : 60)) && K.ticketsOf(Mt).find((t) => t.id === 'o2').secs === 180);
+ok('a confirmed order is Done (d:<order>); a suggestion that waits for the family is With the family (f:<request>)', tk('o3').zone === 'done' && tk('o3').key === 'd:o3' && K.ticketsOf(K.buildModel({ ...state, requests: [sug] }, MENU)).find((t) => t.id === 'o3').zone === 'family');
+ok('an order the pretend rush made already confirmed, only so a change could be asked for, is hidden until a change was answered', tk('o10').zone === 'hidden' && K.ticketsOf(K.buildModel({ ...state, orders: [{ ...orders[2], base: true }], requests: [ask('q8', 'o3', 'yes', {}, { created: '2026-11-03 09:00' })] }, MENU))[0].zone === 'done');
+ok('the big order number: the pretend rush gives its own (204), an order of the signed-in family is 100 plus its number (o1 is 101, o12 is 112)', tk('o9').num === 204 && tk('o1').num === 101 && K.orderNum({ id: 'o12', order: {} }) === 112);
+ok('the family is named in words: "Alex" is "Alex’s family", a name that says family stays as it is, nothing at all is "A family’s"', tk('o1').who === 'Alex’s family' && tk('o9').who === 'Nora’s family' && K.familyLabel('') === 'A family');
+ok('a pretend family does not get the signed-in family\'s allergy note or flags; the signed-in family does', tk('o9').allergies === '' && tk('o9').familyGlutenFree === false && tk('o1').allergies === 'Riley: peanuts' && tk('o1').familyGlutenFree === true);
+ok('a ticket knows when it arrived (the pretend rush writes it on the record; the signed-in family\'s has none: the screen notes when it first saw it)', tk('o9').arrived === 5000 && tk('o1').arrived === null && tk('o2').arrived === null);
+const items = [{ key: 'a', late: false, left: 50, seq: 0 }, { key: 'b', late: true, left: -5, seq: 1 }, { key: 'c', late: true, left: -40, seq: 2 }, { key: 'd', late: false, left: 10, seq: 3 }, { key: 'e', late: false, left: 10, seq: 4 }];
+ok('the rail: late tickets on top (the one most late first), then the soonest deadline, ties by arrival', K.railOrder(items).join() === 'c,b,d,e,a');
+ok('a ticket that turns late goes to the top, and stays above those that are not late', K.railOrder([{ key: 'x', late: false, left: 5, seq: 0 }, { key: 'y', late: false, left: 1, seq: 1 }]).join() === 'y,x' && K.railOrder([{ key: 'x', late: false, left: 5, seq: 0 }, { key: 'y', late: true, left: 0, seq: 1 }]).join() === 'y,x');
+ok('keep rolling: after an answer the next ticket below gets the focus, at the bottom the first of the rest, none when nothing is left', K.nextKey(['a', 'b', 'c'], 'a') === 'b' && K.nextKey(['a', 'b', 'c'], 'b') === 'c' && K.nextKey(['a', 'b', 'c'], 'c') === 'a' && K.nextKey(['a'], 'a') === null && K.nextKey([], 'a') === null && K.nextKey(['a', 'b'], 'zzz') === 'a');
+ok('the keys: 1 or Y is Yes, 2 or N is No, 3 or S (also T and E) is Another time, M mutes, the arrows move; no other key means anything', ['1', 'y', 'Y'].every((k) => K.actionForKey(k) === 'yes') && ['2', 'n', 'N'].every((k) => K.actionForKey(k) === 'no') && ['3', 's', 'S', 't', 'e'].every((k) => K.actionForKey(k) === 'later') && K.actionForKey('m') === 'mute' && K.actionForKey('ArrowDown') === 'down' && K.actionForKey('ArrowUp') === 'up' && ['4', 'a', 'Enter', ' ', '', null, undefined, 'constructor', '__proto__'].every((k) => K.actionForKey(k) === null));
+ok('the editor starts from the time the family asked for (a change) or the order\'s own time (a new order); +5 and -5 move it by 5 minutes and stay inside the day', K.startPickup(tk('o1')) === '14:30' && K.startPickup(tk('o2')) === '11:00' && K.moveTime('12:45', 10) === '12:55' && K.moveTime('12:45', -5) === '12:40' && K.moveTime('23:50', 15) === '23:55' && K.moveTime('00:02', -15) === '00:00');
+
+// answers, through a real store
+const TODAY = '2026-11-03';
+function world() {
+  const st = Store.create({ m: new Map(), getItem(k) { return this.m.has(k) ? this.m.get(k) : null; }, setItem(k, v) { this.m.set(k, String(v)); }, removeItem(k) { this.m.delete(k); } }, { now: () => ({ date: TODAY, time: '10:00' }) });
+  st.createAccount({ name: 'Alex', email: 'alex@example.com' });
+  const real = require('../js/demo-pizza-data.js');
+  const pz = Object.fromEntries(real.PIZZAS.map((m) => [m.id, m]));
+  const tickets = () => K.ticketsOf(K.buildModel({ orders: st.list('orders', { live: true }), visits: st.list('visits', { live: true }), requests: st.list('requests', { live: true }), family: st.get('family'), account: st.current() }, real.PIZZAS));
+  return { st, pz, tickets };
+}
+{
+  const w = world(), t = w.tickets()[0];
+  const bell = w.st.noticesFor('family').length;
+  const res = K.answerTicket(w.st, t, 'yes', {}, w.pz);
+  const n = w.st.noticesFor('family')[0];
+  ok('Yes to a new order of the signed-in family confirms it and tells the family (a notice that leads to My pizza)', res.ok && res.text === 'Order 101 confirmed for 3:00 pm.' && w.st.get('orders', 'o1').status === 'confirmed' && w.st.noticesFor('family').length === bell + 1 && /^The kitchen confirmed your pizza order for .* at 3:00 pm\.$/.test(n.text) && n.link === '#pizza');
+  ok('a second Yes changes nothing and says the order is already confirmed (two tabs, two pressers)', (() => { const again = K.answerTicket(w.st, t, 'yes', {}, w.pz); return !again.ok && again.closed && /already confirmed/.test(again.text) && w.st.noticesFor('family').length === bell + 1; })());
+}
+{
+  const w = world(), t = w.tickets()[0];
+  const res = K.answerTicket(w.st, t, 'later', { pickup: '15:15', note: 'The oven is full.' }, w.pz);
+  ok('Another time for a new order confirms it for the new time and the family hears both times and the note', res.ok && w.st.get('orders', 'o1').pickup === '15:15' && w.st.get('orders', 'o1').status === 'confirmed' && /at 3:15 pm instead of 3:00 pm\. The oven is full\.$/.test(w.st.noticesFor('family')[0].text) && /3:15 pm instead of 3:00 pm/.test(res.text));
+  const w2 = world(), t2 = w2.tickets()[0], bell = w2.st.noticesFor('family').length;
+  ok('No on a new order is not an answer (it can be confirmed or moved): nothing changes', (() => { const r = K.answerTicket(w2.st, t2, 'no', {}, w2.pz); return !r.ok && w2.st.get('orders', 'o1').status === 'new' && w2.st.noticesFor('family').length === bell; })());
+}
+{
+  const w = world(), o = w.st.get('orders', 'o1');
+  const ask1 = () => w.st.ask({ kind: 'pizza-change', to: 'kitchen', from: 'family', target: { coll: 'orders', id: 'o1' }, patch: { pizzas: o.pizzas, pickup: '14:30' }, summary: 'Earlier', note: 'Could it be earlier?' });
+  let q = ask1(), t = w.tickets()[0];
+  ok('a change that waits is the ticket of the rail, with the family\'s words and the table of what changes', t.kind === 'change' && t.req.id === q.id && t.req.note === 'Could it be earlier?' && t.req.asked.rows[0].to === '2:30 pm' && K.startPickup(t) === '14:30');
+  let r = K.answerTicket(w.st, t, 'yes', { note: 'See you' }, w.pz);
+  ok('Yes to a change: it goes into the order, the family is told with the note', r.ok && r.text === 'Order 101: Yes.' && w.st.get('orders', 'o1').pickup === '14:30' && w.st.get('requests', q.id).status === 'yes' && w.st.get('requests', q.id).reply.note === 'See you' && /said yes\. Note: See you/.test(w.st.noticesFor('family')[0].text));
+  w.st.update('orders', 'o1', { pickup: '15:00', status: 'new' });
+  q = ask1(); t = w.tickets()[0];
+  r = K.answerTicket(w.st, t, 'no', {}, w.pz);
+  ok('No to a change keeps the order as it was', r.ok && r.text === 'Order 101: No.' && w.st.get('orders', 'o1').pickup === '15:00' && w.st.get('requests', q.id).status === 'no');
+  q = ask1(); t = w.tickets()[0];
+  r = K.answerTicket(w.st, t, 'later', { pickup: '14:45', note: 'A little later?' }, w.pz);
+  const got = w.st.get('requests', q.id);
+  ok('Another time for a change sends the family a plan: the same pizzas at the new time, their words kept, in a plain sentence; the family has to say OK', r.ok && /another time, 2:45 pm, sent to the family/.test(r.text) && got.status === 'suggested' && got.suggestion.patch.pickup === '14:45' && got.suggestion.patch.pizzas.length === 2 && /Ready at 2:45 pm\.$/.test(got.suggestion.summary) && got.reply.note === 'A little later?' && w.st.get('orders', 'o1').pickup === '15:00');
+  const tf = w.tickets()[0];
+  ok('and the ticket leaves the rail and waits With the family', tf.zone === 'family' && tf.key === 'f:' + q.id);
+  w.st.cancel(q.id); q = ask1(); t = w.tickets()[0];
+  w.st.cancel(q.id);
+  r = K.answerTicket(w.st, t, 'yes', {}, w.pz);
+  ok('a change the family cancelled a moment ago: the answer says so and changes nothing', !r.ok && r.closed && /already closed/.test(r.text) && w.st.get('orders', 'o1').pickup === '15:00');
+}
+{
+  const w = world();
+  w.st.transact((st) => {
+    st.orders.push({ id: 'oL1', visitId: 'vL1', pickup: '12:30', pizzas: [{ type: 'cheese', count: 1, toppings: ['tomato sauce', 'cheese'], glutenFree: false, vegan: false }], notes: '', status: 'new', num: 201, familyName: 'Dana’s family', live: true, fam: 'Dana’s family', ev: 1, arrived: 0 });
+    return true;
+  });
+  const t = w.tickets().find((x) => x.live), bell = w.st.noticesFor('family').length;
+  const r = K.answerTicket(w.st, t, 'yes', {}, w.pz);
+  ok('Yes to a pretend family\'s order confirms it and makes no notice for the signed-in family', r.ok && r.text === 'Order 201 confirmed for 12:30 pm.' && w.st.get('orders', 'oL1').status === 'confirmed' && w.st.noticesFor('family').length === bell && w.st.noticesFor('kitchen').length === 0);
+}
+
+// the sound
+{
+  const log = { osc: 0, ctx: 0, resume: 0, start: 0 };
+  class AC { constructor() { log.ctx++; this.currentTime = 0; this.destination = {}; this.state = 'suspended'; }
+    createOscillator() { log.osc++; return { type: '', frequency: { value: 0 }, connect() {}, start() { log.start++; }, stop() {} }; }
+    createGain() { return { gain: { setValueAtTime() {}, linearRampToValueAtTime() {} }, connect() {} }; }
+    resume() { log.resume++; } }
+  const snd = K.makeSound({ AudioContext: AC });
+  snd.chime(); snd.beep();
+  ok('the sound is OFF until it is switched on: a chime or a beep makes nothing, and no audio is even opened', snd.supported() && !snd.isOn() && log.osc === 0 && log.ctx === 0);
+  snd.on();
+  ok('switching it on (a press) opens the audio, wakes it up and plays one soft note so the person hears that it works', snd.isOn() && log.ctx === 1 && log.resume === 1 && log.osc === 1 && log.start === 1);
+  const before = log.osc;
+  snd.chime();
+  const afterChime = log.osc;
+  snd.beep();
+  ok('a new ticket makes one soft chime (two notes), a late one one gentle beep (one note)', afterChime - before === 2 && log.osc - afterChime === 1 && log.ctx === 1);
+  snd.off();
+  const n = log.osc;
+  snd.chime(); snd.beep();
+  ok('muting stops it at once', !snd.isOn() && log.osc === n);
+  const none = K.makeSound({});
+  ok('a browser with no audio: the screen works, nothing is thrown, the button can say so', none.supported() === false && (none.on(), none.chime(), none.beep(), true));
+  const broken = K.makeSound({ AudioContext: class { constructor() { throw new Error('blocked'); } } });
+  ok('audio that refuses to open is not an error either', (broken.on(), broken.chime(), true));
+  ok('the beep repeats every 7 seconds while a ticket is late (the page\'s own timer)', K.BEEP_EVERY === 7000);
+}
+const keySrc = fs.readFileSync(path.join(ROOT, 'js/demo-kitchen.js'), 'utf8');
+ok('no inline handlers, no innerHTML, no storage in the kitchen script; the family\'s words only ever go in as text', !/\bon[a-z]+\s*=\s*["']/.test(keySrc.replace(/'on'/g, '')) && !/innerHTML|outerHTML|insertAdjacentHTML/.test(keySrc) && !/localStorage|sessionStorage|indexedDB|cookie/i.test(keySrc));
+
 await finish({});

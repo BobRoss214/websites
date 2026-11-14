@@ -37,7 +37,7 @@ const SYMBOLS = {
 
 /* ---- orders to the page maker that are in the list's own words; the phrases must still be in the list, or this stops */
 const RULES = {
-  pizza: { needs: [/LINK to the existing page wise-pie\.html/, /Opening hours may show in this group/], set: { linkTo: 'wise-pie.html', hoursOk: ['10 am', '8 pm'] } },   // the hours of the farm's older page (see OLD_FACTS): no other clock time in the pizza group
+  pizza: { needs: [/LINK to the existing page wise-pie\.html/, /Opening hours may show in this group/], set: { linkTo: 'wise-pie.html', hoursOk: ['10 am', '11 am', '8 pm'] } },   // the hours of the farm's older page (see OLD_FACTS: 10 am and 8 pm) and the winter hours of the tree weekends (the builder's words of 10 Nov 2026: 11 am and 8 pm): no other clock time in the pizza group
   'christmas-tree': { needs: [/keep the page's existing wording only/], set: { noNewDates: true } },
 };
 

@@ -7,7 +7,11 @@
  * Plain JavaScript, no libraries. It loads in the browser (window.DemoStore) and in Node (module.exports), and  DemoStore.create(storage, options)  makes a store
  * on any storage that has getItem / setItem / removeItem, so tests can pass a fake one. If the storage is blocked or full the store carries on in memory.
  * Every method is synchronous and returns plain objects (copies: changing one never changes the state). Every change calls the subscribers.
- * Dates are 'YYYY-MM-DD', times 'HH:MM', the farm's own clock. The names and shapes are listed in docs/ACCOUNT_DEMO.md. */
+ * Dates are 'YYYY-MM-DD', times 'HH:MM', the farm's own clock. The names and shapes are listed in docs/ACCOUNT_DEMO.md.
+ *
+ * The PRETEND RUSH (js/demo-live.js) keeps pretend families in the same lists: a record with  live: true  (and  fam: "Dana's family")  belongs to one of them, not to the
+ * signed-in family. The family's own screens never see these records: list(), openRequests(), threadsWaiting() leave them out unless the last argument is { live: true }
+ * (the desk and the kitchen ask for them), and a live record never makes a notice in the family's bell. The engine's own bookkeeping is the object  live  (get('live')). */
 (function () {
   'use strict';
 
@@ -15,7 +19,7 @@
 
   var KEY = 'wa-demo-v1';
   var LISTS = { visits: 'v', orders: 'o', requests: 'r', messages: 'm', notices: 'n', reviews: 'rv', photos: 'p', events: 'e', waitlist: 'w' };   // the id prefixes
-  var OBJECTS = { family: 1, alerts: 1 };                                  // one object each
+  var OBJECTS = { family: 1, alerts: 1, live: 1 };                         // one object each (live: the bookkeeping of the pretend rush, js/demo-live.js)
   var KIND_LINK = { 'visit-change': '#visits', 'pizza-change': '#pizza', 'event-change': '#event' };   // where a notice about a request leads
   var SIDES = { cathy: 1, kitchen: 1 };
 
@@ -27,7 +31,7 @@
     return {
       v: 1, accounts: [], session: null,
       visits: [], orders: [], requests: [], messages: [], notices: [], reviews: [], photos: [], events: [], waitlist: [],
-      family: {}, alerts: {}, closedDays: [], flags: {}
+      family: {}, alerts: {}, live: {}, closedDays: [], flags: {}
     };
   }
 
@@ -76,6 +80,7 @@
       var st = null;
       if (raw) { try { st = JSON.parse(raw); } catch (e) { st = null; } }
       if (!st || typeof st !== 'object' || st.v !== 1) st = empty();
+      if (!st.live || typeof st.live !== 'object') st.live = {};   // a state saved before the pretend rush existed
       cache = { raw: raw, state: st };
       return st;
     }
@@ -127,6 +132,7 @@
           st.orders.forEach(function (o) {
             if (o.visitId === rec.id && o.pickup === Data.defaultPickup(oldTime)) {
               o.pickup = Data.defaultPickup(rec.time);
+              if (rec.live) return;   // a pretend family (the rush): no notices
               noteTo(st, 'family', 'Your pizza pick-up moved to ' + Data.time12(o.pickup) + ', 1 hour after your visit.', '#pizza');
               noteTo(st, 'kitchen', 'Pick-up moved to ' + Data.time12(o.pickup) + ' because the visit moved.', '');
             }
@@ -140,6 +146,8 @@
       var n = now(), s = Data.sample(n.date, n.time, eventKind);
       Object.keys(s).forEach(function (k) { st[k] = clone(s[k]); });
       st.flags = { sampleNote: true };
+      var L = st.live || {};   // the pretend families went with the old lists: the run starts again, the person's choices stay
+      st.live = { on: L.on, speed: L.speed, settings: L.settings };
     }
     function accountOf(st) { return st.session ? (st.accounts.filter(function (a) { return a.email === st.session; })[0] || null) : null; }
     var normEmail = function (e) { return trim(e).toLowerCase(); };
@@ -197,12 +205,17 @@
       });
     }
     function reset() { io.remove(); cache = null; changed(); return true; }
+    // transact(fn): runs fn(state) on a private copy of the whole state; what fn returns is saved (unless it is undefined: then nothing is saved) and the subscribers are told.
+    // Made for the pretend rush (js/demo-live.js), which makes several records at once; nothing else should need it.
+    function transact(fn) { return edit(fn); }
 
     /* ---------------- lists and single objects ---------------- */
-    function list(coll) {
+    // list(coll[, { live: true }]): the family's own records; with { live: true } also the pretend families' ones (the desk and the kitchen read them so).
+    function list(coll, opts) {
       var st = read();
       if (coll === 'closedDays') return clone(st.closedDays);
-      return LISTS[coll] ? clone(st[coll]) : [];
+      if (!LISTS[coll]) return [];
+      return clone(opts && opts.live ? st[coll] : st[coll].filter(function (r) { return !r.live; }));
     }
     function get(coll, id) {
       var st = read();
@@ -255,8 +268,8 @@
     function requestsFor(coll, id) {   // every request about one visit or order, oldest first
       return clone(read().requests.filter(function (q) { return q.target && q.target.coll === coll && q.target.id === id; }));
     }
-    function openRequests(to) {        // the requests a side has to answer (status waiting), oldest first; no argument: both sides
-      return clone(read().requests.filter(function (q) { return q.status === 'waiting' && (!to || q.to === to); }));
+    function openRequests(to, opts) {  // the requests a side has to answer (status waiting), oldest first; no side: both sides; { live: true }: the pretend families' too
+      return clone(read().requests.filter(function (q) { return q.status === 'waiting' && (!to || q.to === to) && (!q.live || (opts && opts.live)); }));
     }
     function linkFor(q) { return KIND_LINK[q.kind] || '#visits'; }
     function hist(q, w, text) { q.history.push({ at: stampNow(), who: w, text: text }); q.updated = stampNow(); }
@@ -302,7 +315,7 @@
         } else return undefined;
         q.reply = { by: q.to, answer: r.answer, note: note, at: stampNow() };
         hist(q, q.to, text);
-        noteTo(st, 'family', text, linkFor(q));
+        if (!q.live) noteTo(st, 'family', text, linkFor(q));
         return q;
       });
     }
@@ -315,10 +328,10 @@
           var rec = find(st[q.target.coll] || [], q.target.id);
           if (rec) { merge(st, q.target.coll, rec, q.suggestion.patch); if (q.target.coll === 'orders') rec.status = 'confirmed'; }
           q.status = 'accepted'; hist(q, 'family', 'You said OK to the new plan.');
-          noteTo(st, q.to, 'The family said OK to your new plan: ' + (q.suggestion.summary || q.summary), '');
+          if (!q.live) noteTo(st, q.to, 'The family said OK to your new plan: ' + (q.suggestion.summary || q.summary), '');
         } else if (how === 'decline') {
           q.status = 'declined'; hist(q, 'family', 'You said no thanks and kept things as they were.');
-          noteTo(st, q.to, 'The family said no thanks to your new plan.', '');
+          if (!q.live) noteTo(st, q.to, 'The family said no thanks to your new plan.', '');
         } else return undefined;
         return q;
       });
@@ -328,7 +341,7 @@
         var q = find(st.requests, id);
         if (!q || (q.status !== 'waiting' && q.status !== 'suggested')) return undefined;
         q.status = 'cancelled'; hist(q, 'family', 'You cancelled your request.');
-        noteTo(st, q.to, 'The family cancelled a request: ' + (q.summary || q.kind), '');
+        if (!q.live) noteTo(st, q.to, 'The family cancelled a request: ' + (q.summary || q.kind), '');
         return q;
       });
     }
@@ -338,16 +351,21 @@
       text = trim(text);
       if (!threadId || !text || (from !== 'family' && from !== 'cathy')) return null;
       return edit(function (st) {
-        var m = addRec(st, 'messages', { thread: threadId, from: from, text: text, at: stampNow() });
+        var first = null;   // the first message of the thread: when it is a pretend family's (the rush), the answer is too and makes no notice
+        for (var i = 0; i < st.messages.length && !first; i++) if (st.messages[i].thread === threadId) first = st.messages[i];
+        var pretend = !!(first && first.live), rec = { thread: threadId, from: from, text: text, at: stampNow() };
+        if (pretend) { rec.live = true; rec.fam = first.fam; rec.ev = first.ev; }   // the reply ages out of the rush's window together with its question
+        var m = addRec(st, 'messages', rec);
+        if (pretend) return m;
         if (from === 'cathy') noteTo(st, 'family', 'Mrs. Cathy wrote: ' + short(text), /^event-/.test(threadId) ? '#event' : '#messages');
         else noteTo(st, 'cathy', 'New message from the family: ' + short(text), '');
         return m;
       });
     }
     function thread(threadId) { return clone(read().messages.filter(function (m) { return m.thread === threadId; })); }
-    function threadsWaiting() {   // the threads whose last message is from the family (Mrs. Cathy has not answered yet)
+    function threadsWaiting(opts) {   // the threads whose last message is from the family (Mrs. Cathy has not answered yet); { live: true }: the pretend families' too
       var last = {}, order = [];
-      read().messages.forEach(function (m) { if (!last[m.thread]) order.push(m.thread); last[m.thread] = m; });
+      read().messages.forEach(function (m) { if (m.live && !(opts && opts.live)) return; if (!last[m.thread]) order.push(m.thread); last[m.thread] = m; });
       return clone(order.filter(function (t) { return last[t].from === 'family'; }).map(function (t) { return { thread: t, last: last[t] }; }));
     }
     function postNotice(text, link, to) {   // a notice in the bell of one side (the family by default); not called notify: that is also the name of a browser property
@@ -370,6 +388,7 @@
         st.visits.forEach(function (v) {
           if (v.date !== date) return;
           v.closed = true; v.closedReason = reason; n++;
+          if (v.live) return;
           noteTo(st, 'family', 'The farm is closed on ' + Data.dateLong(date) + ' because of ' + reason + '. Pick a new day for your visit.', '#visits');
         });
         return { date: date, reason: reason, visits: n };
@@ -384,6 +403,7 @@
         st.visits.forEach(function (v) {
           if (v.date !== date || !v.closed) return;
           v.closed = false; v.closedReason = ''; n++;
+          if (v.live) return;
           noteTo(st, 'family', 'Good news: the farm is open again on ' + Data.dateLong(date) + '. Your visit is on.', '#visits');
         });
         return { date: date, visits: n };
@@ -460,6 +480,8 @@
         var r = find(st[coll], id);
         if (!r || r.status !== 'waiting') return undefined;
         r.status = ok ? 'approved' : 'declined';
+        r.decided = stampNow();   // the desk counts "answered today" from this
+        if (r.live) return r;
         noteTo(st, 'family', ok ? 'Mrs. Cathy approved your ' + words + '. It shows under "Shared with the farm (demo)".' : 'Mrs. Cathy is not sharing your ' + words + ' right now.', '#photos');
         return r;
       });
@@ -486,7 +508,7 @@
     }
 
     return {
-      createAccount: createAccount, signIn: signIn, signOut: signOut, current: current, hasAccount: hasAccount, reset: reset, seedSample: seedSample, addEvent: addEvent,
+      createAccount: createAccount, signIn: signIn, signOut: signOut, current: current, hasAccount: hasAccount, reset: reset, seedSample: seedSample, addEvent: addEvent, transact: transact,
       list: list, get: get, add: add, update: update, remove: remove, getFamily: getFamily, setFamily: setFamily, flag: flag, setFlag: setFlag,
       ask: ask, reply: reply, respond: respond, cancel: cancel, openRequestFor: openRequestFor, requestsFor: requestsFor, openRequests: openRequests,
       post: post, thread: thread, threadsWaiting: threadsWaiting, postNotice: postNotice, noticesFor: noticesFor, markRead: markRead, markAllRead: markAllRead,

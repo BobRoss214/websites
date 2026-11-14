@@ -464,8 +464,10 @@
   const SETTING_NAMES = {
     '': ['seasonPicker', 'reviews', 'analytics', 'notice', 'noticeUntil', 'closures', 'hours', 'week', 'signup', 'reviewUrl', 'community', 'farmPoint', 'entrancePhoto', 'photos'],
     hours: ['greenhouse', 'pizza', 'farm'],
-    'hours.greenhouse': ['days', 'open', 'close'],
-    'hours.pizza': ['days', 'open', 'close'],
+    'hours.greenhouse': ['days', 'open', 'close', 'winter'],
+    'hours.greenhouse.winter': ['days', 'open', 'close'],
+    'hours.pizza': ['days', 'open', 'close', 'winter'],
+    'hours.pizza.winter': ['days', 'open', 'close'],
     'hours.farm': ['spring', 'summer', 'fall', 'winter'],
     week: ['updated', 'expireDays', 'note', 'crops', 'days', 'waitlistEmail', 'feed', 'demo'],
     signup: ['action', 'interests', 'tags', 'languageField', 'demo'],
@@ -537,8 +539,7 @@
   function checkHours() {
     const h = W.hours;
     if (!h || typeof h !== 'object') return;   // missing hours: reported with the other failures of js/content.js
-    ['greenhouse', 'pizza'].forEach((place) => {
-      const sch = h[place];
+    const checkSchedule = (sch, place) => {   // place: 'greenhouse', 'pizza', or 'greenhouse.winter' (the Christmas tree weekends)
       if (sch == null) return;   // not given: no badge for it
       if (typeof sch !== 'object' || Array.isArray(sch)) { warn('hours.' + place + ' must look like { days: [5, 6, 0], open: \'10:00\', close: \'20:00\' }.'); return; }
       const ok = {};
@@ -554,7 +555,13 @@
         warn('hours.' + place + ' closes at ' + hhmmOf(ok.close) + ' but opens at ' + hhmmOf(ok.open) + '. close must be later than open on the 24-hour clock (8 pm is \'20:00\').' + maybe + ' Hours past midnight are not supported: the badge would never show open.');
       }
       if (sch.days !== undefined) checkDays(sch.days, 'hours.' + place + '.days');
-    });
+      if (place.indexOf('.') < 0 && sch.winter != null) {   // the hours of the Christmas tree weekends; Wise Pie may say 'greenhouse': the same hours as The GreenHouse
+        if (place === 'pizza' && sch.winter === 'greenhouse') return;
+        if (typeof sch.winter !== 'object' || Array.isArray(sch.winter)) warn('hours.' + place + '.winter must look like { days: [6, 0], open: \'11:00\', close: \'20:00\' }' + (place === 'pizza' ? ", or 'greenhouse' (the same hours as The GreenHouse)" : '') + '.');
+        else checkSchedule(sch.winter, place + '.winter');
+      }
+    };
+    ['greenhouse', 'pizza'].forEach((place) => checkSchedule(h[place], place));
     if (h.farm && typeof h.farm === 'object' && !Array.isArray(h.farm)) Object.keys(h.farm).forEach((season) => { if (['spring', 'summer', 'fall', 'winter'].indexOf(season) >= 0) checkDays(h.farm[season], 'hours.farm.' + season); });
     else if (h.farm != null) warn('hours.farm must look like { fall: [4, 5, 6, 0] }: a list of day numbers for each season (' + DAY_NUMBERS + ').');
   }
@@ -695,7 +702,7 @@
     { id: 'pumpkins', name: T('Pumpkins'), icon: 'pumpkin', vb: '0 0 110 92', wins: seasonRange('fall') },
     { id: 'tomatoes', name: T('Tomatoes & basil'), icon: 'tomato', vb: '0 0 64 64', color: '#e5334b', wins: (y) => [[new Date(y, 8, 13), new Date(y, 10, 8)]] },   // the same days as the fall season in js/season.js
     { id: 'flowers', name: T('U-cut flowers'), icon: 'bloom', vb: '0 0 60 60', color: '#e0509c', wins: (y) => [...seasonRange('spring')(y), ...seasonRange('summer')(y), [new Date(y, 8, 1), new Date(y, 10, 8)]] },   // spring and summer picking, then September until the first frost
-    { id: 'trees', name: T('Christmas trees'), icon: 'fir', vb: '0 0 80 110', wins: seasonRange('winter'), where: T('At The GreenHouse') },
+    { id: 'trees', name: T('Christmas trees'), icon: 'fir', vb: '0 0 80 110', wins: (y) => W.seasons.treeWeekends(y).map((w) => [w.start, w.end]), where: T('At The GreenHouse') },   // the two tree weekends, Saturday and Sunday only (js/season.js), not the days between them and never a Friday
   ];
   const OVERRIDE_LABEL = { soon: T('Coming soon'), starting: T('Just starting'), peak: T('Peak picking'), ending: T('Winding down') };
   const AVAIL_LABEL = { open: T('Spots open'), few: T('A few spots left'), full: T('Full'), closed: T('Closed') };
@@ -974,7 +981,7 @@
   const driveSpots = {};   // the two places once found
   let driveFrom = null;    // the visitor's last address that was found, so asking for the other place needs no second search
   let driveBusy = false;   // one lookup at a time, whichever box asked
-  // like the rest of the site: The GreenHouse is the place to go in winter (the farm is closed), the farm the rest of the year
+  // like the rest of the site: The GreenHouse is the place to go in winter (the Christmas trees are there), the farm the rest of the year
   const seasonTo = () => ((W.seasons.active || W.seasons.current()) === 'winter' ? 'greenhouse' : 'farm');
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   async function getJson(url, ms, soft) {   // soft: an answer with HTTP status 400 is still read (OSRM sends 400 with code NoRoute or NoSegment)

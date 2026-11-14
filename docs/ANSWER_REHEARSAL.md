@@ -28,12 +28,12 @@ The answer used in each replay is an example (for example a price of $35, a clos
 
 ## What was tried, and what was not
 
-The playbook has 250 answers (the 92 questions d01 to d92). 111 were replayed. 139 were not:
+The playbook has 250 answers (the 92 questions d01 to d92). 110 were replayed. 140 were not:
 
 | Not replayed | Answers | Why |
 |---|---|---|
 | No change (the answer leaves the files as they are) | 86 | Nothing to do, so nothing to try. |
-| A code change only Claude can make | 23 | The entry gives the owner no file steps to follow (d08 A, d09 B and C, d10 C, d32 A, d46 C, d48 C, d50 C, d59 A, d64 B and C, d67 B, d68 C, d69 A, d70 B, d72 A and B, d78 B, d81 A, d82 A, d86 C, d88 C, d90 B). |
+| A code change only Claude can make | 24 | The entry gives the owner no file steps to follow (d08 A, d09 B and C, d10 C, d32 A, d46 C, d48 C, d50 B and C, d59 A, d64 B and C, d67 B, d68 C, d69 A, d70 B, d72 A and B, d78 B, d81 A, d82 A, d86 C, d88 C, d90 B). |
 | An optional patch | 9 | `node tests/run-all.mjs option-patches` tries them (d01 A and B, d05 A and C, d24 B, d25 A, d30 A, d88 B, d89 A). Four more, d65 C and D, d68 A and d86 B, are replayed (see "Optional patches"). |
 | Her own words or numbers, the same steps as another answer | 16 | d07 C, d26 C, d37 B, d45 C, d53 C, d58 C, d74 C, d75 C, d76 C, d78 C, d90 C, d91 B and C, d92 B and C, and d31 A (the optional credit: as d61 B). |
 | The same kind of edit as another answer, in many sentences | 2 | d79 B and d80 B: about eight and about twenty sentences, found by the consistency test, like d51 B. |
@@ -90,7 +90,7 @@ The first full pass found these. Each one is now fixed in the words of `docs/DEC
 | d39 A (Rd) | Tests: none. | The QR signs check wants the directions sign to say "Road" while the structured data says "Rd". The sign also has its words in the Hindi, Chinese and Vietnamese lines. | The test change, and all five languages of the sign. |
 | d39 B (Road) | "Keep the map links equal to the Business Profile." | 17 places in four files carry "Hartis+Rd" or "Hartis%20Rd". The consistency check "directions links" fails on them. The JS strings are 1, not 2. | Every place, with its count. |
 | d45 B (infants only) | Give the free-age fact a new pattern. | The wagon ride line ("Ages N and younger ride free") was read by the same fact: two answers when the two ages differ. The pizza package pattern reads "(ages 3+)". | The wagon ride has its own fact now (`age: wagon ride free`); the second pattern is named. |
-| d50 B (tree dates) | Change the words and the dates. | The test has the word "early December" and the bar's range written in; the bar was not mentioned. Which word goes with which day was nowhere. | Early is day 1 to 10, mid 11 to 20, late 21 on; the bar number and the two test lines. |
+| d50 B (tree dates; replayed until 10 Nov 2026, since then the dates are worked out from a rule and B is a code change) | Change the words and the dates. | The test has the word "early December" and the bar's range written in; the bar was not mentioned. Which word goes with which day was nowhere. | Early is day 1 to 10, mid 11 to 20, late 21 on; the bar number and the two test lines. |
 | d51 B (hours) | About 25 sentences, for example these. | Two table rows ("4 pm - 8 pm" in the pizza ways table) are not on the list. The consistency test names them, which is the way the entry says to find the rest. | The two are listed. |
 | d52 B (other e-mail) | 9 ids. | Only 6 contain the address. Three say "Cathy" in words. | 6 ids, and what the other three are. |
 | d07 A, d61 B (strings) | 5 ids; 0 strings. | Two ids end as the same words (4 new sentences). A new photo caption is 1 JS string. | Corrected. |
@@ -178,7 +178,6 @@ One browser test for each answer that changes live text or a date (the first tes
 | d48 B | farm-seasons | pass |
 | d48 D | languages | pass |
 | d49 A | languages | pass |
-| d50 B | dated | pass |
 | d51 B | live | pass |
 | d52 B | messages | pass |
 | d53 B | languages | pass |

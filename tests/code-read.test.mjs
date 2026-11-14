@@ -70,14 +70,19 @@ await run('code-read', async ({ browser, base, errs }) => {
   ok('...the red "today" line in the year calendar moved to Sep 13', after.cal !== before.cal && Math.abs(parseFloat(after.cal) - (8 + 12 / 30) / 12) < 0.0002, before.cal + ' -> ' + after.cal);
   await night.context().close();
 
-  /* ...and "This season" on the farm picker's note, which follows the season that is closest (Jun 11 -> 12: spring stops being the closest, summer starts to be). */
-  const june = await open(browser, base, 'index.html', errs, { time: '2026-06-11T23:58:00-04:00' });
+  /* ...and "This season" on the farm picker's note, which is only for a season that is really in progress (the Now mark follows the same rule): on the days between
+   * seasons the picker opens on the season that starts next, and says nothing about "this season" (Jun 7 is the last day of spring, Jun 15 the first of summer). */
+  const june = await open(browser, base, 'index.html', errs, { time: '2026-06-07T23:58:00-04:00' });
   const thisSeason = () => june.evaluate(() => [...document.querySelectorAll('[data-fs-note]')].filter((n) => !n.hidden && !n.querySelector('.fs-this').hidden).map((n) => n.dataset.fsNote));
   const sel = () => june.evaluate(() => [...document.querySelectorAll('.fs-btn[data-fs]')].filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.dataset.fs));
-  ok('Jun 11 11:58 pm: the farm picker is on Spring and says "This season" there', (await sel()).join() === 'spring' && (await thisSeason()).join() === 'spring', JSON.stringify([await sel(), await thisSeason()]));
-  await june.evaluate(() => document.querySelector('.fs-btn[data-fs="summer"]').click());
+  ok('Jun 7 11:58 pm (the last day of spring): the farm picker is on Spring and says "This season" there', (await sel()).join() === 'spring' && (await thisSeason()).join() === 'spring', JSON.stringify([await sel(), await thisSeason()]));
   await june.clock.runFor(150000);
-  await okSoon('after midnight, with Summer showing: its note now says "This season"', thisSeason, (a) => a.join() === 'summer', 10000);
+  await okSoon('after midnight (Jun 8, between spring and summer): Spring is over, so its note no longer says "This season"', thisSeason, (a) => a.length === 0, 10000);
+  await june.evaluate(() => document.querySelector('.fs-btn[data-fs="summer"]').click());
+  ok('...and Summer, which has not started (it starts Jun 15), does not say it either', (await sel()).join() === 'summer' && (await thisSeason()).length === 0, JSON.stringify([await sel(), await thisSeason()]));
+  await june.clock.setSystemTime(new Date('2026-06-14T23:58:00-04:00'));
+  await june.clock.runFor(150000);
+  await okSoon('after midnight on Jun 15 (summer starts), with Summer showing: its note now says "This season"', thisSeason, (a) => a.join() === 'summer', 10000);
   await june.context().close();
 
   /* The pizza calendar entry (the .ics file and the Google Calendar link) of a schedule row that has no second cell (the "Oct 9-11" cell): no dates, so no "for  open at". */

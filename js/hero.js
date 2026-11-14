@@ -713,23 +713,25 @@
   const FIRES = [{ x: 560, y: 458, s: 1 }, { x: 890, y: 452, s: 0.94 }];   // kept clear of the picking card (bottom left) and the snowman (right)
   const SNOWMAN = { x: 1236, y: 512 };   // where winterFore stands him; he fills about 118 units of width (his arms 175)
 
-  // Rows of trees planted on the snow lanes, evenly stepped toward the viewer; every other row is shifted
-  // half a step over, so each tree peeks between two in front. Clearings are left around the campfires and the snowman.
+  // Rows of trees planted on the snow lanes, evenly stepped toward the viewer; each row is shifted over by its own part of a step (TREE_SHIFT), so that a tree does not stand right behind another
+  // one (with every other row half a step over, the trees of the rows at 0.4, 0.52 and 0.65 stood in a line from the back to the front and a back tree was 80 % behind the ones in front: with
+  // these shifts no tree of the lot is more than 40 % behind others, as the drawing's cone is measured in tests/hero.test.mjs). Clearings are left around the campfires and the snowman.
   // The trees are 1.5 times as tall and wide as they first were (TREE_SIZE: a tree of row t is 1.5 * (18 + 188 t) units tall and 0.727 of that wide, 64 x 46 at the back and 210 x 153 at the front)
-  // and stand 1.5 times as far apart (TREE_STEP: every 1.5th lane, every 3rd in the two rows at the back), so the lot looks as it did, with fewer and bigger trees: the same gap between neighbours
-  // and each tree still seen between two in front. The tap area of a tree is its picture and a tenth more, so it grew with it. 16 trees can be lit (it was 22: the count is in
-  // docs/QUESTIONS_FOR_THE_FARM.md, question 64, and in tests/hero.test.mjs) and 7 far ones are only drawn.
+  // and stand 1.5 times as far apart (TREE_STEP: every 1.5th lane, every 3rd in the two rows at the back), so the lot looks as it did, with fewer and bigger trees. The tap area of a tree is its picture
+  // and a tenth more, so it grew with it. 16 trees can be lit (it was 22: the count is in docs/QUESTIONS_FOR_THE_FARM.md, question 64, and in tests/hero.test.mjs) and 7 far ones are only drawn.
   const TREE_ROWS = [0.13, 0.2, 0.29, 0.4, 0.52, 0.65];
-  const TREE_SIZE = 1.5, TREE_STEP = 1.5;
-  // A tree is left out where a fire burns (the flames reach 84 units up, the stones 62 to each side of the fire, and a tree is as wide as its picture) and in front of the snowman's body.
-  const inTheWay = (x, y, w) => FIRES.some((f) => y > f.y - 84 * f.s && Math.abs(x - f.x) < 62 * f.s + w / 2) || Math.abs(x - SNOWMAN.x) < 59 + w * 0.3;
+  const TREE_SIZE = 1.5, TREE_STEP = 1.5, TREE_SHIFT = [0, 0.5, 0.5, 0, 0.125, 0.375], WHOLE = 580;
+  // A tree is left out where a fire burns (the flames reach 84 units up, the stones 62 to each side of the fire, and a tree is as wide as its picture), in front of the snowman's body, and where a window
+  // as high as it is wide would cut it: 1280 x 1024 shows the middle 1182 of the picture's 1440 units (129 to 1311), a smaller one about as much when its hero grows with the words, so a tree
+  // has to stand whole inside the WHOLE units (580) on each side of the middle.
+  const inTheWay = (x, y, w) => FIRES.some((f) => y > f.y - 84 * f.s && Math.abs(x - f.x) < 62 * f.s + w / 2) || Math.abs(x - SNOWMAN.x) < 59 + w * 0.3 || Math.abs(x - 720) + w / 2 > WHOLE;
   function winterField() {
     let out = `<path d="${groundPath()}" fill="#f5f9fd" stroke="#c9dcef" stroke-width="3"/>`;
     out += rowPolys(range(-5, 5), { fill: '#e6f0f9', inner: '#ffffff', hw: 60, innerHw: 28, innerOpacity: 0.7 });
     TREE_ROWS.forEach((t, r) => {
       const h = TREE_SIZE * (18 + 188 * t), w = h * 0.727, y = rowY(t), far = t < 0.25, step = (far ? 2 : 1) * TREE_STEP;
       for (let n = -9; n <= 9; n++) {
-        const k = (n + (r % 2 ? 0.5 : 0)) * step;   // the middle lane and every step from it; odd rows sit half a step over
+        const k = (n + TREE_SHIFT[r]) * step;   // the middle lane and every step from it, this row's part of a step over
         if (Math.abs(k) > 5) continue;   // the snow lanes of the field run from -5 to 5
         const x = rowX(k, t);
         if (!inTheWay(x, y, w)) out += tree(x, y, w, h, far ? 'plain' : 'pick');
@@ -1247,7 +1249,7 @@
    * Build a season
    * ------------------------------------------------------------------ */
   // data-only="fall winter": shown only while one of those seasons is on screen. Add data-in-season to show it only
-  // while that season is really happening (not in the weeks before or after, when the nearest season is shown).
+  // while that season is really happening (not in the weeks between seasons, when the season that starts next is shown).
   // data-out-of-season="spring" is the opposite: hidden while that season is really happening ("Tell me when it opens").
   function applyOnly(id) {
     const now = W.seasons.live().map((s) => s.id), live = now.includes(id);
@@ -1300,8 +1302,8 @@
       W.seasons.apply(id);
       try { build(id); } catch (e) { setTimeout(() => { throw e; }); }   // a drawing problem must not leave the wrong season's words and buttons
       applyOnly(id);
-      // Between seasons the scene shows the nearest one, but its line ("It's strawberry season!") would not be true yet
-      // (or any more), so the all-year line is shown instead. A season picked with the switcher still shows its own line.
+      // Between seasons the scene shows the season that starts next, but its line ("It's strawberry season!") would not be true yet,
+      // so the all-year line is shown instead. A season picked with the switcher still shows its own line.
       if (!userAction && !W.seasons.live().some((s) => s.id === id)) {
         $$('.hero-sub').forEach((p) => { p.hidden = p.dataset.only !== 'no-js'; });
         $$('#hero-h > [data-only]').forEach((s, i) => { s.hidden = i > 0; });   // the first title is the all-year one
@@ -1319,10 +1321,10 @@
     const markTags = () => {
       $$('.ss-now, .ss-next', switchEl).forEach((n) => n.remove());
       if (!W.clockOk()) return;   // no readable clock: no tags
-      const on = W.seasons.live()[0], up = W.seasons.upcoming();
+      const tag = W.seasons.tags();   // js/season.js: { now: the season in progress, next: the one that starts next }
       buttons.forEach((b) => {
-        if (on && b.dataset.season === on.id) b.insertAdjacentHTML('beforeend', '<span class="ss-now">' + t('now') + '</span>');
-        else if (up && b.dataset.season === up.id) b.insertAdjacentHTML('beforeend', '<span class="ss-next">' + t('next') + '</span>');
+        if (b.dataset.season === tag.now) b.insertAdjacentHTML('beforeend', '<span class="ss-now">' + t('now') + '</span>');
+        else if (b.dataset.season === tag.next) b.insertAdjacentHTML('beforeend', '<span class="ss-next">' + t('next') + '</span>');
       });
     };
     markTags();
