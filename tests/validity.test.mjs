@@ -164,7 +164,7 @@ animation-timing-function appearance aspect-ratio backdrop-filter backface-visib
 background-position-x background-position-y background-repeat background-size border border-block border-block-end border-block-start border-bottom border-bottom-color border-bottom-left-radius border-bottom-right-radius
 border-bottom-style border-bottom-width border-collapse border-color border-image border-inline border-inline-end border-inline-start border-left border-left-color border-left-style border-left-width border-radius border-right
 border-right-color border-right-style border-right-width border-spacing border-style border-top border-top-color border-top-left-radius border-top-right-radius border-top-style border-top-width border-width bottom box-decoration-break
-box-shadow box-sizing break-after break-before break-inside caption-side caret-color clear clip clip-path color color-scheme column-count column-gap column-rule columns container container-name container-type content content-visibility
+box-shadow box-sizing break-after break-before break-inside caption-side caret-color clear clip clip-path color color-scheme column-count column-gap column-rule column-span columns container container-name container-type content content-visibility
 counter-increment counter-reset cursor direction display empty-cells fill fill-opacity fill-rule filter flex flex-basis flex-direction flex-flow flex-grow flex-shrink flex-wrap float font font-family font-feature-settings font-kerning
 font-optical-sizing font-size font-size-adjust font-stretch font-style font-synthesis font-variant font-variant-numeric font-weight forced-color-adjust gap grid grid-area grid-auto-columns grid-auto-flow grid-auto-rows grid-column
 grid-column-end grid-column-start grid-gap grid-row grid-row-end grid-row-start grid-template grid-template-areas grid-template-columns grid-template-rows height hyphens image-rendering inset inset-block inset-block-end inset-block-start
@@ -345,7 +345,7 @@ for (const f of htmlFiles) {
 }
 const fragments = list('pages', '.html');
 for (const f of fragments) { const r = checkHtml(read(f), { name: f, fragment: true }); ok(`${f}: no repeated id, no bad nesting, no bad link`, r.problems.length === 0, r.problems.slice(0, 4).join(' | ')); }
-{   // the dates the owner types into the pages (kills mutants a06: data-until month 13, a07: data-until written 2026-10-3; before this only the browser test `dated`, minutes later, saw them)
+{   // the dates the owner types into the pages (kills mutants a06: data-until month 13, a07: data-until written 2026-11-8; before this only the browser test `dated`, minutes later, saw them)
   const found = []; let n = 0;
   for (const f of [...htmlFiles, ...fragments]) { n += (noComments(read(f)).match(/\bdata-(until|release)="/g) || []).length; for (const b of badDates(read(f))) found.push(`${f}: ${b}`); }
   ok(`every data-until and data-release in the pages is a real day written YYYY-MM-DD (${n} dates read; it notices the breaks a06 and a07 of tools/mutants.json)`, found.length === 0 && n > 0, found.slice(0, 4).join(' | ') || (n ? '' : 'no date found: is the check reading the pages?'));

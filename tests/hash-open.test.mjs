@@ -11,6 +11,7 @@
  * That jump became a glide that ran past the place by thousands of pixels on a laptop (about 270 px on a phone) and stayed there until the page put the
  * place back in view 1.5 s after loading (keepHashTarget in js/features.js). The check fails when, after its first move, the page is ever more than
  * 40 px from the place where it ends (a glide, an overshoot, a jump later), or when the place ends off the usual line.
+ * The places the top menu's lines go to are among them (#addons, #animals, #shop-icecream, #steps and the farm map and the photo gallery, which a script shows after the load).
  * Also: once the page has loaded, links on the page still glide (smooth scrolling is only held back while a page opens). */
 import { run, open, ok, ms } from './lib.mjs';
 
@@ -52,7 +53,9 @@ await run('hash-open', async ({ browser, base, errs }) => {
 
   // 1. a page opened at a #place: look at every frame until 2 s after the load
   const OPEN = [
-    ['laptop', 'index.html', ['menu', 'farm']], ['phone', 'index.html', ['farm', 'varieties']],
+    ['laptop', 'index.html', ['menu', 'farm', 'addons', 'animals', 'shop-icecream']], ['phone', 'index.html', ['farm', 'varieties', 'steps', 'farm-playgrounds']],
+    // the places of the menu that are hidden until a script shows them (the farm map, the photo gallery)
+    ['laptop', 'index.html', ['farm-map', 'gallery']],
     ['laptop', 'first-visit.html', ['parking', 'checklist']], ['phone', 'first-visit.html', ['strollers']],
     // the four other pages (they load js/features.js and css/styles.css too): one real section of each, below the first screen
     ['laptop', 'pumpkin-patch.html', ['plan']], ['phone', 'pumpkin-patch.html', ['plan']],
@@ -102,9 +105,10 @@ await run('hash-open', async ({ browser, base, errs }) => {
     const { p, f } = await start({ id, width: 1366, height: 768 });
     try {
       await loaded(f, id ? 2300 : 300);
-      const g = await glide(f, '.nav ul > li > a[href="#farm"]');
-      ok(`laptop, page ${name}: the "On the Farm" link glides (smooth scrolling is on again)`, g.steps >= 4 && g.sb === 'smooth', `scroll-behavior ${g.sb}, ${g.steps} different places seen on the way to ${g.y}px`);
-      ok(`laptop, page ${name}: the "On the Farm" link still ends on the usual line`, Math.abs(g.top - 88) <= TOL, `#farm ends ${g.top}px from the top, the line is 88px`);
+      await f.click('button[aria-controls="nav-list-things"]');   // the line is in the Things to Do list: open it first
+      const g = await glide(f, '#nav-list-things a[href="#farm"]');
+      ok(`laptop, page ${name}: the "U-pick" line of the menu (Things to Do) glides (smooth scrolling is on again)`, g.steps >= 4 && g.sb === 'smooth', `scroll-behavior ${g.sb}, ${g.steps} different places seen on the way to ${g.y}px`);
+      ok(`laptop, page ${name}: the "U-pick" line still ends on the usual line`, Math.abs(g.top - 88) <= TOL, `#farm ends ${g.top}px from the top, the line is 88px`);
     } catch (e) { ok(`laptop, page ${name}: links glide`, false, String(e.message).split('\n')[0]); }
     await p.context().close();
   }

@@ -60,14 +60,15 @@ html[data-season="winter"] .bee-fly{display:none}
 
 /* ---------------------------------------------------------------- season switcher */
 .hero{padding-top:clamp(14px,1.6vw,22px)}
-.season-switch{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;margin:0 auto 16px;pointer-events:auto}
+.season-switch{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:18px 8px;margin:0 auto 16px;pointer-events:auto}   /* the buttons wrap in a long language (Vietnamese at 768 px) or at big text: the row gap leaves room for the Now / Next tags of the lower row, which stand 12 px above their buttons */
 .ss-label{font:700 1.5rem/1 var(--hand);color:#a8182f;margin-right:4px;transform:rotate(-2deg)}
 .season-switch button{position:relative;display:inline-flex;align-items:center;gap:.4em;padding:.26em .85em .26em .45em;font:700 .95rem/1.2 var(--display);color:var(--ink);background:rgba(255,255,255,.9);border:2.5px solid var(--ink);border-radius:999px;cursor:pointer;box-shadow:0 3px 0 var(--ink);transition:transform .18s cubic-bezier(.3,1.6,.5,1),background-color .2s,box-shadow .2s}
 @media (hover:hover){.season-switch button:hover{transform:translateY(-2px);box-shadow:0 5px 0 var(--ink)}}
 .season-switch button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
 .season-switch button[aria-checked="true"]{background:var(--sun);box-shadow:0 3px 0 var(--ink),inset 0 0 0 2px var(--ink)}   /* thicker dark edge, not only yellow (docs/COLOUR_BLIND_CHECK.md) */
 .ss-ico{width:26px;height:26px;flex:none}
-.ss-now{position:absolute;top:-12px;right:-8px;background:var(--red);color:#fff;border:2px solid var(--ink);border-radius:999px;padding:.1em .5em;font:700 .7rem/1.2 var(--display);letter-spacing:.06em;text-transform:uppercase;transform:rotate(6deg);pointer-events:none}
+.ss-now,.ss-next{position:absolute;top:-12px;right:-8px;background:var(--red);color:#fff;border:2px solid var(--ink);border-radius:999px;padding:.1em .5em;font:700 .7rem/1.2 var(--display);letter-spacing:.06em;text-transform:uppercase;transform:rotate(6deg);pointer-events:none}
+.ss-next{background:var(--berry)}   /* "Now" is red, "Next" is blue (white words on it: 6 to 1): two colours that cannot be mixed up, and the words say it too */
 
 /* ---------------------------------------------------------------- fall: tractor + wagon ride */
 .rig{--rig-from:-420px;--rig-to:1660px;--rig-rest:420px;
@@ -226,26 +227,27 @@ html[data-season="winter"] .bee-fly{display:none}
 @keyframes sparkOut{0%{opacity:0;transform:translate(40px,40px) scale(.2)}20%{opacity:1}100%{opacity:0;transform:translate(calc(40px + var(--dx) * .6),calc(40px + var(--dy) * .6)) scale(1.5)}}
 
 /* ---------------------------------------------------------------- falling leaves + snow */
-.particles{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;overflow:hidden;pointer-events:none}
+.particles{position:absolute;top:0;right:0;bottom:0;left:0;inset:0;overflow:hidden;pointer-events:none;transition:opacity .6s}
 .particles i{position:absolute;top:0;display:block;width:var(--s);height:var(--s);will-change:transform}
-.particles .leaf{background:var(--c);border-radius:0 100% 0 100%;border:1.5px solid rgba(58,36,22,.55);
-  animation:heroFall var(--d) linear infinite var(--dl),heroSpin calc(var(--d) * .35) linear infinite var(--dl)}
+.particles .leaf{animation:heroFall var(--d) linear infinite var(--dl),heroSway var(--sd,3.7s) cubic-bezier(.37,0,.63,1) infinite alternate var(--dl)}   /* a leaf falls straight down and drifts to one side and the other, slowly and smoothly, a sine (js/hero.js sets --fh, the height it falls through, --d, how long it takes, --sd, how long one drift takes, --sw, how far it reaches and --rk, how far it tips: a leaf goes sideways at 20 px a second at most, a whole swing takes 5.6 s or more) */
+.particles .leaf::before{content:"";display:block;width:var(--s);height:var(--s);background:var(--c);border-radius:0 100% 0 100%;border:1.5px solid rgba(58,36,22,.55);
+  animation:heroRock var(--sd,3.7s) cubic-bezier(.37,0,.63,1) infinite alternate var(--dl)}   /* ...while the leaf itself tips the way it drifts; only its drawing turns, so the drifting stays level */
 .particles .flake{background:#fff;border-radius:50%;opacity:.92;box-shadow:0 0 0 1px rgba(110,150,200,.4);
   animation:heroSnow var(--d) linear infinite var(--dl)}
 @keyframes heroFall{
-  0%{translate:0 -8vh;opacity:0}8%{opacity:1}
-  25%{translate:var(--sw) 26vh}
-  50%{translate:calc(var(--sw) * -.7) 52vh}
-  75%{translate:calc(var(--sw) * 1.1) 78vh}
-  100%{translate:calc(var(--sw) * -.3) 108vh;opacity:.9}
+  0%{translate:0 -40px;opacity:0}6%{opacity:1}
+  100%{translate:0 calc(var(--fh,100vh) + 34px);opacity:1}   /* from just above the hero to just below it, whatever its height */
 }
-@keyframes heroSpin{from{rotate:var(--rot)}to{rotate:calc(var(--rot) + 360deg)}}
-@keyframes heroSnow{
-  0%{translate:0 -6vh;opacity:0}8%{opacity:.92}
-  33%{translate:var(--sw) 34vh}
-  66%{translate:calc(var(--sw) * -.8) 70vh}
-  100%{translate:calc(var(--sw) * .4) 108vh;opacity:.92}
+@keyframes heroSway{from{transform:translateX(calc(var(--sw) * -1))}to{transform:translateX(var(--sw))}}
+@keyframes heroRock{from{rotate:calc(var(--rot) - var(--rk,38deg))}to{rotate:calc(var(--rot) + var(--rk,38deg))}}
+html[data-calm="light"] .particles,html[data-calm="most"] .particles{opacity:0}   /* the automatic calm mode: a leaf that stopped in mid-air looks broken, so the falling leaves and snow fade out instead (the visitor's own Pause keeps the picture as it is); the layer's own transition (above) fades it out and, when motion comes back, in again, and js/main.js (initMotion) lets what is under it rest only when it has faded */
+@keyframes heroSnow{   /* like the leaves: from just above the hero to just below it, whatever its height (js/hero.js sets --fh; 100vh until it has) */
+  0%{translate:0 -14px;opacity:0}8%{opacity:.92}
+  33%{translate:var(--sw) calc(var(--fh,100vh) * .34)}
+  66%{translate:calc(var(--sw) * -.8) calc(var(--fh,100vh) * .7)}
+  100%{translate:calc(var(--sw) * .4) calc(var(--fh,100vh) + 14px);opacity:.92}
 }
+@supports not (translate:0 0){.particles{display:none}}   /* a browser without the single-property transforms (Chrome before 104, Safari before 14.1) would show the leaves and snow hanging in a row along the top edge, swaying: nothing is better */
 
 /* ---------------------------------------------------------------- small screens */
 @media (max-width:47.5em){
@@ -257,12 +259,16 @@ html[data-season="winter"] .bee-fly{display:none}
   .ss-label{display:none}
   .season-switch button{flex:1 1 auto;justify-content:center;min-width:0;padding:.22em .3em .22em .3em;font-size:.82rem;box-shadow:0 2px 0 var(--ink)}
   .ss-ico{width:20px;height:20px}
-  .ss-now{top:-20px;right:-4px;font-size:.6875rem}
+  .ss-now,.ss-next{top:-20px;right:-4px;font-size:.6875rem;padding:.1em .3em;letter-spacing:.02em}   /* compact: on a narrow button (Verano, Otoño) the long words "siguiente" and "tiếp theo" reached the tag of the button before */
 }
 @media (max-width:22.5em){
+  .ss-now,.ss-next{font-size:.625rem}   /* 360 px and under: a little smaller still */
   .season-switch button{font-size:.76rem;gap:.25em}
   .ss-ico{width:17px;height:17px}
   .hero h1{font-size:clamp(1.7rem,9vw,2.3rem)}   /* "Árboles de Navidad" (es, winter) was cut off at 320px */
+}
+@media (max-width:21.5em){
+  .ss-now,.ss-next{right:-2px;padding:.1em .2em;letter-spacing:0}   /* 320 px: the narrowest button (Mùa hè) is shorter than the words "tiếp theo" and the tag of the button before must not be touched */
 }
 
 /* Nothing should freeze off-screen or half-drawn when motion is turned off. */

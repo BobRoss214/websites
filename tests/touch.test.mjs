@@ -80,7 +80,7 @@ async function reach(p, sel, { anchor = '#top', steps = [0, 150, 300, 450] } = {
 
 // What the scene has in each season: [name, selector, what one tap must do]. A "?" after the kind: nice to have, a phone may have it under other things.
 const THINGS = {
-  spring: [['a strawberry', '[data-pick]:not(.tree-pick)', 'pick'], ['a rider on the wagon', '.npc-hit[data-npc=rider]', 'say?'], ['the tractor and wagon', '[data-rig]', 'rig'], ['the sun', '.sun', 'sun?']],
+  spring: [['a strawberry', '[data-pick]:not(.tree-pick):not(.flower-cut)', 'pick'], ['a sunflower', '.flower-cut[data-pick]', 'pick?'], ['a rider on the wagon', '.npc-hit[data-npc=rider]', 'say?'], ['the tractor and wagon', '[data-rig]', 'rig'], ['the sun', '.sun', 'sun?']],
   summer: [['a blueberry', '[data-pick]:not(.tree-pick):not(.flower-cut)', 'pick'], ['a sunflower', '.flower-cut[data-pick]', 'pick?']],
   fall: [['a pumpkin', '[data-pick]:not(.tree-pick)', 'pick'], ['a rider on the wagon', '.npc-hit[data-npc=rider]', 'say?'], ['the scarecrow', '.npc-hit[data-npc=scarecrow]', 'say?'], ['the tractor and wagon', '[data-rig]', 'rig']],
   winter: [['a Christmas tree', '.tree-pick', 'tree'], ['a campfire', '[data-fire]', 'fire'], ['the sun', '.sun', 'sun?']],
@@ -146,11 +146,13 @@ async function bee(p) {
   const tx = 300, ty = 460;   // the bare sky right of the headline
   const hero = await p.evaluate(() => { const r = document.querySelector('#top').getBoundingClientRect(); return { x: r.x, y: r.y }; });
   await p.touchscreen.tap(tx, ty);
-  const want = [tx - hero.x - 26, ty - hero.y - 24];   // the bee's top-left corner when its middle is on the finger
-  const flightGoal = () => p.evaluate(() => { const a = document.querySelector('#bee-fly').getAnimations(); if (!a.length) return null; const k = a[a.length - 1].effect.getKeyframes(), m = /translate\(([-\d.]+)px, ([-\d.]+)px/.exec(k[k.length - 1].transform || ''); return m ? [+m[1], +m[2]] : null; });
-  let goal = null;
-  for (let i = 0; i < 5; i++) { await p.clock.runFor(400); goal = await flightGoal(); if (goal && Math.abs(goal[0] - want[0]) < 6 && Math.abs(goal[1] - want[1]) < 6) break; }   // the bee starts its flight within half a second
-  ok('a tap in the hero sends the bee to that spot', !!goal && Math.abs(goal[0] - want[0]) < 6 && Math.abs(goal[1] - want[1]) < 6, `the bee flies to ${goal && goal.map(Math.round)}, finger at ${want.map(Math.round)}`);
+  // The bee glides to the finger in short legs (js/main.js, initBee): the middle of its box comes to the finger within a few seconds. A leg is run by the browser's animation clock,
+  // which the page's pretend clock does not move, so this waits in real time (tests/critter.test.mjs looks at the flight itself).
+  const want = [tx - hero.x, ty - hero.y];
+  const centre = () => p.evaluate(() => { const r = document.querySelector('#bee-fly').getBoundingClientRect(), h = document.querySelector('#top').getBoundingClientRect(); return [r.x - h.x + r.width / 2, r.y - h.y + r.height / 2]; });
+  let at = await centre();
+  for (const end = Date.now() + ms(15000); Math.hypot(at[0] - want[0], at[1] - want[1]) > 60 && Date.now() < end;) { await sleep(100); at = await centre(); }
+  ok('a tap in the hero sends the bee to that spot (its middle comes within 60 px of the finger)', Math.hypot(at[0] - want[0], at[1] - want[1]) <= 60, `the bee is at ${at.map(Math.round)}, the finger at ${want.map(Math.round)}`);
   const y0 = await scrollNow(p);
   await drag(p.cdp, 200, 560, 200, 300);   // a swipe that starts in the sky
   ok('a swipe that starts in the hero (bee flying) scrolls the page', (await scrollNow(p)) - y0 >= 150);
@@ -310,7 +312,8 @@ async function menus(p, label) {
   await (await p.$('.lang-btn')).tap(); await p.clock.runFor(300);   // closed again
   await (await p.$('.menu-toggle')).tap(); await p.clock.runFor(500);
   const nav = await p.evaluate(() => { const n = document.querySelector('.nav').getBoundingClientRect(); return { x: n.x + n.width / 2, y: n.y + n.height / 2 }; });
-  for (let k = 0; k < 6; k++) await drag(p.cdp, nav.x, nav.y + 100, nav.x, nav.y - 100, 8);
+  let last = -1;   // the menu is long (7 groups, 37 lines): drag until it stops moving
+  for (let k = 0; k < 30; k++) { await drag(p.cdp, nav.x, nav.y + 100, nav.x, nav.y - 100, 8); const st = await p.evaluate(() => document.querySelector('.nav').scrollTop); if (st === last) break; last = st; }
   const end = await p.evaluate(() => { const links = [...document.querySelectorAll('.nav a')].filter((a) => a.getBoundingClientRect().width > 0), l = links[links.length - 1].getBoundingClientRect(), bar = document.querySelector('.action-bar').getBoundingClientRect(); return { bottom: Math.round(l.bottom), bar: Math.round(bar.top) }; });
   ok(`${label}: the open menu scrolls with a finger to its last item, clear of the bottom bar`, end.bottom <= end.bar, JSON.stringify(end));
 }

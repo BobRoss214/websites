@@ -18,60 +18,139 @@ h4,h5{margin:0;font-family:var(--display);line-height:1.15;text-wrap:balance}
 .answer .ticks{margin-top:.6em}
 .answer a{font-weight:800}
 
-/* ---------- header: eight links plus a "More" menu ----------
-   Spanish and Vietnamese labels are longer, so they collapse at a wider screen. */
-.header-inner.wrap{width:min(1560px,100% - 2 * var(--gutter))}
-.nav{gap:14px}
-.nav ul{gap:2px}
-.nav ul a{padding:.5em .55em;font-size:.95rem;white-space:nowrap}
-/* fall: a little red dot on the new Tomatoes link */
-html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2px;right:2px;width:9px;height:9px;border-radius:50%;background:var(--red);border:2px solid var(--cream)}
-/* the More dropdown */
-.nav-more{position:relative}
-.nav .nav-first{display:none}   /* only in the phone menu (see the breakpoints below); the wide bar has it under More */
-.nav-more-btn{display:flex;align-items:center;gap:.3em;padding:.5em .55em .5em .75em;border:0;border-radius:999px;background:none;color:inherit;font:600 .95rem/1 var(--display);cursor:pointer;transition:background-color .2s}
-.nav-more.is-open .nav-more-btn{background:#fff}
-@media (hover:hover){.nav-more-btn:hover{background:#fff}}
-.nav-more-btn .ico{width:1em;height:1em;transition:transform .2s}
-.nav-more.is-open .nav-more-btn .ico{transform:rotate(180deg)}
-.nav-more-btn[aria-current]{background:var(--sun);box-shadow:inset 0 0 0 2.5px var(--ink)}
-.nav .nav-more-list{position:absolute;top:calc(100% + 10px);right:0;z-index:60;min-width:190px;display:none;flex-direction:column;gap:2px;padding:8px;background:#fff;border:3px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink)}
-.nav-more.is-open .nav-more-list{display:flex}
-.nav .nav-more-list a{padding:.6em .9em;font-size:1rem;border-radius:12px}
-@media (hover:hover){.nav .nav-more-list a:hover{background:var(--cream)}}
-@media (max-width:73.75em){
-  :root{--header-h:4rem}
-  .menu-toggle{display:grid}
-  .site-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream)}
-  .nav{position:fixed;top:calc(var(--header-h) + 3px);right:0;bottom:0;left:0;inset:calc(var(--header-h) + 3px) 0 0 0;z-index:49;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;padding:28px var(--gutter) 120px;background:var(--cream);overflow-y:auto;transform:translateY(-14px);opacity:0;visibility:hidden;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
-  .nav.is-open{opacity:1;transform:none;visibility:visible;transition-delay:0s}
-  .nav ul{flex-direction:column;gap:8px}
-  .nav ul a{font-size:1.4rem;padding:.55em .8em;border:3px solid var(--ink);background:#fff;box-shadow:0 4px 0 var(--ink);border-radius:20px}
-  .nav ul a[aria-current]{box-shadow:0 4px 0 var(--ink)}
-  .nav-more-btn{display:none}
-  .nav .nav-more-list{display:flex;position:static;min-width:0;padding:0;background:none;border:0;box-shadow:none;gap:8px}
-  .nav .nav-more-list a{padding:.55em .8em!important;font-size:1.4rem!important}
-  .nav-cta{font-size:1.3rem;padding:.9em}
-  body.nav-lock{overflow:hidden}
-  .nav .nav-first{display:block}
-  .nav .nav-first-more{display:none}
+/* ---------- header: seven drop-down groups ----------
+   Visit, Things to Do, GreenHouse, Store, Groups & Parties, About Us, Contact: each is a button that opens a list of lines (js/main.js, initNav). In the
+   phone menu the buttons are hidden, each name is a small heading and its lines are chips under it. The words are longer than the old eight short links,
+   so the bar folds into the phone menu at a width that was measured for each language (work-notes/MENU-PLAN.md). */
+.header-inner.wrap{width:min(97.5rem,100% - 2 * var(--gutter))}   /* 97.5rem is 1560px at the normal text size; with a bigger system font it grows, so the bar still has the room its words need */
+.header-inner{gap:14px}   /* the least room between the logo, the bar and the language button (they spread out when there is more) */
+.nav{gap:10px}
+.nav > ul{gap:2px}
+.nav ul a{white-space:nowrap}
+/* fall: a little red dot on the Things to Do button (the new Tomatoes & basil line is in its list); in the phone menu it sits after the group's name */
+html[data-season="fall"] .nav-tomato .nav-group-btn::after{content:"";position:absolute;top:2px;right:2px;width:9px;height:9px;border-radius:50%;background:var(--red);border:2px solid var(--cream)}
+html[data-season="fall"] .nav-tomato .nav-group-title::after{content:"";display:inline-block;width:9px;height:9px;margin-left:.5em;vertical-align:.1em;border-radius:50%;background:var(--red);border:2px solid var(--cream)}
+/* coming up: a line for something that is nearly here (or here now) is bold with a little red dot, and so is the button of its group (js/main.js, initNav) */
+.nav-group-list a.is-coming{font-weight:800}
+.nav-group-list a.is-coming::after{content:"";display:inline-block;width:9px;height:9px;margin-left:.5em;vertical-align:.1em;border-radius:50%;background:var(--red);border:2px solid var(--cream)}
+.nav-group.has-coming .nav-group-btn::after{content:"";position:absolute;top:2px;right:2px;width:9px;height:9px;border-radius:50%;background:var(--red);border:2px solid var(--cream)}
+.nav-group.has-coming .nav-group-title::after{content:"";display:inline-block;width:9px;height:9px;margin-left:.5em;vertical-align:.1em;border-radius:50%;background:var(--red);border:2px solid var(--cream)}
+/* a group: its button, its name (only shown in the phone menu) and its list of lines */
+.nav-group{position:relative}
+.nav-group-btn{display:flex;align-items:center;gap:.2em;padding:.5em .4em .5em .5em;border:0;border-radius:999px;background:none;color:inherit;font:600 .95rem/1 var(--display);white-space:nowrap;cursor:pointer;transition:background-color .2s}
+.nav-group.is-open .nav-group-btn{background:#fff}
+@media (hover:hover){.nav-group-btn:hover{background:#fff}}
+.nav-group-btn .ico{width:1em;height:1em;transition:transform .2s}
+.nav-group.is-open .nav-group-btn .ico{transform:rotate(180deg)}
+.nav-group-btn[aria-current]{background:var(--sun);box-shadow:inset 0 0 0 2.5px var(--ink)}
+.nav-group-title{display:none}
+.nav .nav-group-list{position:absolute;top:calc(100% + 10px);left:0;z-index:60;min-width:190px;max-height:calc(100vh - 120px);overflow-y:auto;overscroll-behavior:contain;display:none;flex-direction:column;gap:2px;padding:8px;background:#fff;border:3px solid var(--ink);border-radius:18px;box-shadow:0 5px 0 var(--ink)}   /* in a very short window the list scrolls inside itself instead of running off the bottom */
+.nav .nav-group-end .nav-group-list{left:auto;right:0}   /* the last two (About Us, Contact) open towards the left, so the list stays on the screen */
+.nav-group.is-open .nav-group-list{display:flex}
+.nav .nav-group-list a{padding:.6em .9em;font-size:1rem;border-radius:12px}
+@media (hover:hover){.nav .nav-group-list a:hover{background:var(--cream)}}
+@media (max-width:79.9em){
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]){--header-h:4rem}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .menu-toggle{display:grid}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .site-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream)}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav{position:fixed;top:calc(var(--header-h) + 3px);right:0;bottom:0;left:0;inset:calc(var(--header-h) + 3px) 0 0 0;z-index:49;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;padding:28px var(--gutter) 120px;background:var(--cream);overflow-y:auto;transform:translateY(-14px);opacity:0;visibility:hidden;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav.is-open{opacity:1;transform:none;visibility:visible;transition-delay:0s}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav ul{flex-direction:column;gap:8px}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav > ul{gap:20px}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav ul a{font-size:1.4rem;padding:.55em .8em;border:3px solid var(--ink);background:#fff;box-shadow:0 4px 0 var(--ink);border-radius:20px;white-space:normal}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav ul a[aria-current]{box-shadow:0 4px 0 var(--ink)}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav-group-btn{display:none}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav-group-title{display:block;margin:0 0 8px 6px;font:700 .9rem/1.2 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav .nav-group-list{display:flex;position:static;min-width:0;max-height:none;overflow:visible;padding:0;background:none;border:0;box-shadow:none;gap:8px}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav .nav-group-list a{padding:.55em .8em!important;font-size:1.4rem!important}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav-cta{font-size:1.3rem;padding:.9em}
+  html:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) body.nav-lock{overflow:hidden}
 }
-@media (max-width:83.125em){
-  html:is([lang="es"],[lang="vi"]){--header-h:4rem}
-  html:is([lang="es"],[lang="vi"]) .menu-toggle{display:grid}
-  html:is([lang="es"],[lang="vi"]) .site-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream)}
-  html:is([lang="es"],[lang="vi"]) .nav{position:fixed;top:calc(var(--header-h) + 3px);right:0;bottom:0;left:0;inset:calc(var(--header-h) + 3px) 0 0 0;z-index:49;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;padding:28px var(--gutter) 120px;background:var(--cream);overflow-y:auto;transform:translateY(-14px);opacity:0;visibility:hidden;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
-  html:is([lang="es"],[lang="vi"]) .nav.is-open{opacity:1;transform:none;visibility:visible;transition-delay:0s}
-  html:is([lang="es"],[lang="vi"]) .nav ul{flex-direction:column;gap:8px}
-  html:is([lang="es"],[lang="vi"]) .nav ul a{font-size:1.4rem;padding:.55em .8em;border:3px solid var(--ink);background:#fff;box-shadow:0 4px 0 var(--ink);border-radius:20px}
-  html:is([lang="es"],[lang="vi"]) .nav ul a[aria-current]{box-shadow:0 4px 0 var(--ink)}
-  html:is([lang="es"],[lang="vi"]) .nav-more-btn{display:none}
-  html:is([lang="es"],[lang="vi"]) .nav .nav-more-list{display:flex;position:static;min-width:0;padding:0;background:none;border:0;box-shadow:none;gap:8px}
-  html:is([lang="es"],[lang="vi"]) .nav .nav-more-list a{padding:.55em .8em!important;font-size:1.4rem!important}
-  html:is([lang="es"],[lang="vi"]) .nav-cta{font-size:1.3rem;padding:.9em}
-  html:is([lang="es"],[lang="vi"]) body.nav-lock{overflow:hidden}
-  html:is([lang="es"],[lang="vi"]) .nav .nav-first{display:block}
-  html:is([lang="es"],[lang="vi"]) .nav .nav-first-more{display:none}
+@media (max-width:76.75em){
+  html[lang|="en"],html[lang|="hi"]{--header-h:4rem}
+  html[lang|="en"] .menu-toggle,html[lang|="hi"] .menu-toggle{display:grid}
+  html[lang|="en"] .site-header,html[lang|="hi"] .site-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream)}
+  html[lang|="en"] .nav,html[lang|="hi"] .nav{position:fixed;top:calc(var(--header-h) + 3px);right:0;bottom:0;left:0;inset:calc(var(--header-h) + 3px) 0 0 0;z-index:49;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;padding:28px var(--gutter) 120px;background:var(--cream);overflow-y:auto;transform:translateY(-14px);opacity:0;visibility:hidden;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
+  html[lang|="en"] .nav.is-open,html[lang|="hi"] .nav.is-open{opacity:1;transform:none;visibility:visible;transition-delay:0s}
+  html[lang|="en"] .nav ul,html[lang|="hi"] .nav ul{flex-direction:column;gap:8px}
+  html[lang|="en"] .nav > ul,html[lang|="hi"] .nav > ul{gap:20px}
+  html[lang|="en"] .nav ul a,html[lang|="hi"] .nav ul a{font-size:1.4rem;padding:.55em .8em;border:3px solid var(--ink);background:#fff;box-shadow:0 4px 0 var(--ink);border-radius:20px;white-space:normal}
+  html[lang|="en"] .nav ul a[aria-current],html[lang|="hi"] .nav ul a[aria-current]{box-shadow:0 4px 0 var(--ink)}
+  html[lang|="en"] .nav-group-btn,html[lang|="hi"] .nav-group-btn{display:none}
+  html[lang|="en"] .nav-group-title,html[lang|="hi"] .nav-group-title{display:block;margin:0 0 8px 6px;font:700 .9rem/1.2 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  html[lang|="en"] .nav .nav-group-list,html[lang|="hi"] .nav .nav-group-list{display:flex;position:static;min-width:0;max-height:none;overflow:visible;padding:0;background:none;border:0;box-shadow:none;gap:8px}
+  html[lang|="en"] .nav .nav-group-list a,html[lang|="hi"] .nav .nav-group-list a{padding:.55em .8em!important;font-size:1.4rem!important}
+  html[lang|="en"] .nav-cta,html[lang|="hi"] .nav-cta{font-size:1.3rem;padding:.9em}
+  html[lang|="en"] body.nav-lock,html[lang|="hi"] body.nav-lock{overflow:hidden}
+}
+@media (max-width:69.25em){
+  html[lang|="zh"]{--header-h:4rem}
+  html[lang|="zh"] .menu-toggle{display:grid}
+  html[lang|="zh"] .site-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream)}
+  html[lang|="zh"] .nav{position:fixed;top:calc(var(--header-h) + 3px);right:0;bottom:0;left:0;inset:calc(var(--header-h) + 3px) 0 0 0;z-index:49;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;padding:28px var(--gutter) 120px;background:var(--cream);overflow-y:auto;transform:translateY(-14px);opacity:0;visibility:hidden;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
+  html[lang|="zh"] .nav.is-open{opacity:1;transform:none;visibility:visible;transition-delay:0s}
+  html[lang|="zh"] .nav ul{flex-direction:column;gap:8px}
+  html[lang|="zh"] .nav > ul{gap:20px}
+  html[lang|="zh"] .nav ul a{font-size:1.4rem;padding:.55em .8em;border:3px solid var(--ink);background:#fff;box-shadow:0 4px 0 var(--ink);border-radius:20px;white-space:normal}
+  html[lang|="zh"] .nav ul a[aria-current]{box-shadow:0 4px 0 var(--ink)}
+  html[lang|="zh"] .nav-group-btn{display:none}
+  html[lang|="zh"] .nav-group-title{display:block;margin:0 0 8px 6px;font:700 .9rem/1.2 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  html[lang|="zh"] .nav .nav-group-list{display:flex;position:static;min-width:0;max-height:none;overflow:visible;padding:0;background:none;border:0;box-shadow:none;gap:8px}
+  html[lang|="zh"] .nav .nav-group-list a{padding:.55em .8em!important;font-size:1.4rem!important}
+  html[lang|="zh"] .nav-cta{font-size:1.3rem;padding:.9em}
+  html[lang|="zh"] body.nav-lock{overflow:hidden}
+}
+/* demo mode (html has the class wa-demo): the account button next to the language button takes room, so the bar folds a little earlier */
+@media (max-width:84.9em){
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]){--header-h:4rem}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .menu-toggle{display:grid}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .site-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream)}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav{position:fixed;top:calc(var(--header-h) + 3px);right:0;bottom:0;left:0;inset:calc(var(--header-h) + 3px) 0 0 0;z-index:49;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;padding:28px var(--gutter) 120px;background:var(--cream);overflow-y:auto;transform:translateY(-14px);opacity:0;visibility:hidden;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav.is-open{opacity:1;transform:none;visibility:visible;transition-delay:0s}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav ul{flex-direction:column;gap:8px}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav > ul{gap:20px}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav ul a{font-size:1.4rem;padding:.55em .8em;border:3px solid var(--ink);background:#fff;box-shadow:0 4px 0 var(--ink);border-radius:20px;white-space:normal}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav ul a[aria-current]{box-shadow:0 4px 0 var(--ink)}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav-group-btn{display:none}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav-group-title{display:block;margin:0 0 8px 6px;font:700 .9rem/1.2 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav .nav-group-list{display:flex;position:static;min-width:0;max-height:none;overflow:visible;padding:0;background:none;border:0;box-shadow:none;gap:8px}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav .nav-group-list a{padding:.55em .8em!important;font-size:1.4rem!important}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) .nav-cta{font-size:1.3rem;padding:.9em}
+  html.wa-demo:not([lang|="en"]):not([lang|="hi"]):not([lang|="zh"]) body.nav-lock{overflow:hidden}
+}
+@media (max-width:81.75em){
+  html.wa-demo[lang|="en"],html.wa-demo[lang|="hi"]{--header-h:4rem}
+  html.wa-demo[lang|="en"] .menu-toggle,html.wa-demo[lang|="hi"] .menu-toggle{display:grid}
+  html.wa-demo[lang|="en"] .site-header,html.wa-demo[lang|="hi"] .site-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream)}
+  html.wa-demo[lang|="en"] .nav,html.wa-demo[lang|="hi"] .nav{position:fixed;top:calc(var(--header-h) + 3px);right:0;bottom:0;left:0;inset:calc(var(--header-h) + 3px) 0 0 0;z-index:49;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;padding:28px var(--gutter) 120px;background:var(--cream);overflow-y:auto;transform:translateY(-14px);opacity:0;visibility:hidden;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
+  html.wa-demo[lang|="en"] .nav.is-open,html.wa-demo[lang|="hi"] .nav.is-open{opacity:1;transform:none;visibility:visible;transition-delay:0s}
+  html.wa-demo[lang|="en"] .nav ul,html.wa-demo[lang|="hi"] .nav ul{flex-direction:column;gap:8px}
+  html.wa-demo[lang|="en"] .nav > ul,html.wa-demo[lang|="hi"] .nav > ul{gap:20px}
+  html.wa-demo[lang|="en"] .nav ul a,html.wa-demo[lang|="hi"] .nav ul a{font-size:1.4rem;padding:.55em .8em;border:3px solid var(--ink);background:#fff;box-shadow:0 4px 0 var(--ink);border-radius:20px;white-space:normal}
+  html.wa-demo[lang|="en"] .nav ul a[aria-current],html.wa-demo[lang|="hi"] .nav ul a[aria-current]{box-shadow:0 4px 0 var(--ink)}
+  html.wa-demo[lang|="en"] .nav-group-btn,html.wa-demo[lang|="hi"] .nav-group-btn{display:none}
+  html.wa-demo[lang|="en"] .nav-group-title,html.wa-demo[lang|="hi"] .nav-group-title{display:block;margin:0 0 8px 6px;font:700 .9rem/1.2 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  html.wa-demo[lang|="en"] .nav .nav-group-list,html.wa-demo[lang|="hi"] .nav .nav-group-list{display:flex;position:static;min-width:0;max-height:none;overflow:visible;padding:0;background:none;border:0;box-shadow:none;gap:8px}
+  html.wa-demo[lang|="en"] .nav .nav-group-list a,html.wa-demo[lang|="hi"] .nav .nav-group-list a{padding:.55em .8em!important;font-size:1.4rem!important}
+  html.wa-demo[lang|="en"] .nav-cta,html.wa-demo[lang|="hi"] .nav-cta{font-size:1.3rem;padding:.9em}
+  html.wa-demo[lang|="en"] body.nav-lock,html.wa-demo[lang|="hi"] body.nav-lock{overflow:hidden}
+}
+@media (max-width:74.25em){
+  html.wa-demo[lang|="zh"]{--header-h:4rem}
+  html.wa-demo[lang|="zh"] .menu-toggle{display:grid}
+  html.wa-demo[lang|="zh"] .site-header{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--cream)}
+  html.wa-demo[lang|="zh"] .nav{position:fixed;top:calc(var(--header-h) + 3px);right:0;bottom:0;left:0;inset:calc(var(--header-h) + 3px) 0 0 0;z-index:49;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:22px;padding:28px var(--gutter) 120px;background:var(--cream);overflow-y:auto;transform:translateY(-14px);opacity:0;visibility:hidden;transition:opacity .25s,transform .3s cubic-bezier(.2,.8,.2,1),visibility 0s .3s}
+  html.wa-demo[lang|="zh"] .nav.is-open{opacity:1;transform:none;visibility:visible;transition-delay:0s}
+  html.wa-demo[lang|="zh"] .nav ul{flex-direction:column;gap:8px}
+  html.wa-demo[lang|="zh"] .nav > ul{gap:20px}
+  html.wa-demo[lang|="zh"] .nav ul a{font-size:1.4rem;padding:.55em .8em;border:3px solid var(--ink);background:#fff;box-shadow:0 4px 0 var(--ink);border-radius:20px;white-space:normal}
+  html.wa-demo[lang|="zh"] .nav ul a[aria-current]{box-shadow:0 4px 0 var(--ink)}
+  html.wa-demo[lang|="zh"] .nav-group-btn{display:none}
+  html.wa-demo[lang|="zh"] .nav-group-title{display:block;margin:0 0 8px 6px;font:700 .9rem/1.2 var(--display);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+  html.wa-demo[lang|="zh"] .nav .nav-group-list{display:flex;position:static;min-width:0;max-height:none;overflow:visible;padding:0;background:none;border:0;box-shadow:none;gap:8px}
+  html.wa-demo[lang|="zh"] .nav .nav-group-list a{padding:.55em .8em!important;font-size:1.4rem!important}
+  html.wa-demo[lang|="zh"] .nav-cta{font-size:1.3rem;padding:.9em}
+  html.wa-demo[lang|="zh"] body.nav-lock{overflow:hidden}
 }
 
 /* ---------- hero extras ---------- */
@@ -93,6 +172,8 @@ html[data-season="fall"] .nav-tomato a::after{content:"";position:absolute;top:2
 .choose-addr{display:flex;align-items:center;gap:.4em;font-weight:800;margin:0 0 .8em}
 .choose-addr .ico{color:var(--red)}
 .choose-card .ticks{margin:0 0 1.2em}
+.choose-ask{display:flex;align-items:center;gap:.4em;margin:-.3em 0 1.2em;font-weight:700;font-size:.95rem;color:var(--ink)}   /* Ava's address under the GreenHouse card's list (a long address wraps by the mailto rule in css/extras.css) */
+.choose-ask .ico{flex:none;color:var(--red)}
 
 /* ---------- visit: packages ---------- */
 .packages{display:grid;grid-template-columns:1fr 1fr;gap:26px}

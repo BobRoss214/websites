@@ -1,6 +1,6 @@
 {
  "about": "Extra facts the review sheet shows to the friend (tools/review_sheet.py reads this file; it is not site text). \"first\": ids of the lines that cost a visitor money or a wasted trip when wrong (refunds, rain, pets, allergies, safety, the address): they get priority 1 together with every line that has a price and every QR sign line. \"ask\": questions for a native reader, shown in the \"question for you\" column; a question is shown only while the current translation still contains the text in \"when\", so a line that was fixed stops asking. \"changed\": lines that were changed after a check; shown only while the current translation still has the new wording. Ids that no longer exist are ignored. \"renamed\": {\"old id\": \"new id\"} for a text whose id changed while its words stayed (`python3 tools/review_sheet.py changes` prints the pair): a corrected sheet that still has the old id is read as the new one.",
- "first": ["t0e3c1f6e", "t2c97bd46", "tb68669e6", "t40668596", "td5097209", "t6cc73b83", "t37319519", "t54bad66d", "tf1ab0489", "t117bfbcb", "t493369ae", "t60dfbf11", "tc955ad55", "tc3166c39", "t9c92799b", "ta2d4eb0f", "tf13be67c", "t168a0beb", "t775b3737", "tb63cbabc", "t788bdb17", "t3a5391d6", "t8763a833"],
+ "first": ["t0e3c1f6e", "t2c97bd46", "tb68669e6", "t40668596", "td5097209", "t6cc73b83", "t37319519", "t54bad66d", "tf1ab0489", "t117bfbcb", "t493369ae", "t60dfbf11", "tc955ad55", "tc3166c39", "t9c92799b", "ta2d4eb0f", "tf13be67c", "t168a0beb", "t775b3737", "tb63cbabc", "t788bdb17", "t3d42bdef", "t8763a833"],
  "renamed": {"te6cbae6c": "t6fab8a7b"},
  "ask": [
   {
@@ -121,7 +121,7 @@
   },
   {
    "lang": "zh",
-   "ids": ["t4b6d3990", "tb89adc3c", "t49c35609", "tb2ff1037", "t46f6aa3b", "td6ecd1d8", "t0b5eaa9e"],
+   "ids": ["t4b6d3990", "tb89adc3c", "t49c35609", "tb2ff1037", "t46f6aa3b", "td6ecd1d8", "tf7a7ad06"],
    "when": "鬼屋小径",
    "ask": "“Haunted trail” is a spooky walk in the dark on the farm. “鬼屋小径” is “haunted house path”, and a trail is not a house.",
    "suggest": "“闹鬼小径” or “鬼影小径”"
@@ -161,7 +161,7 @@
   },
   {
    "lang": "vi",
-   "ids": ["tfd41a510", "t0b5eaa9e", "t910a3c0c", "t277ccb16"],
+   "ids": ["tfd41a510", "tf7a7ad06", "t910a3c0c", "t277ccb16"],
    "when": "xe kéo",
    "ask": "“Wagon ride” is the ride on a wagon pulled by a tractor. “xe kéo” means “pulled cart”. Natural, or is there a better word?"
   },

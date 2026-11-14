@@ -120,7 +120,7 @@ const FACTS = [
   { id: 'price: extra per person in the pizza package, the photo passes\' farm fee and the no-pizza field fee', norm: money, min: 9, find: [
     new RegExp('Includes \\d+ Wise Pie pizzas, plus ' + MONEY + ' per person'), new RegExp('\\+ ' + MONEY + ' per person farm fee'),
     new RegExp('No pizza \\| (?:[^$|]+\\| )?' + MONEY + ' per person'), new RegExp('Farm fun, no pizza \\| ' + MONEY), new RegExp('farm fun without pizza is ' + MONEY + ' per person')] },
-  { id: 'price: corn pit, per person', norm: money, min: 5, find: [new RegExp('Corn pit[ |]{1,4}' + MONEY + ' per person'), new RegExp('corn pit \\(' + MONEY + ' per person\\)'), new RegExp('the corn pit is ' + MONEY + ' per person')] },
+  { id: 'price: corn pit, per person', norm: money, min: 5, find: [new RegExp('Corn pit[ |]{1,4}' + MONEY + ' per person'), new RegExp('corn pit \\(' + MONEY + ' per person\\)'), new RegExp('[Tt]he corn pit is ' + MONEY + ' per person')] },   /* "The corn pit is $4 per person" now starts a sentence in the pumpkin patch FAQ (the wagon ride age is said before it) */
   { id: 'price: wagon ride, per person', norm: money, min: 5, find: [new RegExp('Wagon ride[ |]{1,4}' + MONEY + ' per person'), new RegExp('wagon ride \\(' + MONEY + ' per person\\)'), new RegExp('Wagon rides are ' + MONEY + ' per person')] },
   { id: 'price: barrel train, per child', norm: money, min: 4, find: [new RegExp('Barrel train[ |]{1,4}' + MONEY + ' per child'), new RegExp('barrel train is ' + MONEY + ' per child')] },
   { id: 'price: tomatoes, per pound', norm: money, min: 5, find: [new RegExp(MONEY + ' per pound')] },
@@ -155,7 +155,8 @@ const FACTS = [
     new RegExp(DAYTXT + ',? \\d to \\d pm', 'i')],
     extra: () => [{ file: 'js/content.js', line: contentLine(/greenhouse:/), value: dayList(CONTENT.hours.greenhouse.days), words: 'hours.greenhouse.days' }, { file: 'js/content.js', line: contentLine(/pizza:\s*\{/), value: dayList(CONTENT.hours.pizza.days), words: 'hours.pizza.days' }, ...stripDays('GreenHouse')] },
   /* ---- ages ---- */
-  { id: 'age: free (infants, wagon ride, party children)', norm: num, min: 10, find: [/[Ii]nfants (\d+) and under are free/, /[Aa]ges (\d+) and younger ride free/, /[Cc]hildren (\d+) and under are free/, /[Cc]hildren age (\d+) and younger are free/] },
+  { id: 'age: free (infants, party children)', norm: num, min: 8, find: [/[Ii]nfants (\d+) and under are free/, /[Cc]hildren (\d+) and under are free/, /[Cc]hildren age (\d+) and younger are free/] },
+  { id: 'age: wagon ride free', norm: num, min: 8, find: [/[Aa]ges (\d+) and younger ride (?:the wagon )?free/] },
   { id: 'age: from this age people pay the field fee / school admission', norm: num, min: 11, find: [/[Aa]ges (\d+) and up/, /\(ages (\d+)\+\)/, /ages (\d+) and older/, /ages (\d+) and up/] },
   { id: 'age: barrel train (and under only)', norm: num, min: 3, find: [/Ages (\d+) and under only/] },
   /* ---- group sizes ---- */
@@ -321,7 +322,7 @@ verify('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so
     const words = decode(li[1]).toLowerCase(); const bars = [...li[2].matchAll(/--s:([\d.]+);--e:([\d.]+)/g)].map((b) => [+b[1], +b[2]]);
     const mon = (w) => MON.findIndex((x) => w.startsWith(x));
     let start = null, end = null;
-    const MONTHS = '(january|february|march|april|may|june|july|august|september|october|november|december)';   // "mid-April to early June", "mid- to late June through early July", "late September through October"
+    const MONTHS = '(january|february|march|april|may|june|july|august|september|october|november|december)';   // "mid-April to early June", "mid- to late June through early July", "mid-September through early November"
     const parts = new RegExp('(early|mid|late)?[- ]*(?:to (?:early|mid|late) )?' + MONTHS + '\\s*(?:to|through)\\s+(early |mid-|late )?' + MONTHS).exec(words.replace('mid- to late ', 'mid-').replace('new this year: every weekend, ', ''));
     if (/thanksgiving/.test(words)) { start = [10.7, 11.0]; const e = /early (december)/.exec(words); end = e ? [11.0, 11.34] : null; }
     else if (parts) {
@@ -357,7 +358,8 @@ verify('structured data (JSON-LD) is valid on all ' + PAGES.length + ' pages, so
   ];
   for (const [name, expect, rx] of want) { const m = rx.exec(t); if (!m) { bad.push(name + ': the words were not found'); continue; } if (m[1].toLowerCase().replace(/[ -]+/g, '') !== expect.toLowerCase().replace(/[ -]+/g, '')) bad.push(`${name}: the page says "${m[1]}", js/season.js says ${expect}`); }
   if (!(winterEnd && winterEnd.month === 'December' && /Friday after Thanksgiving to early December/.test(t) && half(winterEnd) === 'early')) bad.push('winter: "Friday after Thanksgiving to early December" does not match the end date in js/season.js');
-  if (!(tom && +tom[1] === 8 && +tom[2] >= 20 && +tom[3] === 9 && +tom[4] >= 28) || !/late September through October/.test(t)) bad.push('tomatoes and basil: "late September through October" does not match the dates in js/features.js');
+  // tomatoes and basil run the same days as the fall season (the site builder, Nov 9 2026): September 13 to November 8 in js/features.js, said as "mid-September through early November"
+  if (!(tom && +tom[1] === 8 && +tom[2] === 13 && +tom[3] === 10 && +tom[4] === 8) || !/every weekend,? (?:from )?mid-September through early November/i.test(t) || /late September through October/i.test(t)) bad.push('tomatoes and basil: "every weekend, mid-September through early November" does not match the dates in js/features.js (September 13 to November 8, the fall season)');
   verify('season words match js/season.js and the tomato dates in js/features.js', bad.length === 0, 'the seasons in the text and in js/season.js (or the tomato dates in js/features.js) differ: ' + bad.join('; '),
     'change the words in index.html (search for the words quoted above) or the dates in js/season.js so they say the same months, ' + REBUILD);
 }

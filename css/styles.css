@@ -185,11 +185,24 @@ svg.layer{bottom:0;height:64%;overflow:visible}
 .chips li{display:inline-flex;align-items:center;gap:.4em;background:rgba(255,255,255,.85);border:2.5px solid var(--ink);border-radius:999px;padding:.3em .85em .3em .6em;font:600 .93rem/1.2 var(--display)}
 .chips .ico{width:1.1em;height:1.1em;color:var(--green)}
 
-/* The bee is two boxes. The outer one (.bee-fly) is moved around by main.js, one animation per leg of the flight, and turned to face the
-   way it goes; the drawing inside bobs and tilts in a loop. Both are run by the compositor, so no script runs while it flies. */
-.bee-fly{position:absolute;left:0;top:0;width:52px;z-index:6;pointer-events:none;will-change:transform}
+/* What follows the pointer is a bee or a butterfly (js/main.js, initBee picks one when the page loads and now and then changes it). It is two boxes.
+   The outer one (.bee-fly) is moved around by main.js, one animation per leg of the flight, and turned to face the way it goes; the drawing inside
+   (the bee, or the butterfly: data-kind on .bee-fly says which one shows) bobs and tilts in a loop, and its wings buzz or flap in loops of their own.
+   Everything that moves is moved by transform only, which the compositor runs, so no script runs while it flies. The wings of the butterfly are direct children of
+   its drawing, like the two butterflies of the hero's scene (docs/SLOW_PHONE_TEST.md: some browsers run a part inside another group of a drawing on the main thread).
+   It stays hidden until the script has put it where it starts (.is-ready), so neither kind shows up for a moment in the corner. */
+.bee-fly{position:absolute;left:0;top:0;width:52px;z-index:6;pointer-events:none;will-change:transform;visibility:hidden}
+.bee-fly.is-ready{visibility:visible}
 .bee{display:block;width:100%;height:auto;filter:drop-shadow(0 4px 2px rgba(58,36,22,.18));animation:beeFly 1.454s ease-in-out infinite}
 .bee .wing{transform-box:fill-box;transform-origin:50% 100%;animation:buzz .09s linear infinite alternate}
+.bfly{display:none;width:100%;height:auto;animation:bflyBob .86s ease-in-out infinite}
+.bee-fly[data-kind="butterfly"] .bee{display:none}
+.bee-fly[data-kind="butterfly"] .bfly{display:block}
+.bfly .bw{animation-duration:.13s}   /* flaps faster than the butterflies of the scene (.32 s); the same keyframes (flap) */
+.bfly .wu{fill:var(--bf1,var(--pumpkin))}
+.bfly .wl{fill:var(--bf2,var(--sun))}
+.bee-fly[data-hue="morpho"]{--bf1:var(--berry);--bf2:var(--sky)}
+.bee-fly[data-hue="admiral"]{--bf1:var(--red);--bf2:var(--sun)}
 
 .picker{position:absolute;z-index:7;left:var(--gutter);bottom:clamp(12px,2.4vw,26px);display:flex;align-items:center;gap:12px;max-width:min(360px,calc(100% - 2 * var(--gutter)));background:var(--paper);border:3px solid var(--ink);border-radius:22px;padding:10px 16px 10px 10px;box-shadow:0 5px 0 var(--ink)}
 .picker-basket{position:relative;flex:none;width:64px;height:52px}
@@ -469,6 +482,7 @@ svg.layer{bottom:0;height:64%;overflow:visible}
 @keyframes flap{from{transform:scaleX(1)}to{transform:scaleX(.25)}}
 @keyframes beeFly{0%{transform:translateY(-5px) rotate(-5deg)}12.5%{transform:translateY(5px) rotate(-3.5deg)}25%{transform:translateY(-5px) rotate(0)}37.5%{transform:translateY(5px) rotate(3.5deg)}50%{transform:translateY(-5px) rotate(5deg)}62.5%{transform:translateY(5px) rotate(3.5deg)}75%{transform:translateY(-5px) rotate(0)}87.5%{transform:translateY(5px) rotate(-3.5deg)}100%{transform:translateY(-5px) rotate(-5deg)}}
 @keyframes buzz{from{transform:rotate(-14deg)}to{transform:rotate(16deg)}}
+@keyframes bflyBob{0%,100%{transform:translateY(-6px) rotate(-8deg)}25%,75%{transform:translateY(0) rotate(0)}50%{transform:translateY(6px) rotate(8deg)}}
 @keyframes flutter{
   0%{transform:translate(0,0) rotate(-6deg)}
   20%{transform:translate(9vw,-42px) rotate(8deg)}

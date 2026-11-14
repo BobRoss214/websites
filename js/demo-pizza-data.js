@@ -1,14 +1,18 @@
-/* Wise Acres account demo: the pizza data and the pizza rules (the Fall Menu, the crust and cheese extras, what an order costs, the difference between two orders,
- * the pick-up time). Every number is copied from the site's own page (the Fall Menu in index.html and the printed menu picture assets/photos/wise-pie-fall-menu-2026.webp);
- * tests/demo-data.test.mjs checks each against the page. THE DEMO IS PRETEND: see docs/ACCOUNT_DEMO.md.
+/* Wise Acres account demo: the pizza menu and the pizza rules. Plain data and plain functions: no page, no browser storage, no other file needed.
+ * THE DEMO IS PRETEND (docs/ACCOUNT_DEMO.md). The only real things here are the names, the toppings and the prices of the Fall Menu, copied from the
+ * site's own pages (the Wise Pie section of index.html and the printed menu picture assets/photos/wise-pie-fall-menu-2026.webp): the nine pizzas,
+ * the gluten-free crust (+$9) and the vegan cheese (+$3). Nothing is added to them: a price that is not on the page is never shown.
+ * js/demo-data.js keeps the same names and reads them from here, and the pizza editor (js/demo-pizza-editor.js), the family's My pizza screen
+ * (js/demo-view-pizza.js) and the kitchen screen all use this one file. It loads in the browser (window.DemoPizzaData) and in Node (module.exports).
  *
- * Plain JavaScript, no libraries, no DOM, no browser storage. It loads in the browser (window.DemoPizzaData) and in Node (module.exports). js/demo-data.js uses it, so every
- * reader of DemoData keeps the same names (DemoData.PIZZAS, DemoData.priceOrder ...). Owner after the foundation: helper C (the family's My pizza screen, the pizza editor and
- * the kitchen use it). An order is { pickup: 'HH:MM', pizzas: [{ type, count, toppings: [...], glutenFree, vegan }], notes } with type an id of PIZZAS. */
+ * An order is { pickup: 'HH:MM', pizzas: [{ type: '<pizza id>', count, toppings: [the toppings it keeps], glutenFree, vegan }], notes }.
+ * Times are the farm's own clock, 24 hours, no time zones. */
 (function () {
   'use strict';
 
-  /* ---------------- small helpers (this file needs no other file) ---------------- */
+  /* ------------------------------------------------------------------ *
+   * Small helpers (times, money, words)
+   * ------------------------------------------------------------------ */
   function pad(n) { return (n < 10 ? '0' : '') + n; }
   function toMin(t) { var m = /^(\d{1,2}):(\d{2})$/.exec(String(t)); return m ? +m[1] * 60 + +m[2] : NaN; }
   function fromMin(n) { n = ((n % 1440) + 1440) % 1440; return pad(Math.floor(n / 60)) + ':' + pad(n % 60); }
@@ -19,29 +23,33 @@
     var h = Math.floor(n / 60) % 24, m = n % 60;
     return (h % 12 === 0 ? 12 : h % 12) + ':' + pad(m) + ' ' + (h < 12 ? 'am' : 'pm');
   }
+  function cents(x) { return Math.round(x * 100) / 100; }
   function money(n) {
     n = Math.round(n * 100) / 100;
-    var neg = n < 0, a = Math.abs(n), whole = Math.floor(a), cents = Math.round((a - whole) * 100);
-    return (neg ? '-' : '') + '$' + String(whole).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (cents ? '.' + pad(cents) : '');
+    var neg = n < 0, a = Math.abs(n), whole = Math.floor(a), c = Math.round((a - whole) * 100);
+    return (neg ? '-' : '') + '$' + String(whole).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (c ? '.' + pad(c) : '');
   }
+  // ['a'] -> 'a'; ['a', 'b'] -> 'a and b'; ['a', 'b', 'c'] -> 'a, b and c'
   function words(list) { return list.length < 2 ? list.join('') : list.slice(0, -1).join(', ') + ' and ' + list[list.length - 1]; }
-  function cents(x) { return Math.round(x * 100) / 100; }
+  function plural(n, one, many) { return n + ' ' + (n === 1 ? one : (many || one + 's')); }
 
-  /* ---------------- what the page says ---------------- */
+  /* ------------------------------------------------------------------ *
+   * The Fall Menu: ALL FROM THE SITE'S OWN PAGE (#menu in index.html, and the printed menu picture)
+   * ------------------------------------------------------------------ */
   var PRICES = {
-    pizzasIncluded: 2,   // the visit with pizza includes 2 Wise Pie pizzas
+    pizzasIncluded: 2,   // a "Visit with pizza" reservation includes 2 Wise Pie pizzas
     glutenFree: 9,       // Wholly Wholesome gluten-free crust, +$9
     veganCheese: 3       // Follow Your Heart vegan cheese, +$3
   };
-  var FARM_OPENS = '10:00', FARM_CLOSES = '16:00';   // "At the farm: 10 am - 4 pm"
+  var FARM_OPENS = '10:00', FARM_CLOSES = '16:00';   // "At the farm: 10 am - 4 pm" (the pizza section of the page)
   var PIZZA_DELAY = 60;                              // pizzas are ready 1 hour after the reservation time
 
-  // The Fall Menu (the printed menu and #menu on the home page). `desc` is the page's own line; the toppings are what follows "homemade dough".
+  // [id, name, price, the page's own line]; the toppings are what follows "homemade dough"
   var MENU = [
     ['cheese', 'Cheese', 15, 'homemade dough, tomato sauce, cheese'],
     ['halfzies', 'Halfzies', 15, 'homemade dough, tomato sauce, cheese, pepperoni on half'],
     ['margherita', 'Margherita', 15, 'homemade dough, tomato sauce, cheese, fresh basil'],
-    ['bee-keeper', 'The Bee Keeper', 16, 'homemade dough, tomato sauce, organic jalape\u00f1os, honey, cheese'],
+    ['bee-keeper', 'The Bee Keeper', 16, 'homemade dough, tomato sauce, organic jalapeños, honey, cheese'],
     ['farmer-cathy', 'The Farmer Cathy', 16, 'homemade dough, organic olive oil, organic tomatoes, organic red onion, organic zucchini, garlic, roasted corn, cheese'],
     ['pepperoni', 'Pepperoni', 16, 'homemade dough, tomato sauce, cheese, pepperoni'],
     ['nitrate-free-pepperoni', 'Nitrate Free Pepperoni', 17, 'homemade dough, tomato sauce, cheese, nitrate-free pepperoni'],
@@ -53,7 +61,9 @@
   });
   function pizzaById(id) { for (var i = 0; i < PIZZAS.length; i++) if (PIZZAS[i].id === id) return PIZZAS[i]; return null; }
 
-  /* ---------------- pizza orders ---------------- */
+  /* ------------------------------------------------------------------ *
+   * Pick-up times: the pizza is ready 1 hour after the reservation time unless the family asks for another time
+   * ------------------------------------------------------------------ */
   function defaultPickup(visitTime) { return addMinutes(visitTime, PIZZA_DELAY); }
   // Pick-up times in 15 minute steps, from the visit time to the end of the farm's day.
   function pickupSlots(visitTime) {
@@ -62,11 +72,21 @@
     for (var m = from; m <= Math.max(end, from); m += 15) out.push(fromMin(m));
     return out;
   }
+
+  /* ------------------------------------------------------------------ *
+   * Reading an order
+   * ------------------------------------------------------------------ */
   function pizzaCount(order) { return (order.pizzas || []).reduce(function (s, p) { return s + (p.count || 0); }, 0); }
   function countWhere(order, key) { return (order.pizzas || []).reduce(function (s, p) { return s + (p[key] ? p.count || 0 : 0); }, 0); }
+  // a row with every field filled in (a row from the page's own sample or from a request may only name its type)
   function withDefaults(p) {
     var type = pizzaById(p.type);
     return { type: p.type, count: p.count || 1, toppings: p.toppings ? p.toppings.slice() : (type ? type.toppings.slice() : []), glutenFree: !!p.glutenFree, vegan: !!p.vegan };
+  }
+  // The toppings a row leaves off, in the menu's own order
+  function leftOff(p) {
+    var type = pizzaById(p.type), keep = p.toppings || (type ? type.toppings : []);
+    return type ? type.toppings.filter(function (t) { return keep.indexOf(t) < 0; }) : [];
   }
   // One short plain line per pizza row: "1 Pepperoni", "2 Margherita, gluten-free crust, without fresh basil".
   function describeOrder(order) {
@@ -74,15 +94,30 @@
       var type = pizzaById(p.type), name = type ? type.name : String(p.type), s = p.count + ' ' + name;
       if (p.glutenFree) s += ', gluten-free crust';
       if (p.vegan) s += ', vegan cheese';
-      if (type && p.toppings) {
-        var off = type.toppings.filter(function (t) { return p.toppings.indexOf(t) < 0; });
-        if (off.length) s += ', without ' + words(off);
-      }
+      var off = leftOff(p);
+      if (off.length) s += ', without ' + words(off);
       return s;
     });
   }
-  // What the order costs on top of the package. The package pays for its first 2 pizzas; every other pizza is at its menu price; the crust and the cheese
-  // are +$9 and +$3 each. When the extra pizzas are not all the same price the exact amount is not known, so it is a range from the menu (never a made-up rule).
+  // One sentence for a whole order: "3 pizzas: 2 Pepperoni, 1 Margherita (gluten-free crust). Ready at 2:45 pm."
+  function orderSentence(order) {
+    var rows = (order.pizzas || []).map(function (p) {
+      var type = pizzaById(p.type), extra = [];
+      if (p.glutenFree) extra.push('gluten-free crust');
+      if (p.vegan) extra.push('vegan cheese');
+      var off = leftOff(p);
+      if (off.length) extra.push('without ' + words(off));
+      return p.count + ' ' + (type ? type.name : String(p.type)) + (extra.length ? ' (' + extra.join(', ') + ')' : '');
+    });
+    var n = pizzaCount(order);
+    return (n ? plural(n, 'pizza') + ': ' + rows.join(', ') : 'No pizzas') + '.' + (order.pickup ? ' Ready at ' + time12(order.pickup) + '.' : '');
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Prices: what an order costs on top of the package. The package pays for its first 2 pizzas; every other pizza is at its menu price; the crust
+   * and the cheese are +$9 and +$3 each. When the extra pizzas are not all the same price the exact amount is not known, so it is a range from the
+   * menu (never a made-up rule). Taking things away shows no price: "The kitchen confirms any price change".
+   * ------------------------------------------------------------------ */
   function priceOrder(order, included) {
     var P = PRICES, n = pizzaCount(order), inc = included == null ? P.pizzasIncluded : included, extra = Math.max(0, n - inc);
     var prices = [];
@@ -98,6 +133,10 @@
     var exact = !extra || low === high;
     return { count: n, included: inc, extraCount: extra, extraLow: low, extraHigh: high, lines: lines, exact: exact, total: exact ? cents(low + gf * P.glutenFree + vg * P.veganCheese) : null };
   }
+
+  /* ------------------------------------------------------------------ *
+   * The difference between two orders
+   * ------------------------------------------------------------------ */
   // Counts of each type in an order: { pepperoni: 2, ... }
   function typeCounts(order) { var c = {}; (order.pizzas || []).forEach(function (p) { c[p.type] = (c[p.type] || 0) + (p.count || 0); }); return c; }
   // The toppings of every pizza of one kind, one text per pizza, sorted: two orders put the same toppings on that kind when these lists are equal.
@@ -106,7 +145,6 @@
     (order.pizzas || []).forEach(function (p) { if (p.type === type) for (var i = 0; i < (p.count || 0); i++) out.push((p.toppings || []).slice().sort().join(', ')); });
     return out.sort();
   }
-  // The difference between two orders, in plain words, with the price of what was ADDED. Taking things away shows no price: "The kitchen confirms any price change".
   // -> { changes: [sentences], added: [{ label, amount }], addedTotal: number|null, lowered: bool, now: 'text', asked: 'text', same: bool }
   // addedTotal is null when one added amount is not known (extra pizzas that are not a new kind), and 0 when nothing was added.
   function diffOrders(before, after) {
@@ -147,10 +185,40 @@
     };
   }
 
+  /* ------------------------------------------------------------------ *
+   * One pizza per row (what the editor shows) and back to counts (what the store keeps)
+   * ------------------------------------------------------------------ */
+  // [{ type, count: 2, ... }] -> two rows of count 1 each, so one of them can be made different
+  function expandRows(order) {
+    var out = [];
+    (order.pizzas || []).forEach(function (p) {
+      var row = withDefaults(p);
+      for (var i = 0; i < row.count; i++) out.push({ type: row.type, count: 1, toppings: row.toppings.slice(), glutenFree: row.glutenFree, vegan: row.vegan });
+    });
+    return out;
+  }
+  function rowKey(p) { return [p.type, (p.toppings || []).slice().sort().join('|'), p.glutenFree ? 'gf' : '', p.vegan ? 'v' : ''].join('#'); }
+  // identical rows become one row with a count, in the order they first appear
+  function mergeRows(rows) {
+    var out = [], at = {};
+    rows.forEach(function (p) {
+      var k = rowKey(p);
+      if (k in at) { out[at[k]].count += p.count || 1; return; }
+      at[k] = out.length;
+      out.push({ type: p.type, count: p.count || 1, toppings: (p.toppings || []).slice(), glutenFree: !!p.glutenFree, vegan: !!p.vegan });
+    });
+    return out;
+  }
+  // The same pizzas, time and note? (the order of the rows and a row split in two do not matter)
+  function signature(order) { return mergeRows(expandRows(order)).map(function (p) { return rowKey(p) + 'x' + p.count; }).sort().join(';'); }
+  function sameOrder(a, b) { return signature(a) === signature(b) && (a.pickup || '') === (b.pickup || '') && (a.notes || '') === (b.notes || ''); }
+
   var api = {
     PRICES: PRICES, PIZZAS: PIZZAS, FARM_OPENS: FARM_OPENS, FARM_CLOSES: FARM_CLOSES, PIZZA_DELAY: PIZZA_DELAY,
-    pizzaById: pizzaById, defaultPickup: defaultPickup, pickupSlots: pickupSlots, pizzaCount: pizzaCount, withDefaults: withDefaults,
-    describeOrder: describeOrder, priceOrder: priceOrder, diffOrders: diffOrders
+    pizzaById: pizzaById, withDefaults: withDefaults, leftOff: leftOff, pizzaCount: pizzaCount, describeOrder: describeOrder, orderSentence: orderSentence,
+    priceOrder: priceOrder, diffOrders: diffOrders, defaultPickup: defaultPickup, pickupSlots: pickupSlots,
+    expandRows: expandRows, mergeRows: mergeRows, rowKey: rowKey, sameOrder: sameOrder,
+    toMin: toMin, fromMin: fromMin, addMinutes: addMinutes, time12: time12, money: money, words: words, plural: plural
   };
   if (typeof module === 'object' && module && module.exports) module.exports = api;
   if (typeof window === 'object' && window) window.DemoPizzaData = api;

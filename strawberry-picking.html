@@ -119,28 +119,87 @@
     <div class="wrap header-inner">
       <a data-ta-aria-label="t07b93f87" class="brand" href="index.html" aria-label="Wise Acres Organic Farm — back to top">
         <svg class="brand-berry" aria-hidden="true"><use href="#strawberry"/></svg>
-        <span class="brand-text"><span data-t="t31a0a6c6" class="brand-name" translate="no">Wise Acres</span><span data-t="t5104c566" class="brand-sub">Organic Farm</span></span>
+        <span class="brand-text"><span data-t="t31a0a6c6" class="brand-name" translate="no">Wise Acres</span> <span data-t="t5104c566" class="brand-sub">Organic Farm</span></span>
       </a>
 
       <nav data-ta-aria-label="td1883058" class="nav" id="nav" aria-label="Main">
         <ul>
-          <li><a data-t="t7c9a8664" href="index.html#visit">Visit</a></li>
-          <li class="nav-first"><a data-t="t9c2ac95a" href="first-visit.html">First-visit guide</a></li>
-          <li><a data-t="te9db7dd6" href="index.html#farm">On the Farm</a></li>
-          <li><a data-t="t27d882d4" href="index.html#seasons">Seasons</a></li>
-          <li class="nav-tomato"><a data-t="t3a209b3e" href="index.html#tomatoes">Tomatoes</a></li>
-          <li><a data-t="t01eb73e0" href="index.html#pizza">Pizza</a></li>
-          <li><a data-t="t1dc91a78" href="index.html#greenhouse">GreenHouse</a></li>
-          <li><a data-t="t55de8870" href="index.html#shop">Shop</a></li>
-          <li class="nav-more">
-            <button data-t="t1e6fa7b2" class="nav-more-btn" type="button" aria-expanded="false" aria-controls="nav-more-list">More <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
-            <ul class="nav-more-list" id="nav-more-list">
-              <li class="nav-first-more"><a data-t="t9c2ac95a" href="first-visit.html">First-visit guide</a></li>
-              <li><a data-t="td4e7d7d3" href="index.html#flowers">Flowers</a></li>
-              <li><a data-t="tae9629f4" href="index.html#groups">Groups</a></li>
-              <li><a data-t="tc8927cf4" href="index.html#about">Our Story</a></li>
-              <li><a data-t="t03688ba6" href="index.html#faq">FAQ</a></li>
-              <li><a data-t="tb37456c4" href="index.html#contact">Contact</a></li>
+          <li class="nav-group" data-spy="visit this-week farm-map first-visit reserve">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-visit"><span data-t="t7c9a8664">Visit</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="t7c9a8664" class="nav-group-title" id="nav-title-visit">Visit</span>
+            <ul class="nav-group-list" id="nav-list-visit" aria-labelledby="nav-title-visit">
+              <li><a data-t="t623c865d" href="index.html#visit">Hours &amp; locations</a></li>
+              <li><a data-t="td94af496" href="index.html#steps">Reserve a time</a></li>
+              <li><a data-t="t0b95e8c2" href="index.html#options">Choose your package</a></li>
+              <li><a data-t="t9c2ac95a" href="first-visit.html">First-visit guide</a></li>
+              <li><a data-t="t0a13643a" href="index.html#farm-map">Farm map</a></li>
+              <li><a data-t="tf814a9fb" href="index.html#contact">Directions</a></li>
+            </ul>
+          </li>
+          <li class="nav-group nav-tomato" data-spy="farm farm-cards seasons tomatoes flowers">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-things"><span data-t="tad085e05">Things to Do</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="tad085e05" class="nav-group-title" id="nav-title-things">Things to Do</span>
+            <ul class="nav-group-list" id="nav-list-things" aria-labelledby="nav-title-things">
+              <li><a data-t="t018f1d8a" href="index.html#seasons">What&rsquo;s in season</a></li>
+              <li><a data-t="td150e085" href="index.html#farm">U-pick</a></li>
+              <li><a data-t="tffd483ee" href="index.html#tomatoes">Tomatoes &amp; basil</a></li>
+              <li><a data-t="tec7e08fa" href="index.html#flowers">U-cut flowers</a></li>
+              <li><a data-t="tf0a3eea8" href="index.html#addons">Rides &amp; add-ons</a></li>
+              <li><a data-t="t5210baa9" href="index.html#animals">Meet the animals</a></li>
+              <li><a data-t="t2472110c" href="index.html#farm-playgrounds" data-seasons="spring summer fall" data-fallback="farm">Playgrounds</a></li>
+              <li><a data-t="tb987e3f1" href="index.html#photography">Photography</a></li>
+            </ul>
+          </li>
+          <li class="nav-group" data-spy="greenhouse pizza">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-greenhouse"><span data-t="t1dc91a78">GreenHouse</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="t1dc91a78" class="nav-group-title" id="nav-title-greenhouse">GreenHouse</span>
+            <ul class="nav-group-list" id="nav-list-greenhouse" aria-labelledby="nav-title-greenhouse">
+              <li><a data-t="t3d7eea72" href="index.html#greenhouse">About The GreenHouse</a></li>
+              <li><a data-t="t9cc96e01" href="index.html#pizza">Wise Pie pizza</a></li>
+              <li><a data-t="t1242a215" href="index.html#shop-icecream">Ice cream</a></li>
+              <li><a data-t="tcd3fe557" href="index.html#shop-drinks">Drinks</a></li>
+              <li><a data-t="t05db350a" href="index.html#shop-pumpkins" data-coming="winter">Christmas trees</a></li>
+            </ul>
+          </li>
+          <li class="nav-group" data-spy="shop">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-store"><span data-t="t0d8a7046">Store</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="t0d8a7046" class="nav-group-title" id="nav-title-store">Store</span>
+            <ul class="nav-group-list" id="nav-list-store" aria-labelledby="nav-title-store">
+              <li><a data-t="td718f331" href="index.html#shop">Everything in the store</a></li>
+              <li><a data-t="t8da6d949" href="index.html#shop-snacks">Snacks</a></li>
+              <li><a data-t="t1242a215" href="index.html#shop-icecream">Ice cream</a></li>
+              <li><a data-t="t01eb73e0" href="index.html#shop-greenhouse">Pizza</a></li>
+              <li><a data-t="tcd3fe557" href="index.html#shop-drinks">Drinks</a></li>
+              <li><a data-t="t16570e6e" href="index.html#shop-pantry">Pantry &amp; bakery</a></li>
+              <li><a data-t="tf0eaffbb" href="index.html#shop-gifts">Gifts &amp; merchandise</a></li>
+              <li><a data-t="td7ee4888" href="index.html#shop-plants">Plants &amp; seasonal</a></li>
+            </ul>
+          </li>
+          <li class="nav-group" data-spy="groups">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-groups"><span data-t="t4c852472">Groups &amp; Parties</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="t4c852472" class="nav-group-title" id="nav-title-groups">Groups &amp; Parties</span>
+            <ul class="nav-group-list" id="nav-list-groups" aria-labelledby="nav-title-groups">
+              <li><a data-t="t0e491ed8" href="index.html#school-tours">School tours</a></li>
+              <li><a data-t="t47aeb2c0" href="index.html#parties">Parties at the farm</a></li>
+              <li><a data-t="t8321dc82" href="index.html#corporate">Corporate events</a></li>
+            </ul>
+          </li>
+          <li class="nav-group nav-group-end" data-spy="about reviews gallery">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-about"><span data-t="tc887b9d3">About Us</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="tc887b9d3" class="nav-group-title" id="nav-title-about">About Us</span>
+            <ul class="nav-group-list" id="nav-list-about" aria-labelledby="nav-title-about">
+              <li><a data-t="t5a2d8ead" href="index.html#about">Our story</a></li>
+              <li><a data-t="tb83c4cda" href="index.html#reviews">Reviews</a></li>
+              <li><a data-t="tc8b2e864" href="index.html#gallery">Photos</a></li>
+            </ul>
+          </li>
+          <li class="nav-group nav-group-end" data-spy="faq contact">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-contact"><span data-t="tb37456c4">Contact</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="tb37456c4" class="nav-group-title" id="nav-title-contact">Contact</span>
+            <ul class="nav-group-list" id="nav-list-contact" aria-labelledby="nav-title-contact">
+              <li><a data-t="t4832e458" href="index.html#contact">Contact us</a></li>
+              <li><a data-t="tf16d36d6" href="index.html#faq">Questions (FAQ)</a></li>
+              <li><a data-t="t03765231" href="index.html#follow-signup">Email sign-up</a></li>
             </ul>
           </li>
         </ul>
@@ -291,9 +350,9 @@
     <div class="grass" aria-hidden="true"></div>
     <div class="wrap footer-inner">
       <div class="footer-brand">
-        <a data-ta-aria-label="t9d4c2540" class="brand brand-light" href="index.html" aria-label="Back to top">
+        <a data-ta-aria-label="t07b93f87" class="brand brand-light" href="index.html" aria-label="Wise Acres Organic Farm — back to top">
           <svg class="brand-berry" aria-hidden="true"><use href="#strawberry"/></svg>
-          <span class="brand-text"><span data-t="t31a0a6c6" class="brand-name" translate="no">Wise Acres</span><span data-t="t5104c566" class="brand-sub">Organic Farm</span></span>
+          <span class="brand-text"><span data-t="t31a0a6c6" class="brand-name" translate="no">Wise Acres</span> <span data-t="t5104c566" class="brand-sub">Organic Farm</span></span>
         </a>
         <p data-t="ta1bc4780">A family-owned, USDA Certified Organic u-pick farm in Indian Trail, North Carolina.</p>
         <p><a data-t="tf40e80c8" href="https://eepurl.com/hZehgr" target="_blank" rel="noopener" data-signup-link data-track="Email signup click">Sign up for emails about farm happenings and picking opportunities</a></p>

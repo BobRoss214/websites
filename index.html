@@ -86,28 +86,87 @@
     <div class="wrap header-inner">
       <a data-ta-aria-label="t07b93f87" class="brand" href="#top" aria-label="Wise Acres Organic Farm — back to top">
         <svg class="brand-berry" aria-hidden="true"><use href="#strawberry"/></svg>
-        <span class="brand-text"><span data-t="t31a0a6c6" class="brand-name" translate="no">Wise Acres</span><span data-t="t5104c566" class="brand-sub">Organic Farm</span></span>
+        <span class="brand-text"><span data-t="t31a0a6c6" class="brand-name" translate="no">Wise Acres</span> <span data-t="t5104c566" class="brand-sub">Organic Farm</span></span>
       </a>
 
       <nav data-ta-aria-label="td1883058" class="nav" id="nav" aria-label="Main">
         <ul>
-          <li><a data-t="t7c9a8664" href="#visit">Visit</a></li>
-          <li class="nav-first"><a data-t="t9c2ac95a" href="#first-visit">First-visit guide</a></li>
-          <li><a data-t="te9db7dd6" href="#farm">On the Farm</a></li>
-          <li><a data-t="t27d882d4" href="#seasons">Seasons</a></li>
-          <li class="nav-tomato"><a data-t="t3a209b3e" href="#tomatoes">Tomatoes</a></li>
-          <li><a data-t="t01eb73e0" href="#pizza">Pizza</a></li>
-          <li><a data-t="t1dc91a78" href="#greenhouse">GreenHouse</a></li>
-          <li><a data-t="t55de8870" href="#shop">Shop</a></li>
-          <li class="nav-more">
-            <button data-t="t1e6fa7b2" class="nav-more-btn" type="button" aria-expanded="false" aria-controls="nav-more-list">More <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
-            <ul class="nav-more-list" id="nav-more-list">
-              <li class="nav-first-more"><a data-t="t9c2ac95a" href="#first-visit">First-visit guide</a></li>
-              <li><a data-t="td4e7d7d3" href="#flowers">Flowers</a></li>
-              <li><a data-t="tae9629f4" href="#groups">Groups</a></li>
-              <li><a data-t="tc8927cf4" href="#about">Our Story</a></li>
-              <li><a data-t="t03688ba6" href="#faq">FAQ</a></li>
-              <li><a data-t="tb37456c4" href="#contact">Contact</a></li>
+          <li class="nav-group" data-spy="visit this-week farm-map first-visit reserve">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-visit"><span data-t="t7c9a8664">Visit</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="t7c9a8664" class="nav-group-title" id="nav-title-visit">Visit</span>
+            <ul class="nav-group-list" id="nav-list-visit" aria-labelledby="nav-title-visit">
+              <li><a data-t="t623c865d" href="#visit">Hours &amp; locations</a></li>
+              <li><a data-t="td94af496" href="#steps">Reserve a time</a></li>
+              <li><a data-t="t0b95e8c2" href="#options">Choose your package</a></li>
+              <li><a data-t="t9c2ac95a" href="#first-visit">First-visit guide</a></li>
+              <li><a data-t="t0a13643a" href="#farm-map">Farm map</a></li>
+              <li><a data-t="tf814a9fb" href="#contact">Directions</a></li>
+            </ul>
+          </li>
+          <li class="nav-group nav-tomato" data-spy="farm farm-cards seasons tomatoes flowers">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-things"><span data-t="tad085e05">Things to Do</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="tad085e05" class="nav-group-title" id="nav-title-things">Things to Do</span>
+            <ul class="nav-group-list" id="nav-list-things" aria-labelledby="nav-title-things">
+              <li><a data-t="t018f1d8a" href="#seasons">What&rsquo;s in season</a></li>
+              <li><a data-t="td150e085" href="#farm">U-pick</a></li>
+              <li><a data-t="tffd483ee" href="#tomatoes">Tomatoes &amp; basil</a></li>
+              <li><a data-t="tec7e08fa" href="#flowers">U-cut flowers</a></li>
+              <li><a data-t="tf0a3eea8" href="#addons">Rides &amp; add-ons</a></li>
+              <li><a data-t="t5210baa9" href="#animals">Meet the animals</a></li>
+              <li><a data-t="t2472110c" href="#farm-playgrounds" data-seasons="spring summer fall" data-fallback="farm">Playgrounds</a></li>
+              <li><a data-t="tb987e3f1" href="#photography">Photography</a></li>
+            </ul>
+          </li>
+          <li class="nav-group" data-spy="greenhouse pizza">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-greenhouse"><span data-t="t1dc91a78">GreenHouse</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="t1dc91a78" class="nav-group-title" id="nav-title-greenhouse">GreenHouse</span>
+            <ul class="nav-group-list" id="nav-list-greenhouse" aria-labelledby="nav-title-greenhouse">
+              <li><a data-t="t3d7eea72" href="#greenhouse">About The GreenHouse</a></li>
+              <li><a data-t="t9cc96e01" href="#pizza">Wise Pie pizza</a></li>
+              <li><a data-t="t1242a215" href="#shop-icecream">Ice cream</a></li>
+              <li><a data-t="tcd3fe557" href="#shop-drinks">Drinks</a></li>
+              <li><a data-t="t05db350a" href="#shop-pumpkins" data-coming="winter">Christmas trees</a></li>
+            </ul>
+          </li>
+          <li class="nav-group" data-spy="shop">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-store"><span data-t="t0d8a7046">Store</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="t0d8a7046" class="nav-group-title" id="nav-title-store">Store</span>
+            <ul class="nav-group-list" id="nav-list-store" aria-labelledby="nav-title-store">
+              <li><a data-t="td718f331" href="#shop">Everything in the store</a></li>
+              <li><a data-t="t8da6d949" href="#shop-snacks">Snacks</a></li>
+              <li><a data-t="t1242a215" href="#shop-icecream">Ice cream</a></li>
+              <li><a data-t="t01eb73e0" href="#shop-greenhouse">Pizza</a></li>
+              <li><a data-t="tcd3fe557" href="#shop-drinks">Drinks</a></li>
+              <li><a data-t="t16570e6e" href="#shop-pantry">Pantry &amp; bakery</a></li>
+              <li><a data-t="tf0eaffbb" href="#shop-gifts">Gifts &amp; merchandise</a></li>
+              <li><a data-t="td7ee4888" href="#shop-plants">Plants &amp; seasonal</a></li>
+            </ul>
+          </li>
+          <li class="nav-group" data-spy="groups">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-groups"><span data-t="t4c852472">Groups &amp; Parties</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="t4c852472" class="nav-group-title" id="nav-title-groups">Groups &amp; Parties</span>
+            <ul class="nav-group-list" id="nav-list-groups" aria-labelledby="nav-title-groups">
+              <li><a data-t="t0e491ed8" href="#school-tours">School tours</a></li>
+              <li><a data-t="t47aeb2c0" href="#parties">Parties at the farm</a></li>
+              <li><a data-t="t8321dc82" href="#corporate">Corporate events</a></li>
+            </ul>
+          </li>
+          <li class="nav-group nav-group-end" data-spy="about reviews gallery">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-about"><span data-t="tc887b9d3">About Us</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="tc887b9d3" class="nav-group-title" id="nav-title-about">About Us</span>
+            <ul class="nav-group-list" id="nav-list-about" aria-labelledby="nav-title-about">
+              <li><a data-t="t5a2d8ead" href="#about">Our story</a></li>
+              <li><a data-t="tb83c4cda" href="#reviews">Reviews</a></li>
+              <li><a data-t="tc8b2e864" href="#gallery">Photos</a></li>
+            </ul>
+          </li>
+          <li class="nav-group nav-group-end" data-spy="faq contact">
+            <button class="nav-group-btn" type="button" aria-expanded="false" aria-controls="nav-list-contact"><span data-t="tb37456c4">Contact</span> <svg class="ico" aria-hidden="true"><use href="#i-chevron"/></svg></button>
+            <span data-t="tb37456c4" class="nav-group-title" id="nav-title-contact">Contact</span>
+            <ul class="nav-group-list" id="nav-list-contact" aria-labelledby="nav-title-contact">
+              <li><a data-t="t4832e458" href="#contact">Contact us</a></li>
+              <li><a data-t="tf16d36d6" href="#faq">Questions (FAQ)</a></li>
+              <li><a data-t="t03765231" href="#follow-signup">Email sign-up</a></li>
             </ul>
           </li>
         </ul>
@@ -185,7 +244,7 @@
         <svg class="layer layer-fore" data-depth="-0.07" id="fore" viewBox="0 0 1440 520" preserveAspectRatio="xMidYMax slice"></svg>
       </div>
 
-      <div class="bee-fly" id="bee-fly"><svg class="bee" id="bee" viewBox="0 0 64 46" aria-hidden="true">
+      <div class="bee-fly" id="bee-fly" data-kind="bee" aria-hidden="true"><svg class="bee" id="bee" viewBox="0 0 64 46" aria-hidden="true">
         <defs><clipPath id="bee-clip"><ellipse cx="32" cy="28" rx="21" ry="13"/></clipPath></defs>
         <g class="bee-wings">
           <ellipse class="wing w1" cx="26" cy="12" rx="9" ry="13" transform="rotate(-22 26 12)" fill="#e6f6ff" stroke="#3a2416" stroke-width="2.2"/>
@@ -198,6 +257,21 @@
         <circle cx="53" cy="27" r="8.5" fill="#ffd54f" stroke="#3a2416" stroke-width="3"/>
         <circle cx="56" cy="25" r="2.2" fill="#3a2416"/>
         <path d="M54 12c2 3 3 5 3 8M50 13c0 3 0 5-1 8" stroke="#3a2416" stroke-width="2" fill="none" stroke-linecap="round"/>
+      </svg><svg class="bfly" id="bfly" viewBox="0 0 60 50" aria-hidden="true">
+        <g class="bw bw-l">
+          <path class="wu" d="M30 25C20 4 4 6 4 18c0 8 10 10 26 7Z" fill="#f58a1f" stroke="#3a2416" stroke-width="2.4" stroke-linejoin="round"/>
+          <path class="wl" d="M30 25C14 24 6 34 12 42c8 6 16-6 18-17Z" fill="#ffc928" stroke="#3a2416" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M27 24C21 15 15 11 9 12M26 28C19 28 13 31 12 37" fill="none" stroke="#3a2416" stroke-width="1.3" stroke-linecap="round" opacity=".5"/>
+          <circle cx="11" cy="17" r="2.1" fill="#fff8e6"/><circle cx="16" cy="38" r="1.8" fill="#fff8e6"/>
+        </g>
+        <g class="bw bw-r">
+          <path class="wu" d="M30 25C40 4 56 6 56 18c0 8-10 10-26 7Z" fill="#f58a1f" stroke="#3a2416" stroke-width="2.4" stroke-linejoin="round"/>
+          <path class="wl" d="M30 25c16-1 24 9 18 17-8 6-16-6-18-17Z" fill="#ffc928" stroke="#3a2416" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M33 24C39 15 45 11 51 12M34 28C41 28 47 31 48 37" fill="none" stroke="#3a2416" stroke-width="1.3" stroke-linecap="round" opacity=".5"/>
+          <circle cx="49" cy="17" r="2.1" fill="#fff8e6"/><circle cx="44" cy="38" r="1.8" fill="#fff8e6"/>
+        </g>
+        <rect x="28" y="14" width="4" height="25" rx="2" fill="#3a2416"/><circle cx="30" cy="14" r="3.3" fill="#3a2416"/>
+        <path d="M29 12C27 7 24 5 21 5M31 12C33 7 36 5 39 5" fill="none" stroke="#3a2416" stroke-width="1.8" stroke-linecap="round"/>
       </svg></div>
 
       <div class="wrap hero-copy">
@@ -226,7 +300,7 @@
         <ul data-ta-aria-label="tfaf247c7" class="chips" aria-label="Highlights">
           <li data-t="t9e0e2003"><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg> USDA Certified Organic</li>
           <li data-t="t65d9d8ba"><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg> Family farm since 2013</li>
-          <li class="chip-new" data-only="fall" data-in-season data-until="2026-10-31"><a data-t="t30661b0e" href="#tomatoes"><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg> New: u-pick tomatoes &amp; basil</a></li>
+          <li class="chip-new" data-only="fall" data-in-season data-until="2026-11-08"><a data-t="t30661b0e" href="#tomatoes"><svg class="ico" aria-hidden="true"><use href="#i-leaf"/></svg> New: u-pick tomatoes &amp; basil</a></li>
           <li class="chip-rel rel-off" data-rel-chip data-only="fall"><a href="#schedule"><svg class="ico" aria-hidden="true"><use href="#i-bell"/></svg> <span data-rel-chip-text data-no-i18n>Pizza reservations</span></a></li>
         </ul>
       </div>
@@ -347,7 +421,7 @@
               <li data-t="t1d8c953b">Always by reservation, never walk-in</li>
             </ul>
             <ul class="ticks" data-only="fall">
-              <li data-t="t447b4ee9">A variety of pumpkin types to pick, plus wagon rides, the corn pit, a small sunn hemp maze and more</li>
+              <li data-t="te1a07fa0">A variety of pumpkin types to pick, plus wagon rides, the corn pit, a sunn hemp maze and more</li>
               <li data-t="tb2ff1037">Playgrounds, animals, a haunted trail and a shaded picnic patch</li>
               <li data-t="t1d8c953b">Always by reservation, never walk-in</li>
             </ul>
@@ -356,7 +430,7 @@
               <li data-t="t52787b9b" data-only="winter" data-in-season hidden>Christmas trees are next door at The GreenHouse, no reservation needed</li>
               <li data-t="t0849a04e">Join our email list to hear when picking opens</li>
             </ul>
-            <a data-t="tddae9ce2" class="choose-new" data-only="fall" data-in-season data-until="2026-10-31" href="#tomatoes"><span class="choose-new-badge">New</span> U-pick organic tomatoes &amp; basil, every weekend <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+            <a data-t="tddae9ce2" class="choose-new" data-only="fall" data-in-season data-until="2026-11-08" href="#tomatoes"><span class="choose-new-badge">New</span> U-pick organic tomatoes &amp; basil, every weekend <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
             <a data-t="t01cba258" class="choose-new" data-only="winter" data-in-season hidden href="#greenhouse"><span class="choose-new-badge">Trees</span> Christmas trees are at The GreenHouse <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
             <div class="card-actions">
               <a data-t="tfa23ca11" class="btn btn-red" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve the farm <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
@@ -378,6 +452,7 @@
               <li data-t="t3503086c">Drop in any time. No farm access</li>
               <li data-t="tc8fbc015">Christmas trees after Thanksgiving</li>
             </ul>
+            <a data-t="t90b6ff20" class="choose-ask" href="mailto:ava@wiseacresorganic.com?subject=GreenHouse%20question"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg> GreenHouse questions: ava@wiseacresorganic.com</a>
             <div class="card-actions">
               <a data-t="taf6eb687" class="btn btn-green" href="#greenhouse">See The GreenHouse <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
               <a data-t="t4b3f3cb5" class="btn btn-ghost" id="pl-gh-dir" aria-labelledby="pl-gh-dir pl-gh-h" href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Directions</a>
@@ -461,18 +536,18 @@
             <li data-t="t9812b413">Shaded picnic patch</li>
             <li data-t="t2472110c">Playgrounds</li>
             <li data-t="t1780ecaa">Animals</li>
-            <li data-t="t39573dd5">Small sunn hemp maze</li>
+            <li data-t="t38498f20">Sunn hemp maze</li>
             <li data-t="tc9cb608d">Pumpkin &amp; flower field access</li>
           </ul>
         </div>
 
-        <div class="addons reveal">
+        <div class="addons reveal" id="addons">
           <h4 data-t="t6d120d7c">Optional add-ons</h4>
           <ul class="addon-list">
             <li>
               <span class="addon-art-group" aria-hidden="true"><svg class="addon-art" viewBox="0 0 64 64" style="color:#e5334b"><use href="#tomato"/></svg><svg class="addon-art" viewBox="0 0 64 64" style="color:#43a047"><use href="#basil"/></svg><svg class="addon-art" viewBox="0 0 64 64" style="color:#7b3fa0"><use href="#basil"/></svg></span>
               <span><strong data-t="t3f4eefd1">U-pick tomatoes &amp; basil</strong><span data-t="t48324abe" class="addon-price">$4.50 per pound &middot; $1 per stem</span>
-              <span data-t="tedce5b9f" class="addon-note">New this year. Every weekend, late September through October. <a href="#tomatoes">See the varieties</a>.</span></span>
+              <span data-t="t3e399cd9" class="addon-note">New this year. Every weekend, mid-September through early November. <a href="#tomatoes">See the varieties</a>.</span></span>
             </li>
             <li>
               <svg class="addon-art" aria-hidden="true" viewBox="0 0 126 90" style="--ar:1.4"><use href="#corn-pit"/></svg>
@@ -482,7 +557,7 @@
             <li>
               <svg class="addon-art" aria-hidden="true" viewBox="0 0 508 158" style="--ar:3.22"><use href="#wagon"/><g class="rig-smoke" transform="translate(465 56)" fill="#fff" stroke="#cfcfcf" stroke-width="2"><circle class="puff p1" r="9"/><circle class="puff p2" r="7"/><circle class="puff p3" r="8"/></g></svg>
               <span><strong data-t="tfd41a510">Wagon ride</strong><span data-t="t01a02185" class="addon-price">$4.50 per person</span>
-              <span data-t="tb65a930a" class="addon-note">Ages 2 and younger ride free.</span></span>
+              <span data-t="t74bca80c" class="addon-note">Ages 3 and younger ride free.</span></span>
             </li>
             <li>
               <svg class="addon-art" aria-hidden="true" viewBox="0 0 468 120" style="--ar:3.9"><use href="#barrel-train-long"/><g class="rig-smoke" transform="translate(431 46)" fill="#fff" stroke="#cfcfcf" stroke-width="1.6"><circle class="puff p1" r="7"/><circle class="puff p2" r="5.5"/><circle class="puff p3" r="6.5"/></g></svg>
@@ -610,7 +685,7 @@
             <p data-t="t8aea10f7">Pick out a North Carolina Christmas tree at The GreenHouse next door, starting the Friday after Thanksgiving.</p>
             <span data-t="t11999abc" class="tag">At The GreenHouse</span>
           </li>
-          <li class="card c-sky reveal" data-seasons="spring summer fall">
+          <li class="card c-sky reveal" id="farm-animals" data-seasons="spring summer fall">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 120 112"><use href="#goat"/></svg>
             <h3 data-t="t1eece26f">Meet the Animals</h3>
             <p data-t="t38dfa5d4">Say hello to the farm animals &mdash; and help feed them.</p>
@@ -621,7 +696,7 @@
             <p data-t="t2a765f16">The kids can run on the playground and pet the goats at The GreenHouse.</p>
             <span data-t="t11999abc" class="tag">At The GreenHouse</span>
           </li>
-          <li class="card c-sun reveal" data-seasons="spring summer fall">
+          <li class="card c-sun reveal" id="farm-playgrounds" data-seasons="spring summer fall">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 152 100"><use href="#playground"/></svg>
             <h3 data-t="t2472110c">Playgrounds</h3>
             <p data-t="td348b539">Free play areas, including a 100% recycled-tire playground.</p>
@@ -634,7 +709,7 @@
           </li>
           <li class="card c-green reveal" data-seasons="fall">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 136 100"><use href="#maze" x="23" y="9" width="90" height="90"/><use href="#sunnhemp" width="36" height="100"/><use href="#sunnhemp-pods" x="100" y="2" width="36" height="98"/></svg>
-            <h3 data-t="t8c64d6c3">Small Sunn Hemp Maze</h3>
+            <h3 data-t="ta04da337">Sunn Hemp Maze</h3>
             <p data-t="tcc37b939">Wander through our little maze on fall visits.</p>
             <span data-t="t5c1ae82c" class="tag">Fall</span>
           </li>
@@ -662,13 +737,13 @@
           <li class="card c-cream reveal" data-seasons="spring summer">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 508 158"><use href="#wagon"/><g class="rig-smoke" transform="translate(465 56)" fill="#fff" stroke="#cfcfcf" stroke-width="2"><circle class="puff p1" r="9"/><circle class="puff p2" r="7"/><circle class="puff p3" r="8"/></g></svg>
             <h3 data-t="tea6897bf">Wagon Ride &amp; Barrel Train</h3>
-            <p data-t="t77a4e8d8">Extra fun you can add to your visit.</p>
+            <p data-t="t59243d8a">Extra fun you can add to your visit. Ages 3 and younger ride the wagon free.</p>
             <span data-t="t2877bc7c" class="tag">Add-on</span>
           </li>
           <li class="card c-cream reveal" data-seasons="fall">
             <svg class="card-art" aria-hidden="true" viewBox="0 0 508 158"><use href="#wagon"/><g class="rig-smoke" transform="translate(465 56)" fill="#fff" stroke="#cfcfcf" stroke-width="2"><circle class="puff p1" r="9"/><circle class="puff p2" r="7"/><circle class="puff p3" r="8"/></g></svg>
             <h3 data-t="t6498fda1">Wagon, Corn Pit &amp; Barrel Train</h3>
-            <p data-t="t7fdff574">Extra fun you can add to your fall visit.</p>
+            <p data-t="tad098205">Extra fun you can add to your fall visit. Ages 3 and younger ride the wagon free.</p>
             <span data-t="t2877bc7c" class="tag">Add-on</span>
           </li>
         </ul>
@@ -694,7 +769,7 @@
                 <tr><th data-t="td7695794" scope="row">Barrel train</th><td data-col="spring" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="summer" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="fall" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="winter" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td></tr>
                 <tr><th data-t="tca08d18d" scope="row">Corn pit</th><td data-col="spring" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td><td data-col="summer" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td><td data-col="fall" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="winter" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td></tr>
                 <tr><th data-t="t49c35609" scope="row">Haunted trail</th><td data-col="spring" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td><td data-col="summer" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td><td data-col="fall" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="winter" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td></tr>
-                <tr><th data-t="t39573dd5" scope="row">Small sunn hemp maze</th><td data-col="spring" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td><td data-col="summer" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td><td data-col="fall" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="winter" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td></tr>
+                <tr><th data-t="t38498f20" scope="row">Sunn hemp maze</th><td data-col="spring" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td><td data-col="summer" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td><td data-col="fall" class="fs-yes"><span aria-hidden="true">&#10003;</span><span data-t="t5397e058" class="sr-only">Yes</span></td><td data-col="winter" class="fs-no"><span aria-hidden="true">&ndash;</span><span data-t="t248a134f" class="sr-only">Not this season</span></td></tr>
               </tbody>
             </table>
           </div>
@@ -890,8 +965,8 @@
               <p data-t="tbc119a85">Pick your perfect pumpkin from a variety of types, stroll through the flower field and make a day of it. New this year: u-pick organic tomatoes and basil.</p>
               <ul class="ticks">
                 <li data-t="t64f7221e">U-pick pumpkins &amp; a flower field</li>
-                <li data-t="t1c989256"><strong>New:</strong> u-pick organic tomatoes &amp; basil every weekend, late September through October</li>
-                <li data-t="t0b5eaa9e">Wagon rides, corn pit, haunted trail, small sunn hemp maze, playgrounds &amp; animals</li>
+                <li data-t="t850262cb"><strong>New:</strong> u-pick organic tomatoes &amp; basil every weekend, mid-September through early November</li>
+                <li data-t="tf7a7ad06">Wagon rides, corn pit, haunted trail, sunn hemp maze, playgrounds &amp; animals</li>
                 <li data-t="t26e5052f">Thursday&ndash;Sunday reservations, with or without pizza</li>
               </ul>
               <ul data-ta-aria-label="td18c4de1" class="photo-strip season-pics" aria-label="Photos from the farm"><li><figure><img data-ta-alt="t33b7866d" data-zoom src="assets/photos/mums-and-red-shed.webp" alt="Rows of pink, orange and yellow mums in pots beside a little red shed" width="750" height="563" loading="lazy" decoding="async"><figcaption data-t="tb24561f2">Fall mums</figcaption></figure></li><li><figure><img data-ta-alt="tafe393d2" data-zoom src="assets/photos/mums-field-with-red-shed-and-palm.webp" alt="A field of potted mums in red, pink and white, with a small red shed and a large-leaved tropical plant behind" width="206" height="206" loading="lazy" decoding="async"><figcaption data-t="te3b0d15f">Field of mums</figcaption></figure></li><li><figure><img data-ta-alt="t1de31035" data-zoom src="assets/photos/goat-with-pumpkins.webp" alt="A baby goat standing in the grass behind four small pumpkins" width="500" height="553" loading="lazy" decoding="async"><figcaption data-t="t4fda8924">Goat meets pumpkins</figcaption></figure></li></ul>
@@ -937,8 +1012,8 @@
                 <span class="cal-track" aria-hidden="true"><span class="cal-bar bar-orange" style="--s:8.45;--e:10.25"></span></span>
               </li>
               <li>
-                <span data-t="t4eb3e326" class="cal-label">Tomatoes &amp; basil <span class="cal-range">new this year: every weekend, late September through October</span></span>
-                <span class="cal-track" aria-hidden="true"><span class="cal-bar bar-tomato" style="--s:8.7;--e:10"></span></span>
+                <span data-t="t6af84b8c" class="cal-label">Tomatoes &amp; basil <span class="cal-range">new this year: every weekend, mid-September through early November</span></span>
+                <span class="cal-track" aria-hidden="true"><span class="cal-bar bar-tomato" style="--s:8.45;--e:10.25"></span></span>
               </li>
               <li>
                 <span data-t="t0e76cb0a" class="cal-label">Christmas trees <span class="cal-range">Friday after Thanksgiving to early December, at The GreenHouse</span></span>
@@ -964,7 +1039,7 @@
             <h2 data-t="td028c96c" id="tomato-h">U-pick organic tomatoes &amp; basil</h2>
             <p data-t="tcc72b104" class="lead">Certified organic cherry tomatoes, slicers and basil, picked fresh by you. Grab basil and tomatoes together in one trip. It&rsquo;s a family-friendly u-pick outing.</p>
             <ul class="tomato-facts">
-              <li><span data-t="t349597eb" class="tf-big">Every weekend</span><span data-t="t3416ab73">Late September through October</span></li>
+              <li><span data-t="t349597eb" class="tf-big">Every weekend</span><span data-t="tebb43b26">Mid-September through early November</span></li>
               <li><span class="tf-big">$4.50</span><span data-t="t6b47c02f">per pound, tomatoes</span></li>
               <li><span class="tf-big">$1</span><span data-t="te71161d2">per stem, basil</span></li>
             </ul>
@@ -1324,6 +1399,7 @@
           <div class="card-actions">
             <a data-t="t60adc929" class="btn btn-green" id="gh-dir" aria-labelledby="gh-dir gh-h" href="https://www.google.com/maps/dir/?api=1&amp;destination=5503+Poplin+Rd%2C+Indian+Trail%2C+NC+28079" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg> Get directions</a>
             <a data-t="tf8b54143" class="btn btn-ghost" href="https://wise-pie-wood-fired-at-wise-acres.square.site/?location=CVJNFDQTZCA3B" target="_blank" rel="noopener">Pre-order pizza <svg class="ico" aria-hidden="true"><use href="#i-external"/></svg></a>
+            <a data-t="t90b6ff20" class="btn btn-ghost" href="mailto:ava@wiseacresorganic.com?subject=GreenHouse%20question"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg> GreenHouse questions: ava@wiseacresorganic.com</a>
             <a data-t="t5c7f4dc5" class="btn btn-ghost" href="https://www.instagram.com/thegreenhouse5503/" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-instagram"/></svg> @thegreenhouse5503</a>
           </div>
         </div>
@@ -1406,8 +1482,10 @@
           </div>
         </div>
       </div>
-          <div class="wrap gh-goats reveal">
-        <h3 data-t="t37656560">Meet the goats</h3>
+          <div class="wrap gh-goats reveal" id="animals">
+        <h3 data-t="t5210baa9">Meet the animals</h3>
+        <p data-t="ta76e89f4">Say hello to the farm animals and the goats.</p>
+        <p data-t="t2a765f16">The kids can run on the playground and pet the goats at The GreenHouse.</p>
         <ul class="photo-strip goat-strip"><li><figure><img data-ta-alt="tf9dc5559" data-zoom src="assets/photos/black-goat-cucumber.webp" alt="A black goat nibbling a cucumber through the fence" width="500" height="667" loading="lazy" decoding="async"><figcaption data-t="ta27e4fec">Snack time</figcaption></figure></li><li><figure><img data-ta-alt="t1a8781b2" data-zoom src="assets/photos/goats-rubs-sign.webp" alt="Goats behind a hand-painted sign reading rubs make us happy, corn makes us sick" width="500" height="500" loading="lazy" decoding="async"><figcaption data-t="t3909fa7a">Rubs make us happy</figcaption></figure></li><li><figure><img data-ta-alt="tfb13d6cc" data-zoom src="assets/photos/baby-goat-under-heat-lamp.webp" alt="A baby goat resting in straw under the red glow of a heat lamp" width="750" height="563" loading="lazy" decoding="async"><figcaption data-t="td51ddf23">Baby goat</figcaption></figure></li><li><figure><img data-ta-alt="t1de31035" data-zoom src="assets/photos/goat-with-pumpkins.webp" alt="A baby goat standing in the grass behind four small pumpkins" width="500" height="553" loading="lazy" decoding="async"><figcaption data-t="t4fda8924">Goat meets pumpkins</figcaption></figure></li><li><figure><img data-ta-alt="ted43ffcd" data-zoom src="assets/photos/goat-in-green-frog-hat.webp" alt="A small animal wearing a green knitted frog hat" width="206" height="206" loading="lazy" decoding="async"><figcaption data-t="t5120a3d8">Frog hat</figcaption></figure></li></ul>
       </div>
     </section>
@@ -1436,6 +1514,7 @@
         </ul>
         <p class="notice notice-soft shop-note reveal"><svg class="ico" aria-hidden="true"><use href="#i-info"/></svg><span data-t="taa947919">Prices are for fall 2026 and can change. We read them from the farm&rsquo;s own signs. Anything marked &ldquo;Prices coming soon&rdquo; is still being confirmed. Questions? Email <a href="mailto:cathy@wiseacresorganic.com">cathy@wiseacresorganic.com</a>.</span></p>
 
+        <div class="shop-groups">
         <div class="shop-group sg-snacks reveal" id="shop-snacks">
           <header class="shop-band">
             <svg class="shop-band-ico" aria-hidden="true" focusable="false"><use href="#p-hot-pretzel"/></svg>
@@ -1559,6 +1638,7 @@
             <li><svg class="ico" aria-hidden="true"><use href="#i-check"/></svg><span data-t="t945fd883">No reservation needed, but no farm access</span></li>
             <li><svg class="ico" aria-hidden="true"><use href="#i-cash"/></svg><span data-t="tdb15e03b">Cash preferred, all cards accepted</span></li>
             <li><svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg><address data-t="tcda2e54c">5503 Poplin Road<br>Indian Trail, NC 28079</address></li>
+            <li><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg><a data-t="t543e22f7" href="mailto:ava@wiseacresorganic.com?subject=Wise%20Pie%20question">Pizza questions: ava@wiseacresorganic.com</a></li>
             <li><svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg><a data-t="t3d7eea72" href="#greenhouse">About The GreenHouse</a></li>
           </ul>
         </div>
@@ -2039,7 +2119,7 @@
                 <h4 data-t="tfd41a510" class="shop-name">Wagon ride</h4>
                 <p class="shop-price"><span class="hand">$4.50</span> <span data-t="t7189e9b4" class="sp-u">per person</span></p>
               </div>
-              <p data-t="tb65a930a" class="shop-sub">Ages 2 and younger ride free.</p>
+              <p data-t="t74bca80c" class="shop-sub">Ages 3 and younger ride free.</p>
             </li>
             <li class="shop-card shop-ride">
               <span class="shop-bubble"><svg class="shop-ico" aria-hidden="true" focusable="false"><use href="#barrel-train"/></svg></span>
@@ -2067,7 +2147,7 @@
             <li class="shop-card">
               <span class="shop-bubble"><svg class="shop-ico" aria-hidden="true" focusable="false"><use href="#p-sunn-hemp-mini"/></svg></span>
               <div class="shop-body">
-                <h4 data-t="t39573dd5" class="shop-name">Small sunn hemp maze</h4>
+                <h4 data-t="t38498f20" class="shop-name">Sunn hemp maze</h4>
                 <p data-t="t75f52718" class="shop-price hand">Free</p>
               </div>
             </li>
@@ -2077,7 +2157,7 @@
                 <h4 data-t="t3f4eefd1" class="shop-name">U-pick tomatoes &amp; basil</h4>
                 <ul class="shop-opts shop-opts-u"><li><span data-t="t3a209b3e" class="so-l">Tomatoes</span><span class="so-p"><span class="hand">$4.50</span> <span data-t="t03f254c0" class="sp-u">per pound</span></span></li><li><span data-t="t21365a52" class="so-l">Basil</span><span class="so-p"><span class="hand">$1</span> <span data-t="tf9275b7b" class="sp-u">per stem</span></span></li></ul>
               </div>
-              <p data-t="t52245af8" class="shop-sub">Every weekend, late September through October.</p>
+              <p data-t="tb94d96ba" class="shop-sub">Every weekend, mid-September through early November.</p>
             </li>
             <li class="shop-card">
               <span class="shop-bubble"><svg class="shop-ico" aria-hidden="true" focusable="false"><use href="#strawberry"/></svg></span>
@@ -2105,6 +2185,7 @@
               <li><a data-t="t906d2008" class="btn btn-ghost btn-sm" href="#tomatoes">See the tomato varieties</a></li>
             </ul>
           </div>
+        </div>
         </div>
 
       </div>
@@ -2316,7 +2397,7 @@
                 <h5 data-t="t7f10df40">Fall 2026 special days</h5>
                 <ul class="date-list">
                   <li data-t="tcda0fa57" data-until="2026-10-06"><strong>Exceptional Children Day</strong> Tuesday, Oct 6, 10 am&ndash;1 pm. Email <a href="mailto:vanessa@wiseacresorganic.com?subject=Exceptional%20Children%20Day">vanessa@wiseacresorganic.com</a> to join us.</li>
-                  <li data-t="t5efe64c3" data-until="2026-11-03"><strong>Home School Day</strong> Tuesday, Nov 3, 9 am&ndash;1 pm. Information and reservation sign-ups opened on Sep 29.</li>
+                  <li data-t="te8f8cb7a" data-until="2026-11-03"><strong>Home School Day</strong> Tuesday, Nov 3, 9 am&ndash;1 pm. Information and reservation sign-ups opened on Sep 29. Questions? Email <a href="mailto:vanessa@wiseacresorganic.com?subject=Home%20School%20Day">vanessa@wiseacresorganic.com</a>.</li>
                 </ul>
               </div>
             </div>
@@ -2554,7 +2635,7 @@
                 <li data-t="t39e0d83a"><strong>Spring, strawberries:</strong> usually mid-April through early June</li>
                 <li data-t="t6265c016"><strong>Summer, blueberries &amp; sunflowers:</strong> usually mid- to late June through early July</li>
                 <li data-t="t6fa474da"><strong>Fall, pumpkins:</strong> mid-September through early November</li>
-                <li data-t="t247dcbc5"><strong>Fall, tomatoes &amp; basil (new this year):</strong> every weekend, late September through October</li>
+                <li data-t="tf6fccf62"><strong>Fall, tomatoes &amp; basil (new this year):</strong> every weekend, mid-September through early November</li>
                 <li data-t="t8f55ff30"><strong>Winter, NC Christmas trees:</strong> the Friday after Thanksgiving to early December, at The GreenHouse</li>
                 <li data-t="t4c712247"><strong>U-cut flowers:</strong> April&ndash;July and September&ndash;first frost</li>
               </ul>
@@ -2568,6 +2649,7 @@
               <p data-t="t10b7d3f2">Wise Acres is a small family farm in a neighborhood with limited parking. When we&rsquo;re not open to the public, we&rsquo;re working in the fields. Reservations let us manage parking, protect the crops and give guests, neighbors and farm families a safe, enjoyable experience.</p>
               <p data-t="t2a615e98">We&rsquo;re the only USDA-certified organic strawberry farm in the area, and we grow far fewer berries than conventional farms. Organic practices mean we plant only about one-third of our fields at a time, so supply is limited. In the past, too much picking damaged the crops, and the farm lost income. Reservations help us protect the farm while giving visitors the best experience. Thank you for your patience and support.</p>
               <p data-t="t5c3ac395">Want to visit without a reservation? Go to our property next door, <a href="#greenhouse">The GreenHouse at 5503 Poplin Rd</a>. No reservation is required, and hours vary with the weather.</p>
+              <p data-t="t5bd0997d">Questions about The GreenHouse or Wise Pie pizza? Email Ava at <a href="mailto:ava@wiseacresorganic.com?subject=GreenHouse%20question">ava@wiseacresorganic.com</a>.</p>
             </div>
           </details>
           <details name="faq">
@@ -2590,7 +2672,7 @@
           <details name="faq">
             <summary data-t="t7db13699">Do you have u-pick tomatoes and basil?</summary>
             <div class="answer">
-              <p data-t="t398007b0">Yes, and it&rsquo;s new this year! Certified organic cherry tomatoes, slicers and basil are available to u-pick every weekend from late September through October. Tomatoes are <strong>$4.50 per pound</strong> and basil is <strong>$1 per stem</strong>.</p>
+              <p data-t="t96e7263a">Yes, and it&rsquo;s new this year! Certified organic cherry tomatoes, slicers and basil are available to u-pick every weekend from mid-September through early November. Tomatoes are <strong>$4.50 per pound</strong> and basil is <strong>$1 per stem</strong>.</p>
               <p data-t="tb4be3b83">See every variety in the <a href="#varieties">tomato &amp; basil guide</a>.</p>
             </div>
           </details>
@@ -2816,9 +2898,9 @@
     <div class="grass" aria-hidden="true"></div>
     <div class="wrap footer-inner">
       <div class="footer-brand">
-        <a data-ta-aria-label="t9d4c2540" class="brand brand-light" href="#top" aria-label="Back to top">
+        <a data-ta-aria-label="t07b93f87" class="brand brand-light" href="#top" aria-label="Wise Acres Organic Farm — back to top">
           <svg class="brand-berry" aria-hidden="true"><use href="#strawberry"/></svg>
-          <span class="brand-text"><span data-t="t31a0a6c6" class="brand-name" translate="no">Wise Acres</span><span data-t="t5104c566" class="brand-sub">Organic Farm</span></span>
+          <span class="brand-text"><span data-t="t31a0a6c6" class="brand-name" translate="no">Wise Acres</span> <span data-t="t5104c566" class="brand-sub">Organic Farm</span></span>
         </a>
         <p data-t="ta1bc4780">A family-owned, USDA Certified Organic u-pick farm in Indian Trail, North Carolina.</p>
         <p><a data-t="tf40e80c8" href="https://eepurl.com/hZehgr" target="_blank" rel="noopener" data-signup-link data-track="Email signup click">Sign up for emails about farm happenings and picking opportunities</a></p>

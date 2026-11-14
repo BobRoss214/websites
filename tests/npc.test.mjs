@@ -40,5 +40,18 @@ await run('npc', async ({ browser, base, errs }) => {
     await okSoon(`${name}: a speech bubble with words appears`, () => p.evaluate(() => { const b = document.querySelector('.npc-say'); return b ? b.textContent.trim() : ''; }), (v) => v.length > 2, 20000);
     ok(`${name}: reacts (highlight class)`, await p.evaluate(() => !!document.querySelector('.is-hi')));
   }
+  // the spring field has people at its left and right too (tests/hero.test.mjs looks at how much of each can be seen): each one has a place where a tap lands on that person, not on a plant, a sunflower or a neighbour
+  await p.evaluate(() => window.WISE_ACRES.hero.setSeason('spring'));
+  await until(p, () => document.documentElement.dataset.season === 'spring' && document.querySelectorAll('#field [data-npc=kid] .npc-hit').length > 4, null, 20000);
+  const reach = await p.evaluate(() => [...document.querySelectorAll('#field [data-npc=kid]')].map((k) => {
+    const r = k.querySelector('.npc-hit').getBoundingClientRect();
+    return [[.5, .3], [.5, .5], [.3, .3], [.7, .3], [.5, .15], [.5, .7]].some(([a, c]) => {
+      const x = r.left + r.width * a, y = r.top + r.height * c;
+      if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return false;
+      const t = document.elementFromPoint(x, y);
+      return !!t && t.closest('[data-npc]') === k;
+    });
+  }));
+  ok(`spring: every one of the ${reach.length} people in the strawberry rows can be tapped (${reach.filter(Boolean).length} can)`, reach.length >= 6 && reach.every(Boolean), JSON.stringify(reach));
   await p.context().close();
 });

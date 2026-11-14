@@ -38,7 +38,12 @@ const WRITTEN_HOSTS = new Set([
 // Files that may use a browser storage or network API, and which one. Everything else must not.
 // The pretend account demo (docs/ACCOUNT_DEMO.md): pretend demo, only runs in demo mode (js/demo-header.js switches it on only for ?demo or the preview page). js/demo-store.js keeps
 // its state under the one key wa-demo-v1, js/demo-header.js one hint for the tab. Every other demo file touches storage only through the store.
-const API_FILES = { 'js/i18n.js': ['localStorage'], 'js/main.js': ['localStorage'], 'js/demo-store.js': ['localStorage'], 'js/demo-header.js': ['sessionStorage'] };
+// The owner-only tour (docs/TOUR.md): js/tour.js, only runs in tour mode (window.WA_TOUR, ?tour or #tour); its own place is the key wa-tour, and nothing when the mode is off (tests/tour-off.test.mjs).
+const API_FILES = {
+  'js/i18n.js': ['localStorage'], 'js/main.js': ['localStorage'],
+  'js/demo-store.js': ['localStorage'], 'js/demo-header.js': ['sessionStorage'],
+  'js/tour.js': ['localStorage', 'sessionStorage'],
+};
 const PROBE = 'SECRETPROBE 4242 Zephyr Lane, Zzyzxville, NC 99999';   // the "address" typed into the Drive time box
 const MAIL = 'privacy-probe@example.com';
 const MC = `WISE_ACRES.signup = { action: 'https://wiseacres.us21.list-manage.com/subscribe/post?u=U123&id=L456', interests: { pumpkins: 'group[1][2]' }, tags: '111', languageField: 'LANGUAGE' };`;

@@ -64,4 +64,11 @@ const unnamed = (text) => [...text.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/butto
 ok('(tried on a bad sample first) a button with only a picture and no name is found, one with a name is not', unnamed('<button class="x"><svg aria-hidden="true"></svg></button>').length === 1 && unnamed('<button aria-label="Open menu"><svg></svg></button><button>Send</button>').length === 0);
 const nameless = PAGES.map((f) => [f, unnamed(html[f])]).filter(([, n]) => n.length);
 ok('every button on every page has a name for a screen reader (its words, aria-label, aria-labelledby or title)', nameless.length === 0, nameless.map(([f, n]) => f + ': ' + n.join(', ')).join(' | '));
+/* ---- added for the real website by make_real_branch.sh: the preview-only files are on no public page and not in js/ or css/ ---- */
+const PREVIEW_ONLY = /(?:js\/(?:tour[\w.-]*|shop-sample|shop-pop(?:-box)?)\.js|css\/(?:tour[\w.-]*|shop-pop)\.css)/;
+ok('(tried on a bad sample first) a page that loads the tour is found, one that does not is not', PREVIEW_ONLY.test('<script src="js/tour.js"></script>') && !PREVIEW_ONLY.test('<script src="js/main.js"></script>'));
+const previewPages = fs.readdirSync(ROOT).filter((f) => f.endsWith('.html')).filter((f) => PREVIEW_ONLY.test(fs.readFileSync(path.join(ROOT, f), 'utf8').replace(/<!--[\s\S]*?-->/g, '')));
+ok('no public page names the tour or the Store\'s pretend lists (js/tour*.js, css/tour*.css, js/shop-sample.js, js/shop-pop*.js, css/shop-pop.css): they are for the preview only, and the tour would write wa-tour into the visitor\'s browser (docs/WHAT_THE_SITE_STORES.md)', previewPages.length === 0, previewPages.join(', '));
+const previewFiles = ['js', 'css'].flatMap((d) => fs.readdirSync(path.join(ROOT, d)).map((f) => d + '/' + f)).filter((f) => PREVIEW_ONLY.test(f));
+ok('none of those files is in js/ or css/ (tools/make_deploy_folder.py uploads every file of both)', previewFiles.length === 0, previewFiles.join(', '));
 await finish({});

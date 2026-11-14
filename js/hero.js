@@ -1,8 +1,8 @@
 /* Wise Acres — seasonal hero.
  *
  * The first screen is an illustrated farm that follows the calendar:
- *   spring  strawberry field (tap to pick)
- *   summer  blueberry bushes (tap to pick)
+ *   spring  strawberry field with kids picking, and sunflowers at the sides (tap to pick or snip)
+ *   summer  blueberry bushes, and the same sunflowers at the sides (tap to pick or snip)
  *   fall    pumpkin patch + a tractor pulling a wagon ride (tap to pick / toot)
  *   winter  Christmas-tree farm with campfires and a snowman (tap to light / stoke)
  *
@@ -169,7 +169,23 @@
     let out = `<path d="${groundPath()}" fill="#69b84c"/>`;
     out += lanes('spring', '#cfa571', '#b0804f', '#e3c18a', 6);
     out += rowPolys(range(-5, 5), { fill: '#8a5a35', stroke: INK, inner: '#a4714a', t0: 0.08 });
-    const KIDS = { 6: [[-1.5, '#e5334b', HAT.straw, 0], [1.5, '#4b5bb8', HAT.cap, 1]], 9: [[0.5, '#ffc928', HAT.beanie, 0]], 11: [[-3.2, '#43a047', HAT.pony, 1]] };
+    // [row's k, shirt, hat, faces left]. Six people, three at each side of the field, on the ground that nothing of the page covers: the pills, the chips and the words take the middle, the picker card the bottom
+    // left and the sunflowers the far sides. At each side the three stand on a slant from the back of the field to the front, close to the edge of the rows (k past the plants of their own row, so none of them
+    // is behind a plant of it): rows 3, 4 and 6 at the right, rows 4, 6 and 8 at the left (the last of them beside the chips). They are small on purpose: a tap area is about 46 x 58 of a person's own units and
+    // 70 % or more of it must be the person's own (tests/hero.test.mjs), so three of them fit between the chips and the sunflowers of a 1440 px wide window only when they are small; a bigger person (rows 9 to
+    // 11) has about 55 to 75 % of its tap area left when the berries in front take theirs. Measured on the page as a visitor sees it, in real windows (not screens: a laptop's window is 100 to 130 px lower than
+    // its screen), every place alone and then the whole table, with 80 % of the head and the hat and 60 % of everything drawn (the basket too) in sight and nobody in front: 3 at each side from 1440 x 900 up
+    // (1536 x 864, 1600 x 900, 1920 x 950, 1920 x 1080, 2560 x 1440 ...), 2 at the left and 3 at the right at 1440 x 780, 1366 x 768 and 1280 x 800, 1 and 2 at 1536 x 730. What no places can change: the
+    // picture sits at the bottom of the hero, which is about 800 px high however low the window is, so in a window lower than about 700 px (1366 x 650, 1280 x 680) the first row is under the bottom edge
+    // and nothing can be seen. The pills' words change with the day, the hour and the visitor's time zone: with the farm's own pill too (only in fall, when the spring picture is chosen by hand) the row is up
+    // to 750 px wide and at 1440 x 900 one person at the left and two at the right are under it (2 and 1 are left); in spring there is one pill, and 3 and 3 show at 1440 x 900. People stand in the rows, not
+    // on the hills. k: the place in the row, in steps of 230 * t (the plants stand at the whole steps from -4 to 4); 4.7 to 5.6 are just past the last plant.
+    const KIDS = {
+      3: [[4.7, '#4b5bb8', HAT.beanie, 0]],
+      4: [[-5.6, '#ffc928', HAT.straw, 1], [5.6, '#e5334b', HAT.hair, 0]],
+      6: [[-5.6, '#43a047', HAT.cap, 1], [5.45, '#ffc928', HAT.cap, 0]],
+      8: [[-2.6, '#ff8fb1', HAT.pony, 0]],
+    };
     FIELD_T.forEach((t, ti) => {
       (KIDS[ti] || []).forEach(([k, shirt, hat, flip]) => { out += kid(rowX(k, t), rowY(t) - 2, 22 + 130 * t, shirt, hat, flip); });
       for (let k = -4; k <= 4; k++) {
@@ -196,10 +212,10 @@
   const springFore = () =>
     blades(520, 10, 30, 26, '#5cb85c', 4) +
     meadow(31, 34, 496, 528, ['#fff', '#ffd54f', '#ff8fb1', '#b79bff']) +
-    sunflower(24, 205, 128, '') + sunflower(170, 300, 88, 's2') + sunflower(1236, 250, 112, 's3') + sunflower(1330, 178, 138, 's2') + sunflower(1160, 340, 78, '') +
+    snippable(24, 205, 128, '') + snippable(170, 300, 88, 's2') + snippable(1236, 250, 112, 's3') + snippable(1330, 178, 138, 's2') + snippable(1160, 340, 78, '') +
     blades(538, 12, 34, 22, '#2e8b3a', 9);
 
-  // Summer: the same sunflowers, but tap one and it is snipped. A kid cuts a flower for the bucket every few seconds.
+  // The sunflowers at the sides of the spring and summer fields: tap one and it is snipped (it grows back). In summer a kid also cuts a flower for the bucket every few seconds.
   const snippable = (x, y, w, cls) => {
     const h = w * 380 / 140;
     return pickable(x, y, sunflower(0, 0, w, cls), { x: -4, y: -4, w: w + 8, h: h * 0.42 }, '50% 100%', 'fruit', 'flower-cut');
@@ -852,7 +868,7 @@
       far: () => `<path d="${FAR_HILL}" fill="#b5e59a"/>` + rows(FAR_LINE, '#8fd078', 5, 9) + round(228, 182, 1, '#6cbf5b', '#5cb85c') + round(300, 198, 0.75, '#7ccf62', '#6cbf5b') + barn(1130, 70, 170),
       mid: () => `<path d="${MID_HILL}" fill="#8ed46b"/>` + rows(MID_LINE, '#6fba55', 3, 8),
       field: springField, fore: springFore,
-      hud: { art: 'basket', hint: 'Try it! Tap the strawberries to pick them.', btn: 'Pick a strawberry',
+      hud: { art: 'basket', hint: 'Try it! Tap the strawberries to pick them, or snip a sunflower.', btn: 'Pick a strawberry',
         msgs: [[1, 'Yum! Keep going.'], [3, 'You’re a natural picker!'], [5, 'Basket’s filling up! Ready for the real thing? {reserve}'], [10, TEN]] },
     },
     summer: {
@@ -892,10 +908,26 @@
     let html = '';
     for (let i = 0; i < n; i++) {
       const size = kind === 'snow' ? 3 + r() * 6 : 14 + r() * 12;
-      html += `<i class="${kind === 'snow' ? 'flake' : 'leaf'}" style="left:${(r() * 100).toFixed(1)}%;--s:${size.toFixed(1)}px;--d:${(kind === 'snow' ? 8 + r() * 9 : 10 + r() * 9).toFixed(1)}s;--dl:${(-r() * 16).toFixed(1)}s;--sw:${(20 + r() * 50).toFixed(0)}px;--c:${colors[Math.floor(r() * colors.length)]};--rot:${Math.floor(r() * 360)}deg"></i>`;
+      // A leaf is calm: it falls in 16.5 to 25 s (at most 60 px a second in a hero up to 900 px high), drifts to one side and back in 5.6 to 9.2 s (--sd is one drift, there or back), its reach --sw
+      // is in step with it so that it never goes sideways faster than 20 px a second (a sine, 2 * sw / sd), and it tips the way it drifts by 26 to 50 degrees (at most 36 degrees a second).
+      const fl = kind === 'snow' ? null : { sd: +(2.8 + r() * 1.8).toFixed(1), rk: Math.round(26 + r() * 24) };
+      const flutter = fl ? `;--sd:${fl.sd}s;--rk:${fl.rk}deg` : '';
+      html += `<i class="${kind === 'snow' ? 'flake' : 'leaf'}" style="left:${(r() * 100).toFixed(1)}%;--s:${size.toFixed(1)}px;--d:${(kind === 'snow' ? 8 + r() * 9 : 16.5 + r() * 8.5).toFixed(1)}s;--dl:${(-r() * 16).toFixed(1)}s;--sw:${fl ? Math.round(fl.sd * (5.5 + r() * 4.5)) : (20 + r() * 50).toFixed(0)}px;--c:${colors[Math.floor(r() * colors.length)]};--rot:${Math.floor(r() * 360)}deg${flutter}"></i>`;
     }
     box.innerHTML = html;
     crittersEl.appendChild(box);
+    fallHeight();
+  }
+  // How far a leaf or a flake falls: the height of the hero's picture (the CSS has 100vh until this is set). The hero is not yet at its final height when the layer is made (the first
+  // drawing, the fonts, a season's own words), so it is set again whenever the picture changes size (a resize observer; the window's resize event where there is none).
+  function fallHeight() {
+    if (!crittersEl) return;
+    const box = $('.particles', crittersEl), h = crittersEl.clientHeight;
+    if (box && h > 0) box.style.setProperty('--fh', h + 'px');
+  }
+  if (crittersEl) {
+    if ('ResizeObserver' in window) new ResizeObserver(fallHeight).observe(crittersEl);
+    addEventListener('resize', fallHeight, { passive: true });
   }
 
   /* ------------------------------------------------------------------ *
@@ -981,9 +1013,10 @@
   { const host = $('#picker') || hero; if (host) { stackEl = doc.createElement('div'); stackEl.className = 'ach-stack'; stackEl.setAttribute('aria-live', 'polite'); host.appendChild(stackEl); } }
 
   const kindOf = (el) => (el.dataset.pick === 'tree' ? 'winter'
-    : season === 'spring' ? 'strawberry'
-      : season === 'summer' ? (el.classList.contains('flower-cut') ? 'sunflower' : 'blueberry')
-        : 'pumpkin');
+    : el.classList.contains('flower-cut') ? 'sunflower'
+      : season === 'spring' ? 'strawberry'
+        : season === 'summer' ? 'blueberry'
+          : 'pumpkin');
 
   function credit(kind) {
     tally[kind] = (tally[kind] || 0) + 1;
@@ -1139,17 +1172,31 @@
     if (body) restart(body, 'is-hi', kind === 'scarecrow' ? 2800 : 1700);
   }
 
-  // The friends are drawn in the picture and cannot be reached with Tab, so this one button says hi to the next friend in turn.
+  // The friends are drawn in the picture and cannot be reached with Tab, so this one button says hi to the next friend in turn, one that can be seen: the picture is cut off at both sides of a narrow
+  // window and at the bottom of a low one, and a friend out there would speak from a bubble that hangs in the air at the edge. Friends with at least 60 % of their tap area inside the window and
+  // the hero come first; when there are none, any that shows; when nothing shows (the hero is scrolled away) all of them, since the button is also the way for someone who cannot see the picture.
   const npcBtn = $('#npc-btn');
-  let npcNext = -1;
+  let lastNpc = null;
+  const shownShare = (el) => {
+    const r = ($('.npc-hit', el) || el).getBoundingClientRect(), h = hero.getBoundingClientRect();
+    const w = Math.min(r.right, h.right, window.innerWidth) - Math.max(r.left, h.left, 0), v = Math.min(r.bottom, h.bottom, window.innerHeight) - Math.max(r.top, h.top, 0);
+    return r.width > 0 && r.height > 0 ? Math.max(0, w) * Math.max(0, v) / (r.width * r.height) : 0;
+  };
   if (npcBtn) npcBtn.addEventListener('click', () => {
     const all = $$('[data-npc]', sceneEl);
-    if (all.length) { npcNext = (npcNext + 1) % all.length; npcTalk(all[npcNext]); }
+    if (!all.length) return;
+    const share = new Map(all.map((el) => [el, shownShare(el)]));
+    let list = all.filter((el) => share.get(el) >= 0.6);
+    if (!list.length) list = all.filter((el) => share.get(el) > 0);
+    if (!list.length) list = all;
+    const after = list.findIndex((el) => all.indexOf(el) > all.indexOf(lastNpc));   // the next one in the picture's order after the one that spoke last (the first when that was the last)
+    lastNpc = list[after < 0 ? 0 : after];
+    npcTalk(lastNpc);
   });
 
   function bindScene() {
     pickables = $$('[data-pick]', sceneEl);
-    npcNext = -1;
+    lastNpc = null;
     if (npcBtn) npcBtn.hidden = !$$('[data-npc]', sceneEl).length;
     pickables.forEach((el) => el.addEventListener('click', () => pick(el)));
 
@@ -1258,9 +1305,19 @@
   }
 
   if (switchEl && W.seasonPicker !== false) {
-    const now = W.seasons.current();
+    // The little tags at the top right of the buttons follow today's date, not the picture: "Now" on the season that is on, "Next" on the one that starts next
+    // (between seasons only "Next"). Drawn again when the language changes and when the farm's day changes (wa:day: a page left open overnight, and the tour's pretend days).
+    const markTags = () => {
+      $$('.ss-now, .ss-next', switchEl).forEach((n) => n.remove());
+      if (!W.clockOk()) return;   // no readable clock: no tags
+      const on = W.seasons.live()[0], up = W.seasons.upcoming();
+      buttons.forEach((b) => {
+        if (on && b.dataset.season === on.id) b.insertAdjacentHTML('beforeend', '<span class="ss-now">' + t('now') + '</span>');
+        else if (up && b.dataset.season === up.id) b.insertAdjacentHTML('beforeend', '<span class="ss-next">' + t('next') + '</span>');
+      });
+    };
+    markTags();
     buttons.forEach((b, i) => {
-      if (b.dataset.season === now && W.seasons.live().some((s) => s.id === now)) b.insertAdjacentHTML('beforeend', '<span class="ss-now">' + t('now') + '</span>');
       b.addEventListener('click', () => setSeason(b.dataset.season, true));
       b.addEventListener('keydown', (e) => {
         const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
@@ -1271,7 +1328,8 @@
         next.focus(); setSeason(next.dataset.season, true);
       });
     });
-    doc.addEventListener('wa:lang', () => $$('.ss-now').forEach((n) => { n.textContent = t('now'); }));   // written once above, so it is re-worded when the language changes
+    doc.addEventListener('wa:lang', markTags);
+    doc.addEventListener('wa:day', markTags);
     switchEl.hidden = false;
   }
 

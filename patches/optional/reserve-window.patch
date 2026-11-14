@@ -35,7 +35,7 @@ index dcb86e1..bae7158 100644
            <a data-t="t38a1d40a" class="btn btn-white btn-lg" href="#seasons">See what&rsquo;s in season</a>
          </div>
 @@ -357,7 +357,7 @@
-             <a data-t="tddae9ce2" class="choose-new" data-only="fall" data-in-season data-until="2026-10-31" href="#tomatoes"><span class="choose-new-badge">New</span> U-pick organic tomatoes &amp; basil, every weekend <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+             <a data-t="tddae9ce2" class="choose-new" data-only="fall" data-in-season data-until="2026-11-08" href="#tomatoes"><span class="choose-new-badge">New</span> U-pick organic tomatoes &amp; basil, every weekend <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
              <a data-t="t01cba258" class="choose-new" data-only="winter" data-in-season hidden href="#greenhouse"><span class="choose-new-badge">Trees</span> Christmas trees are at The GreenHouse <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
              <div class="card-actions">
 -              <a data-t="tfa23ca11" class="btn btn-red" data-only="spring summer fall" href="https://bookeo.com/wiseacres?category=41576YNUUTJ173F2927356" target="_blank" rel="noopener">Reserve the farm <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
@@ -117,10 +117,10 @@ index 1c1857f..57629e2 100644
          </div>
        </div>
 diff --git a/tests/hero.test.mjs b/tests/hero.test.mjs
-index ca7d16b..237087d 100644
+index e52d47c..ee8416b 100644
 --- a/tests/hero.test.mjs
 +++ b/tests/hero.test.mjs
-@@ -58,8 +58,9 @@ await run('hero', async ({ browser, base, errs }) => {
+@@ -182,8 +182,9 @@ await run('hero', async ({ browser, base, errs }) => {
      ok(`${s}: hint text`, ((await p.textContent('#pick-msg')) || '').length > 10 && (await p.textContent('#pick-count')) === '0');
      // the chooser card's buttons follow the season: reserve in spring/summer/fall, "Tell me when" in winter, "See prices" in fall only
      const acts = await p.evaluate(() => Array.from(document.querySelectorAll('.choose-farm .card-actions a')).filter((e) => e.getBoundingClientRect().width > 0).map((e) => e.textContent.trim().replace(/\s+/g, ' ')));
@@ -130,4 +130,4 @@ index ca7d16b..237087d 100644
 +    ok(`${s}: the card buttons are "${wantRed}"${s === 'fall' ? ', Directions and See prices' : ' and Directions'}`, (windowed ? !acts.includes(wantRed) : acts.includes(wantRed)) && acts.includes('Directions') && acts.includes('See prices') === (s === 'fall') && acts.includes(s === 'winter' ? 'Reserve the farm' : 'Tell me when') === false, JSON.stringify(acts));
    }
  
-   // ---- fall: picking, the wagon, the tractor
+   // ---- spring: the people in the strawberry rows stand where they can be seen (not behind the words, the chips, the card or the sunflowers), and the sunflowers at the sides can be snipped

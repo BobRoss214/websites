@@ -50,7 +50,7 @@ Everything else (Internet Explorer, Opera Mini, UC Browser in "extreme" mode, iO
    - `prefix-pair`: the `-webkit-` form is written next to the plain one.
    - `guard`: the script tests for the feature before using it.
    - `own`: the word is the site's own name for something (a function called `close`), and the test checks it is never used as the browser's method.
-   - `manual`: a person weighed each use (`:is()`, `:has()`, `:focus-visible`, `rotate`, `scale`, `translate`, `<dialog>`). A new use fails the test until it is reviewed.
+   - `manual`: a person weighed each use (`:is()`, `:has()`, `:focus-visible`, `rotate`, `scale`, `translate`, `<dialog>`, and the alignment words `start`, `end` and `safe`: the compat data dates `start` and `end` for flex boxes, and every use on the site is on a grid box, where they are old). A new use fails the test until it is reviewed.
    - `progressive` and `na`: the page works without it, or it only matters to a mouse or to one maker's browser.
 4. The test also tries its own reader on small samples first, so a reader that stopped working cannot make the test pass.
 
@@ -87,8 +87,8 @@ iPhone and once in Firefox before a launch. Words that a script writes into the 
 
 - **Chrome 80 to 83 and Samsung Internet 13**: rows of buttons touch (flex `gap` is Chrome 84 / Samsung 14); `inset` and the logical sizes (Chrome 87) are written the
   old way so nothing moves; `replaceChildren` (Chrome 86) is not used any more (the photo counter was the one place), so the photo viewer works.
-- **Chrome before 88**: rules written with `:is()` are dropped whole: the Spanish and Vietnamese phone menu rules for windows 1180 to 1330 pixels wide, a few line heights for
-  Hindi, Chinese and Vietnamese, the larger touch area around some buttons. Reading and every button work.
+- **Chrome before 88**: rules written with `:is()` are dropped whole: a few line heights for
+  Hindi, Chinese and Vietnamese, the larger touch area around some buttons. Reading and every button work. (The menu's switch to the phone menu does not use `:is()`: every language has its own rule.)
 - **Chrome before 104** (a computer or phone that never updated): tilts, pops and falling leaves are not drawn (`rotate`, `scale`, `translate`); the progress tractor is placed with
   `left` where container units are missing (Chrome before 105), which is where `translate` is also missing.
 - **Chrome before 105 and Samsung Internet before 20**: no `:has()` (the same two small things as on iOS before 15.4); no container units; no `dvh`/`svh` (108) so the hero uses `vh`.

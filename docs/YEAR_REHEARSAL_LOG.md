@@ -25,7 +25,7 @@ Pictures and fonts were not loaded (they do not change what is being checked). N
 |---|---|---|
 | R01 | Sat Oct 3, 2026: close Sunday for rain | Worked. The three badges close together on Sunday (English computer, Spanish phone), the bar shows at once, it goes at midnight, also on a page left open. A Spanish visitor reads the owner's English words in English (the calendar's own Dec 25 step says how to write all five languages). |
 | R02 | Tue Oct 6, 2026: the first pizza weekend opens | **Calendar wrong, fixed.** The chip and countdown, the 6 hours of "just opened", the Reserve button, the Remind me link (5:00 PM Eastern) all worked. But the step says "change the sentence under the table" and nothing else. Publishing then stops with "Translations missing", four lines, and writes nothing. And the first publish gives the sentence a new `data-t` code, so the calendar's search words stopped matching from then on. The calendar now says both, and searches the words of the sentence. |
-| R03 | Oct 7 to Nov 4: lines hide one by one | Worked. Each line is there at 23:59 on its last day and gone at 00:00 (phone). The special-days box hides when its last line goes. |
+| R03 | Oct 7 to Nov 9: lines hide one by one | Worked. Each line is there at 23:59 on its last day and gone at 00:00 (phone). The special-days box hides when its last line goes. |
 | R04 | Tue Oct 27: the last pizza row; countdown and chip vanish | **Calendar wrong, fixed.** They vanish at 11:00 PM on Tuesday Oct 27 (six hours after the opening), not on Wednesday Oct 28. A new row brings the chip back. |
 | R05 | Mon Nov 9: fall is over | Worked. Farm badge goes, top bar, hero line, rows, the "Fall schedule" button, fall look until Nov 18, Reserve buttons stay. The top bar is not shown on phones: the calendar now says so. |
 | R06 | Wed Nov 18: winter look | Worked. Changing the closing time in `hours` alone makes `python3 tools/check_facts.py hours` say the words disagree (20 places), as the calendar wants. |
@@ -42,7 +42,7 @@ Pictures and fonts were not loaded (they do not change what is being checked). N
 | R17 | Jun 20 and Jul 4 | Worked. |
 | R18 | Sun Jul 11: summer over | Worked. |
 | R19 | Thu Aug 12: fall look | Worked, with the README's steps (`pages.py`, then `i18n.py extract` and `build`) after the edit in `pages/`. |
-| R20 | Aug 23 to Sep 25: the box counts down | Worked (pumpkins Sep 13, cut flowers Sep 1, tomatoes Sep 25). |
+| R20 | Aug 23 to Sep 12: the box counts down | Worked (pumpkins and tomatoes Sep 13, cut flowers Sep 1). The tomatoes started on Sep 25 until 9 Nov 2026, when the site builder gave them the fall dates. |
 | R21 | Mon Sep 13, 2027: fall season | **Calendar wrong, fixed.** The box does not always stay hidden: it shows its "No pizza" lines if their last day was renewed in August. No countdown and no chip without rows, as the calendar says. |
 | R22 | Nov 8 to Nov 9, 2027 | Worked. |
 | R23 | Nov 18 to Nov 26, 2027 | Worked. |

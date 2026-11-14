@@ -63,7 +63,7 @@ export function pageCode() {
   // the letters of the texts being photographed (marked data-cx) see-through, or pure green without shadows
   const T = '[data-cx],[data-cx] *,[data-cx]::first-line,[data-cx] *::first-line';
   // something painted in front of the words for a moment (the flying bee) is not what is behind them: it is hidden for the photos
-  const OCC = '[data-cx-occ]{visibility:hidden!important}';
+  const OCC = '[data-cx-occ],#bee-fly{visibility:hidden!important}';   // the bee or butterfly may fly across a word: it is not part of what is measured
   // an SVG text is painted with fill (its outline halo stays in the see-through picture, like a text shadow)
   const SVGT = 'text[data-cx],[data-cx] text,tspan[data-cx],[data-cx] tspan';
   // an underline drawn by a link around the words is not behind them either

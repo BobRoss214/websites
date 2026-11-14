@@ -157,12 +157,12 @@ Inside a topic every question has its own urgency (1, 2 or 3 in the heading). Th
 | farm-seasons at `haunted trail and the maze only in fall` and `Christmas trees only in winter` | "Haunted" and /Maze/ only in fall; "Christmas" only in winter | d07, d48, d50 |
 | features at `press: two Axios Charlotte links` | exactly two Axios links in the press list | d56 |
 | messages at `the waitlist link is a mailto: to the farm` and `an address the owner typed with a + in it` | the waitlist mailto goes to cathy@wiseacresorganic.com | d52 |
-| consistency at `age: free (infants, wagon ride, party children)` and `age: from this age people pay the field fee / school admission` | the age up to which children are free (every place must give the same number) and the age from which people pay the field fee, the pizza package extra and the school admission for family members | d45 |
+| consistency at `age: free (infants, party children)`, `age: wagon ride free` and `age: from this age people pay the field fee / school admission` | the age up to which children are free (every place must give the same number), the age up to which children ride the wagon free (its own rule) and the age from which people pay the field fee, the pizza package extra and the school admission for family members | d45 |
 | consistency at `days: farm visits without pizza (fall)` and tools/check_facts.py at `Ages 3 and up` | both read the words "Ages 3 and up" (and "Field fee, ages 3 and up") next to the farm days and the $3 price; reword those and these two checks need the new words | d45 |
 | dated, live | closed badges on a closure date | d60 |
 | drive at `those services may keep a record of the request` | the Drive time note sentence | d62 |
 | print-qr (whole file) | QR codes: error correction level M or better, every code scans back, the signs and the six pages on paper | d64, d65 |
-| hero at `fall: the "New tomatoes" chip shows` | the "New" tomato chip (it hides itself after 2026-10-31) | d66 |
+| hero at `fall: the "New tomatoes" chip shows` | the "New" tomato chip (it hides itself after 2026-11-08) | d66 |
 | validity (whole file) | page style lines that browsers ignore (the two backgrounds of d67 must stay valid) | d67 |
 | hero, touch, games (whole files) | the badges and the reach of the game, a badge on a 320 pixel screen, the winter messages | d68, d69, d70 |
 | auto-dark (whole file) | every yellow part keeps dark text when Chromium's auto dark mode is on | d73 |
@@ -1008,7 +1008,7 @@ Faces and organisation names need a yes before launch. Words printed inside pict
 
 **B. A guinea pig**
 
-- Keep the picture out of "Meet the goats": delete its <li> (index.html at `data-ta-alt="ted43ffcd"`, the goat strip). Gallery entry js/content.js at `src: "assets/photos/goat-in-green-frog-hat.webp"` stays; change its alt to "A guinea pig wearing a green knitted frog hat" and add the JS string x 4. Rename the file if you like (both places).
+- Keep the picture out of "Meet the animals": delete its <li> (index.html at `data-ta-alt="ted43ffcd"`, the goat strip). Gallery entry js/content.js at `src: "assets/photos/goat-in-green-frog-hat.webp"` stays; change its alt to "A guinea pig wearing a green knitted frog hat" and add the JS string x 4. Rename the file if you like (both places).
 - Strings: 1 JS string x 4 (alt); the strip tile string becomes unused
 - Tests: gallery
 
@@ -1593,7 +1593,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - js/season.js at `{ id: 'fall'`, fall end: new Date(y, 10, 8) -> new Date(y, 10, 30). Warning: winter starts the Friday after Thanksgiving (Nov 27, 2026, js/season.js at `{ id: 'winter'`), so the two seasons overlap for 4 days. Decide what shows then (ask Claude).
 - Words "early November" become "late November" (say early, mid or late: the year-bar check and the season-words check of consistency read those words, and "end of November" is not one of them): index.html at `data-t="t9f9dedc8"`, `data-t="t7ad569b7"`, `data-t="t21bf1cf8"`, `data-t="t38bfb02d"` and `data-t="t6fa474da"`, and pages/pumpkin-patch.html at `class="hand hero-kicker"` and `Pumpkin picking usually runs` (7 ids: t21bf1cf8, t38bfb02d, t6fa474da, t7ad569b7, t86e21495, t9f9dedc8, tebb43b26).
 - Last pizza weekend row "Oct 30-Nov 8" (index.html at `data-release="2026-10-27"`, data-until="2026-11-08") if more weekends follow; the "No pizza" block (index.html at `<div data-until="2026-11-30">`) already says November.
-- The year bar next to that sentence ends too early for "late November": in index.html at `--s:8.45;--e:10.25` change `--e:10.25` to `--e:10.9` (months count from 0 = January 1, so 10 is November 1; "late November" must end between 10.62 and 11.05). The README rows follow the same text.
+- The year bar next to that sentence ends too early for "late November": in index.html at `bar-orange" style="--s:8.45;--e:10.25"` (the pumpkin bar; the tomato bar below it has the same numbers: change it too if the tomatoes go on as long as the pumpkins, and then the tomato sentences, the tomato dates in js/features.js and the last day of the chip and the card link as well) change `--e:10.25` to `--e:10.9` (months count from 0 = January 1, so 10 is November 1; "late November" must end between 10.62 and 11.05). The README rows follow the same text.
 - Strings: about 7 to 9 ids x 4 translations
 - Tests: consistency: tests/consistency.test.mjs at `Mid-September through early November` builds the fall words from js/season.js, so it expects the new text: in that line change the regex `/(Mid-September through early November)/i` to `late November`; dated: tests/dated.test.mjs pins the pizza rows and the "No pizza" box (dated from `const ROW =` to `const ECD =`, and from `at('2026-11-02T12:00:00-05:00')` to `is gone as well`); it passes without a change when only the end date and the words change (tried), so redo those dates only if you also change the rows or the box; farm-seasons and hero may react to the new end date, run them
 
@@ -1793,7 +1793,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 ### d66. Stop saying "new this year" from January?
 
-- In plain words: The "New this year" ribbon hides itself after December 31, 2026 (the "New" chip and badge hide themselves after October 31). Eight other places still call the tomatoes and basil new, and the red dot on the Tomatoes link comes back every fall.
+- In plain words: The "New this year" ribbon hides itself after December 31, 2026 (the "New" chip and badge hide themselves after November 8). Eight other places still call the tomatoes and basil new, and the red dot on the Tomatoes link comes back every fall.
 - Doc question: Q61
 - Urgency: 3 (nice to have). Checklist says: not listed.
 - Owner fact (no sensible default): no
@@ -1803,15 +1803,15 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **A. Stop calling them new from January 1 (words and red dot)**
 
-- Change the words in index.html at `data-t="td6ecd1d8"` (fall hero line, "plus new u-pick ..."), `data-t="t1c989256"` (the "New:" line in the Fall panel list), `data-t="tedce5b9f"` (add-on note), `data-t="tbc119a85"` (pumpkin text), `data-t="t4eb3e326"` (calendar row), `data-t="t247dcbc5"` (season list) and `data-t="t398007b0"` (FAQ answer "Yes, and it's new this year!"), and in pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes` (the rebuild copies it to the generated pumpkin-patch page).
-- The red dot: delete the rule css/sections.css at `html[data-season="fall"] .nav-tomato a::after` (and the class on index.html at `class="nav-tomato"` can stay).
-- The ribbon (index.html at `data-t="tbaeea389"`) hides itself after its last day, index.html at `data-until="2026-12-31"`; the chip (index.html at `data-t="t30661b0e"`) and the "New" badge (index.html at `data-t="tddae9ce2"`) hide themselves after index.html at `data-until="2026-10-31"` (2 places).
+- Change the words in index.html at `data-t="td6ecd1d8"` (fall hero line, "plus new u-pick ..."), `data-t="t850262cb"` (the "New:" line in the Fall panel list), `data-t="t3e399cd9"` (add-on note), `data-t="tbc119a85"` (pumpkin text), `data-t="t6af84b8c"` (calendar row), `data-t="tf6fccf62"` (season list) and `data-t="t96e7263a"` (FAQ answer "Yes, and it's new this year!"), and in pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes` (the rebuild copies it to the generated pumpkin-patch page).
+- The red dot: delete the two rules css/sections.css at `html[data-season="fall"] .nav-tomato .nav-group-btn::after` and `html[data-season="fall"] .nav-tomato .nav-group-title::after` (and the class on index.html at `class="nav-group nav-tomato"` can stay).
+- The ribbon (index.html at `data-t="tbaeea389"`) hides itself after its last day, index.html at `data-until="2026-12-31"`; the chip (index.html at `data-t="t30661b0e"`) and the "New" badge (index.html at `data-t="tddae9ce2"`) hide themselves after index.html at `data-in-season data-until="2026-11-08"` (2 places).
 - Strings: 8 ids x 4 translations (7 in index.html, 1 for the pumpkin page)
 - Tests: farm-seasons, consistency, languages, i18n; hero looks for the "New" tomatoes chip (hero at `fall: the "New tomatoes" chip shows`), which hides itself after the last day
 
 **B. Keep saying new (I will say until when)**
 
-- Change the last day in index.html at `data-until="2026-12-31"` (the ribbon) and `data-until="2026-10-31"` (2 places: the chip and the "New" badge) to her date. The eight sentences and the red dot stay as they are.
+- Change the last day in index.html at `data-until="2026-12-31"` (the ribbon) and `data-in-season data-until="2026-11-08"` (2 places: the chip and the "New" badge) to her date. The eight sentences and the red dot stay as they are.
 - Strings: 0
 - Tests: none
 
@@ -1829,7 +1829,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 - Owner fact (no sensible default): no
 - Default: none.
 - Depends on: d69 and d70 (the same game code, js/hero.js); d34 (the sunflower photos are a separate question).
-- Note: Checked in a browser on 3 October 2026 (summer picture). The game fixes and the game test (tests/games.test.mjs) are already in the tree; the optional patch games-B-pick-snips-sunflowers.patch goes on top of them.
+- Note: Checked in a browser on 3 October 2026 (summer picture; the spring picture has the same five sunflowers, and they can be snipped there too). The game fixes and the game test (tests/games.test.mjs) are already in the tree; the optional patch games-B-pick-snips-sunflowers.patch goes on top of them.
 
 **A. Let the Pick button snip sunflowers too**
 
@@ -1845,7 +1845,7 @@ The site shows fall wording all year. The two winter patches (A and B), the fall
 
 **C. Draw 2 or 3 sunflowers in the middle**
 
-- Ask Claude: js/hero.js at `sunflower(24, 205, 128, '')` is the first of the five (two on the left edge, three on the right); add two or three in the middle of the picture, away from the berry rows. A drawing change; they must also be tappable on a phone.
+- Ask Claude: js/hero.js at `const springFore` (and at `const summerFore`) list the five sunflowers (two on the left edge, three on the right); add two or three in the middle of the picture, away from the berry rows. A drawing change; they must also be tappable on a phone.
 - Strings: 0
 - Tests: hero, touch, visual-check; games
 
@@ -2100,27 +2100,27 @@ Cancel fee, service animals, school-tour minimum, parking: what visitors will ho
 
 ### d45. Who is free: ages 2 and under
 
-- In plain words: The site says children 2 and under are free. Does that mean until the 3rd birthday? The wagon ride line already says ages 2 and younger ride free.
+- In plain words: The site says children 2 and under are free. Does that mean until the 3rd birthday? The wagon ride is a separate rule: it says ages 3 and younger ride free.
 - Doc question: none (added on the dashboard after the doc was written)
 - Urgency: 2 (wrong or risky information). Checklist says: not listed.
 - Owner fact (no sensible default): yes
 - Default: none. Only she knows the rule. If she does not answer, nothing changes, which is the same as A.
 - Depends on: d16 (the $3 field fee and the pizza package extra start at "ages 3 and up"), d02 (party guests: "Children age 2 and younger are free and do not count toward the total"), d36 (school tours: parents and siblings "ages 3 and older" pay the admission), d44 (what counts as a child on Thursdays).
-- Note: Where the site says it now: "Children age 2 and younger are free" in index.html at `data-t="td4abc72c"` (the pizza package), `data-t="tf355075d"` (the field fee card), `data-t="t6d7bc03d"` (the price list) and `data-t="tc38820e6"` (party guests); pages/first-visit.html at `Children age 2 and younger are free` (1 place); pages/pumpkin-patch.html at `Children age 2 and younger are free` (2 places: the price list and the FAQ answer). "Ages 2 and younger ride free" (the wagon ride) is a separate line: index.html at `data-t="tb65a930a"` (2 places), pages/pumpkin-patch.html at `Ages 2 and younger ride free.` and the sentence in pages/first-visit.html at `ages 2 and younger ride free`.
+- Note: Where the site says it now: "Children age 2 and younger are free" in index.html at `data-t="td4abc72c"` (the pizza package), `data-t="tf355075d"` (the field fee card), `data-t="t6d7bc03d"` (the price list) and `data-t="tc38820e6"` (party guests); pages/first-visit.html at `Children age 2 and younger are free` (1 place); pages/pumpkin-patch.html at `Children age 2 and younger are free` (2 places: the price list and the FAQ answer). "Ages 3 and younger ride free" (the wagon ride) is a separate rule (it said 2 before 3 Nov 2026): index.html at `data-t="t74bca80c"` (2 places), `data-t="t59243d8a"` and `data-t="tad098205"` (the two wagon cards, "ride the wagon free"); pages/pumpkin-patch.html at `Ages 3 and younger ride free.` and `ages 3 and younger ride free` (the price list and the FAQ answer); pages/first-visit.html at `ages 3 and younger ride free`.
 
 **A. Free until their 3rd birthday**
 
 - No change is needed: "age 2 and younger" next to "ages 3 and up" already means exactly this (a child is free until the day they turn 3).
 - Optional, only if she wants it plainer for parents: write "Children under 3 are free" in the places listed in the Note. Then consistency MUST follow (see Tests): its age check reads the words "Children age 2 and younger are free".
 - Strings: 0 if nothing changes; if the plainer words are used, 7 English sentences x 4 translations (ids t2531639c, t3a5391d6, t6d7bc03d, tc38820e6, td4abc72c, tf355075d, tfdad55ee)
-- Tests: none if nothing changes. For the plainer words: consistency at `age: free (infants, wagon ride, party children)` (its minimum is 10; it reads "Children age N and younger are free", "Children N and under are free", "Infants N and under are free" and "Ages N and younger ride free", so it needs a new pattern for the new words).
+- Tests: none if nothing changes. For the plainer words: consistency at `age: free (infants, party children)` (its minimum is 8; it reads "Children age N and younger are free", "Children N and under are free" and "Infants N and under are free", so it needs a new pattern for the new words). The wagon ride has a fact of its own, `age: wagon ride free`.
 
 **B. Free for infants under 12 months only**
 
 - Children aged 1 and 2 then pay. Replace "Children age 2 and younger are free" with her words (for example "Infants under 12 months are free") in all the places in the Note, and change the age from which people pay to match (for example "ages 1 and up"): index.html at `data-t="t10ffb744"` (Field fee, ages 3 and up), `data-t="tf7203efa"` and `data-t="te9a8e62d"` (pizza package, "ages 3+"), `data-t="t6d7bc03d"` (the price list), `data-t="t6c80dbc4"` (school tours: parents and siblings ages 3 and older); pages/pumpkin-patch.html at `Ages 3 and up.`, `(ages 3+)` and `ages 3 and up`; pages/school-field-trips.html at `ages 3 and older` (2 places). Then rebuild.
-- The wagon ride line ("Ages 2 and younger ride free") is a different rule: she must say whether it changes too (2 more English sentences: ids tb65a930a and tb77e4ad7).
+- The wagon ride line is a different rule. Answered on Nov 3 2026 by the site builder: ages 3 and younger ride the wagon free, so the site says "Ages 3 and younger ride free" now (it said 2 before). The consistency test and tools/check_facts.py keep this as its own fact, "age: wagon ride free".
 - Strings: about 14 English sentences x 4 translations (ids t2531639c, t3a5391d6, t6d7bc03d, tc38820e6, td4abc72c, tf355075d, tfdad55ee, t041b0712, t10ffb744, t4d23e4b7, t6c80dbc4, t8763a833, te9a8e62d, tf7203efa); 2 more if the wagon ride changes
-- Tests: consistency MUST follow: consistency at `age: free (infants, wagon ride, party children)` (give it a pattern for the new words; lower its minimum of 10 if fewer places say it; it also reads "Ages N and younger ride free", so if the wagon ride stays at 2 while the rest says 12 months it finds two answers: take `/[Aa]ges (\d+) and younger ride free/` out of that fact and give it a line of its own right under it, `{ id: 'age: free on the wagon ride', norm: num, min: 2, find: [/[Aa]ges (\d+) and younger ride free/] },`), `age: from this age people pay the field fee / school admission` (minimum 11: every place must say the same new number) and `days: farm visits without pizza (fall)` (it reads "Ages 3 and up" and "Field fee, ages 3 and up" before the days) and `days: farm visits with pizza` (its second pattern reads "(ages 3+)." after the price: change `\\(ages 3\\+\\)` to the new age). tools/check_facts.py at `Ages 3 and up` reads the same words for the $3 field fee.
+- Tests: consistency MUST follow: consistency at `age: free (infants, party children)` (give it a pattern for the new words; lower its minimum of 8 if fewer places say it; the wagon ride is a fact of its own, `age: wagon ride free`, so it keeps its age while the rest says 12 months), `age: from this age people pay the field fee / school admission` (minimum 11: every place must say the same new number) and `days: farm visits without pizza (fall)` (it reads "Ages 3 and up" and "Field fee, ages 3 and up" before the days) and `days: farm visits with pizza` (its second pattern reads "(ages 3+)." after the price: change `\\(ages 3\\+\\)` to the new age). tools/check_facts.py at `Ages 3 and up` reads the same words for the $3 field fee.
 
 **C. I will explain**
 
@@ -2181,7 +2181,7 @@ Cancel fee, service animals, school-tour minimum, parking: what visitors will ho
 - Owner fact (no sensible default): yes (only she knows what each word means on her farm)
 - Default: none. If she does not answer, B: nothing breaks.
 - Depends on: d07 (the maze line must use the name she picks), d44 (the corn pit line must agree with the Thursday offer), d02 (the Party Patch is the private party area in the group prices), d16 (farm fun is what both package prices include), d45 (ages).
-- Note: All seven words are on the site today. A few sit next to a short line (the maze card says "Wander through our little maze on fall visits."; Halfzies says "pepperoni on half"), but none has a plain line of its own that says what it is. This question asks for one in her words. Where each word first appears: corn pit, index.html at `data-t="t447b4ee9"` (price $4 per person); barrel train, index.html at `data-t="tea6897bf"` (ages 12 and under, $3 per child); small sunn hemp maze, index.html at `data-t="t447b4ee9"`; Halfzies, index.html at `data-t="te2b6ab0c"` (next to it: "homemade dough, tomato sauce, cheese, pepperoni on half"); Party Patch, index.html at `data-t="t756d2aeb"` (the tab calls it "Private party patch", index.html at `data-t="t91aeca4c"`); u-cut, index.html at `data-t="t0e96fa27"`; farm fun, index.html at `data-t="t9c63bc47"`.
+- Note: All seven words are on the site today. A few sit next to a short line (the maze card says "Wander through our little maze on fall visits."; Halfzies says "pepperoni on half"), but none has a plain line of its own that says what it is. This question asks for one in her words. Where each word first appears: corn pit, index.html at `data-t="te1a07fa0"` (price $4 per person); barrel train, index.html at `data-t="tea6897bf"` (ages 12 and under, $3 per child); sunn hemp maze, index.html at `data-t="te1a07fa0"`; Halfzies, index.html at `data-t="te2b6ab0c"` (next to it: "homemade dough, tomato sauce, cheese, pepperoni on half"); Party Patch, index.html at `data-t="t756d2aeb"` (the tab calls it "Private party patch", index.html at `data-t="t91aeca4c"`); u-cut, index.html at `data-t="t0e96fa27"`; farm fun, index.html at `data-t="t9c63bc47"`.
 
 **A. I will send one line for each**
 
@@ -2189,7 +2189,7 @@ Cancel fee, service animals, school-tour minimum, parking: what visitors will ho
 - Where they go is not decided by her answer. The usual place (a suggestion for whoever makes the change): one new question in the First-timer questions list of pages/first-visit.html, after the question pages/first-visit.html at `<summary>What are your bathroom facilities?</summary>`, with the question "What do the farm words mean?" and the seven lines as the answer. The rebuild (python3 tools/pages.py) copies the question and answer into that page's structured data. To show it on the home page too, add the same question to the FAQ of index.html at `id="faq"` and rebuild.
 - Halfzies is one of the farm names that stay in English inside translated text (js/i18n.js at `const NAMES =`); the other six words are translated.
 - Strings: 1 question and 1 answer (2 ids; 8 ids if the answer is a list of seven short items) x 4 translations
-- Tests: i18n, languages and i18n-a11y after the rebuild. If a line repeats a price, a day or an age, consistency reads it too (for example consistency at `price: corn pit, per person` and `age: free (infants, wagon ride, party children)`).
+- Tests: i18n, languages and i18n-a11y after the rebuild. If a line repeats a price, a day or an age, consistency reads it too (for example consistency at `price: corn pit, per person` and `age: free (infants, party children)`).
 
 **B. Leave them as they are**
 
@@ -2280,7 +2280,7 @@ One spelling and one name everywhere, matching Google and Facebook.
 
 ### d07. Name of the maze
 
-- In plain words: The site says "Corn maze" in some places and "Small Sunn Hemp Maze" in others.
+- In plain words: The site says "Corn maze" in some places and "Sunn Hemp Maze" in others.
 - Doc question: Q11
 - Urgency: 2 (wrong or risky information). Checklist says: not listed.
 - Owner fact (no sensible default): yes
@@ -2289,16 +2289,16 @@ One spelling and one name everywhere, matching Google and Facebook.
 
 **A. Corn maze**
 
-- Everywhere "Corn maze". The farm map already says "Corn maze" (js/farm-map-data.js at `"label": "Corn maze"`, written from tools/saved-map.json at `"label": "Corn maze"`). Change the text that says sunn hemp: index.html at `data-t="t447b4ee9"`, `<li data-t="t39573dd5">`, `data-t="t8c64d6c3"` (heading), `<th data-t="t39573dd5"` (table row), `<h4 data-t="t39573dd5"` (Shop card) and `data-t="t0b5eaa9e"`, and pages/pumpkin-patch.html at `<li>A small sunn hemp maze</li>`. The line index.html at `data-t="tcc37b939"` ("Wander through our little maze") can stay.
+- Everywhere "Corn maze". The farm map already says "Corn maze" (js/farm-map-data.js at `"label": "Corn maze"`, written from tools/saved-map.json at `"label": "Corn maze"`). Change the text that says sunn hemp: index.html at `data-t="te1a07fa0"`, `<li data-t="t38498f20">`, `data-t="ta04da337"` (heading), `<th data-t="t38498f20"` (table row), `<h4 data-t="t38498f20"` (Shop card) and `data-t="tf7a7ad06"`, and pages/pumpkin-patch.html at `<li>A sunn hemp maze</li>`. The line index.html at `data-t="tcc37b939"` ("Wander through our little maze") can stay.
 - README rows "Farm map" and the maze mention (README.md, section "What's interactive", the item "What's on the farm").
-- Strings: 5 ids change (t0b5eaa9e, t39573dd5, t447b4ee9, t8c64d6c3, tc2132019) but two of them end up as the same words, "Corn maze", so 4 new sentences x 4 translations; the JS strings "Corn maze" and "Corn maze sign" stay
+- Strings: 5 ids change (tf7a7ad06, t38498f20, te1a07fa0, ta04da337, t1ba5d868) but two of them end up as the same words, "Corn maze", so 4 new sentences x 4 translations; the JS strings "Corn maze" and "Corn maze sign" stay
 - Tests: farm-seasons: tests/farm-seasons.test.mjs at `haunted trail and the maze only in fall` looks for /Maze/ (capital M) in the fall text: change it to /maze/i if the heading becomes "Corn maze"
 
-**B. Small Sunn Hemp Maze**
+**B. Sunn Hemp Maze**
 
-- Everywhere "Small sunn hemp maze". The text already says it (5 ids). Change the map: in the Farm Map Marker (or by hand in tools/saved-map.json at `"label": "Corn maze"`) change the label "Corn maze" to "Small sunn hemp maze", then python3 tools/farm_map.py tools/saved-map.json (rewrites js/farm-map-data.js at `"label": "Corn maze"`). Check that the legend and the map sign (js/features.js at `T('Corn maze sign')`) say it too.
+- Everywhere "Sunn hemp maze". The text already says it (5 ids). Change the map: in the Farm Map Marker (or by hand in tools/saved-map.json at `"label": "Corn maze"`) change the label "Corn maze" to "Sunn hemp maze", then python3 tools/farm_map.py tools/saved-map.json (rewrites js/farm-map-data.js at `"label": "Corn maze"`). Check that the legend and the map sign (js/features.js at `T('Corn maze sign')`) say it too.
 - The picture of the maze on the map (js/map-art.js cornMaze) is a drawing: no change.
-- Strings: 1 to 2 JS strings x 4 translations (new "Small sunn hemp maze"; "Corn maze sign" if you rename it); the 5 UI ids stay
+- Strings: 1 to 2 JS strings x 4 translations (new "Sunn hemp maze"; "Corn maze sign" if you rename it); the 5 UI ids stay
 - Tests: map (legend text), i18n; farm-seasons unchanged
 
 **C. A different name**
@@ -2472,7 +2472,7 @@ Features, prices and claims the site states as fact. They came from the farm's o
 
 ### d48. Haunted trail and u-pick tomatoes this fall
 
-- In plain words: The home page says visitors can walk a haunted trail and u-pick tomatoes and basil every weekend until the end of October ($4.50 a pound, $1 a stem). Your farm map shows both, but we could not find them on the farm's public pages.
+- In plain words: The home page says visitors can walk a haunted trail and u-pick tomatoes and basil every weekend from mid-September through early November ($4.50 a pound, $1 a stem). Your farm map shows both, but we could not find them on the farm's public pages.
 - Doc question: Q5, Q6, Q7
 - Urgency: 2 (wrong or risky information). Checklist says: before launch.
 - Owner fact (no sensible default): no
@@ -2488,21 +2488,21 @@ Features, prices and claims the site states as fact. They came from the farm's o
 
 **B. No haunted trail this fall**
 
-- Take the haunted trail out: index.html at `data-t="td6ecd1d8"` (hero line), `data-t="tb2ff1037"` (farm card), `data-t="t4b6d3990"` (the "Haunted Trail" card in the fall panel), `data-t="t49c35609"` (row in the "Season by season" table) and `data-t="t0b5eaa9e"` (fall tab line); pages/first-visit.html at `<li>A haunted trail on fall visits</li>`; pages/pumpkin-patch.html at `<li>A haunted trail on fall visits</li>`. 7 UI ids x 4 translations (t0b5eaa9e, t46f6aa3b, t49c35609, t4b6d3990, tb2ff1037, tb89adc3c, td6ecd1d8).
+- Take the haunted trail out: index.html at `data-t="td6ecd1d8"` (hero line), `data-t="tb2ff1037"` (farm card), `data-t="t4b6d3990"` (the "Haunted Trail" card in the fall panel), `data-t="t49c35609"` (row in the "Season by season" table) and `data-t="tf7a7ad06"` (fall tab line); pages/first-visit.html at `<li>A haunted trail on fall visits</li>`; pages/pumpkin-patch.html at `<li>A haunted trail on fall visits</li>`. 7 UI ids x 4 translations (tf7a7ad06, t46f6aa3b, t49c35609, t4b6d3990, tb2ff1037, tb89adc3c, td6ecd1d8).
 - Map: delete the "Haunted trail" mark in the Farm Map Marker (tools/saved-map.json at `"label": "Haunted trail"`) and run python3 tools/farm_map.py tools/saved-map.json (rewrites js/farm-map-data.js at `"label": "Haunted trail"`). The legend label (js/features.js at `T('Haunted trail')`) can stay.
 - Strings: 7 UI ids x 4 translations
 - Tests: farm-seasons MUST change: tests/farm-seasons.test.mjs at `haunted trail and the maze only in fall` requires "Haunted" in the fall text (keep only /Maze/); map (legend and marks)
 
 **C. No u-pick tomatoes and basil this fall**
 
-- Remove the whole "Tomatoes & basil" section index.html from `id="tomatoes"` to `================= WISE PIE` and every link to it: hero line (index.html at `data-t="td6ecd1d8"`) and chip (index.html at `data-t="t30661b0e"`), the chooser card (index.html at `data-t="tddae9ce2"`), the add-on (index.html at `data-t="t48324abe"`), the calendar bar (index.html at `class="cal-bar bar-tomato"`), the Shop card (index.html at `id="shop-upick"`), the FAQ answer (index.html at `data-t="t398007b0"`), pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes`, the "tomatoes" crop in js/features.js (This week box) and the farm map mark. Ask Claude: the largest removal on this list.
+- Remove the whole "Tomatoes & basil" section index.html from `id="tomatoes"` to `================= WISE PIE` and every link to it: hero line (index.html at `data-t="td6ecd1d8"`) and chip (index.html at `data-t="t30661b0e"`), the chooser card (index.html at `data-t="tddae9ce2"`), the add-on (index.html at `data-t="t48324abe"`), the calendar bar (index.html at `class="cal-bar bar-tomato"`), the Shop card (index.html at `id="shop-upick"`), the FAQ answer (index.html at `data-t="t96e7263a"`), pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes`, the "tomatoes" crop in js/features.js (This week box) and the farm map mark. Ask Claude: the largest removal on this list.
 - 46 UI ids and 5 JS strings mention tomatoes or basil. The photo with the price signs goes too (d13, d32).
 - Strings: about 46 UI ids + 5 JS strings (unused after removal)
 - Tests: consistency: tests/consistency.test.mjs at `price: tomatoes, per pound` and `price: basil, per stem` (prices) and from `const tom =` to `season words match js/season.js and the tomato dates in js/features.js` (tomato dates); features at `auto: pumpkins, tomatoes, flowers in season`, `const WEEK =` and `override: tomatoes peak first`; hero at `fall: the "New tomatoes" chip shows` and `winter: the tomato chip and the bee are hidden`; farm-seasons
 
 **D. The tomato or basil prices are different**
 
-- Change the price in 5 sentences and in the Shop card: index.html at `data-t="t48324abe"`, `data-t="t6b47c02f"`, `data-t="te71161d2"` and `data-t="t398007b0"`, the two prices of the u-pick card index.html at `id="shop-upick"` (no translation id), and pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes`. 5 UI ids x 4 translations (t398007b0, t48324abe, t6b47c02f, tcc1be24a, te71161d2).
+- Change the price in 5 sentences and in the Shop card: index.html at `data-t="t48324abe"`, `data-t="t6b47c02f"`, `data-t="te71161d2"` and `data-t="t96e7263a"`, the two prices of the u-pick card index.html at `id="shop-upick"` (no translation id), and pages/pumpkin-patch.html at `New this year. Certified organic cherry tomatoes`. 5 UI ids x 4 translations (t96e7263a, t48324abe, t6b47c02f, ta15f2284, te71161d2).
 - Strings: 7 UI ids x 4 translations
 - Tests: consistency: facts "price: tomatoes, per pound" and "price: basil, per stem" (tests/consistency.test.mjs at `price: tomatoes, per pound` and `price: basil, per stem`, at least 5 places each): all places must agree, no edit if they do
 

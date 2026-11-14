@@ -130,7 +130,7 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'wa-dates-'));
 try {
   const copy = (rel) => fs.cpSync(path.join(ROOT, rel), path.join(tmp, rel), { recursive: true, filter: (s) => !/__pycache__/.test(s) });
   for (const f of fs.readdirSync(ROOT).filter((x) => x.endsWith('.html') && x !== '404.html')) copy(f);
-  for (const d of ['pages', 'lang', 'js', 'tools']) copy(d);
+  for (const d of ['pages', 'lang', 'js', 'tools', 'css']) copy(d);   // css: pages.py stops when a page's `styles:` line names a file that is not in css/
   fs.mkdirSync(path.join(tmp, 'assets'));
   for (const f of fs.readdirSync(path.join(ROOT, 'assets'), { withFileTypes: true }).filter((x) => x.isFile())) copy('assets/' + f.name);   // the share pictures pages.py looks for
   const step = () => [py(tmp, 'tools/pages.py'), py(tmp, 'tools/i18n.py', 'extract'), py(tmp, 'tools/i18n.py', 'build')];

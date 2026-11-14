@@ -61,7 +61,7 @@ Answer:
 
 ### Question 6
 
-**Are you offering u-pick tomatoes and basil this fall (every weekend, late September through October)?**
+**Are you offering u-pick tomatoes and basil this fall (every weekend, mid-September through early November)?**
 
 Dashboard id: d48
 
@@ -118,11 +118,11 @@ Answer:
 
 ### Question 11
 
-**Is the maze this year a small sunn hemp maze?**
+**Is the maze this year a sunn hemp maze?**
 
 Dashboard id: d07
 
-Why it matters: The site calls it a "small sunn hemp maze" but the farm map calls it a "corn maze", so they disagree.
+Why it matters: The site calls it a "sunn hemp maze" but the farm map calls it a "corn maze", so they disagree.
 
 Answer:
 
@@ -452,7 +452,7 @@ Answer:
 
 Dashboard id: d31, d33
 
-Why it matters: Faces and an organization's name should not be on the website without a yes. This photo is already in the photo gallery (the last picture, captioned "Foster Village table"), so we need your answer before the site goes live; if it is No, we take the picture out. Two other new photos show a person's arm or hair but no face (the Easter baby goat and the frog-hat animal). The frog-hat animal is in the "Meet the goats" pictures at The GreenHouse, and we called it a goat only from its file name; its description on the site says "a small animal". If it is a lamb or another animal, "Meet the goats" would be wrong.
+Why it matters: Faces and an organization's name should not be on the website without a yes. This photo is already in the photo gallery (the last picture, captioned "Foster Village table"), so we need your answer before the site goes live; if it is No, we take the picture out. Two other new photos show a person's arm or hair but no face (the Easter baby goat and the frog-hat animal). The frog-hat animal is in the "Meet the animals" pictures at The GreenHouse, and we called it a goat only from its file name; its description on the site says "a small animal". If it is a lamb or another animal, we change the file name and its description.
 
 Answer:
 
@@ -707,7 +707,7 @@ Answer:
 
 Dashboard id: d66
 
-Why it matters: The "New this year" ribbon hides itself after 31 December 2026. (The "New: u-pick tomatoes & basil" chip and badge hide themselves after 31 October.) But eight other places still call the tomatoes and basil new, for example the FAQ answer "Yes, and it's new this year!". The small red dot on the Tomatoes link in the menu also comes back every fall, not only this one.
+Why it matters: The "New this year" ribbon hides itself after 31 December 2026. (The "New: u-pick tomatoes & basil" chip and badge hide themselves after 8 November.) But eight other places still call the tomatoes and basil new, for example the FAQ answer "Yes, and it's new this year!". The small red dot on the Tomatoes link in the menu also comes back every fall, not only this one.
 
 Answer:
 
@@ -725,11 +725,11 @@ Answer:
 
 ### Question 63
 
-**Is it all right that the "Sunflower Whisperer" badge (100 snipped sunflowers in the summer picture) can only be earned on a wide computer screen?**
+**Is it all right that the "Sunflower Whisperer" badge (100 snipped sunflowers in the spring and summer pictures) can only be earned on a wide computer screen?**
 
 Dashboard id: d68
 
-Why it matters: Only 5 sunflowers are drawn, at the far edges of the picture. On a screen 1440 pixels wide 4 of the 5 are in view; on a phone 390 pixels wide none is, so a visitor on a phone can never earn this badge.
+Why it matters: Only 5 sunflowers are drawn in each of those pictures, at the far edges. On a screen 1440 pixels wide 4 of the 5 are in view; on a phone 390 pixels wide none is, so a visitor on a phone can never earn this badge.
 
 Answer:
 
@@ -829,16 +829,16 @@ Places in files are named by words you can find with Ctrl+F, not by line numbers
 **Question 5: Is there a haunted trail at the farm this fall?**
 
 - **If Yes:** no change.
-- **If No:** remove it from `index.html` at `data-t="td6ecd1d8"`, `data-t="tb2ff1037"`, `data-t="t4b6d3990"`, `data-t="tb89adc3c"`, `data-t="t49c35609"` and `data-t="t0b5eaa9e"` (the "Haunted Trail" card is `index.html` at `class="card c-lilac reveal"`; `data-t="t49c35609"` is a row of the season table, `data-t="t0b5eaa9e"` a bullet list). Remove "A haunted trail on fall visits" from `pages/first-visit.html` at `<li>A haunted trail on fall visits</li>` and `pages/pumpkin-patch.html` at `<li>A haunted trail on fall visits</li>` (generated pages follow on rebuild). Remove the map point by re-marking the map and running `python3 tools/farm_map.py tools/saved-map.json` (the point is written to `js/farm-map-data.js` at `"label": "Haunted trail"`; do not edit that file by hand).
+- **If No:** remove it from `index.html` at `data-t="td6ecd1d8"`, `data-t="tb2ff1037"`, `data-t="t4b6d3990"`, `data-t="tb89adc3c"`, `data-t="t49c35609"` and `data-t="tf7a7ad06"` (the "Haunted Trail" card is `index.html` at `class="card c-lilac reveal"`; `data-t="t49c35609"` is a row of the season table, `data-t="tf7a7ad06"` a bullet list). Remove "A haunted trail on fall visits" from `pages/first-visit.html` at `<li>A haunted trail on fall visits</li>` and `pages/pumpkin-patch.html` at `<li>A haunted trail on fall visits</li>` (generated pages follow on rebuild). Remove the map point by re-marking the map and running `python3 tools/farm_map.py tools/saved-map.json` (the point is written to `js/farm-map-data.js` at `"label": "Haunted trail"`; do not edit that file by hand).
 
-**Question 6: Are you offering u-pick tomatoes and basil this fall (every weekend, late September through October)?**
+**Question 6: Are you offering u-pick tomatoes and basil this fall (every weekend, mid-September through early November)?**
 
 - **If Yes:** no change (then questions 7 to 9).
-- **If No:** delete the section and its comment (`index.html` from `TOMATOES & BASIL (new this year)` to the end of that section) and every other mention: `index.html` at `class="nav-tomato"`, `data-t="ta1584517"`, `data-t="td6ecd1d8"`, `data-t="t30661b0e"`, `data-t="tddae9ce2"`, `data-t="t48324abe"`, `data-t="t93b3741c"`, `data-t="tce23d9e3"`, `data-t="t30cf7da9"`, `data-t="t1805b2dc"`, `data-t="t1c989256"`, `data-t="t4eb3e326"`, `id="shop-upick"`, `data-t="t247dcbc5"`, `class="ra-tomato"` and `value="tomatoes"` (menu link, hero text and chip, add-on card, tables, calendar bar, shop prices, season list, signup choice, reserve-band art), the FAQ answer `index.html` at `data-t="t398007b0"` ("Do you have u-pick tomatoes and basil?"), `pages/pumpkin-patch.html` from `<h3>U-pick tomatoes &amp; basil</h3>` to `href="index.html#tomatoes"`, `js/features.js` at `{ id: 'tomatoes'` and `tomatoes: { g: 1`, and `js/season.js` at `{ id: 'fall'`. The tomato sauce and basil in the pizza menu (`index.html` from `data-t="td48b3939"` to `data-t="t71087d7e"`, and `data-t="tb2e89922"`) stay. Delete the README row "Tomatoes & basil". Questions 7 to 9 then do not matter.
+- **If No:** delete the section and its comment (`index.html` from `TOMATOES & BASIL (new this year)` to the end of that section) and every other mention: `index.html` at `class="nav-group nav-tomato"` (and the two red-dot rules in `css/sections.css` at `.nav-tomato .nav-group-btn::after` and `.nav-tomato .nav-group-title::after`), `data-t="tffd483ee" href="#tomatoes"` (the "Tomatoes & basil" line of the Things to Do list), `data-t="ta1584517"`, `data-t="td6ecd1d8"`, `data-t="t30661b0e"`, `data-t="tddae9ce2"`, `data-t="t48324abe"`, `data-t="t93b3741c"`, `data-t="tce23d9e3"`, `data-t="t30cf7da9"`, `data-t="t1805b2dc"`, `data-t="t850262cb"`, `data-t="t6af84b8c"`, `id="shop-upick"`, `data-t="tf6fccf62"`, `class="ra-tomato"` and `value="tomatoes"` (menu line, hero text and chip, add-on card, tables, calendar bar, shop prices, season list, signup choice, reserve-band art), the FAQ answer `index.html` at `data-t="t96e7263a"` ("Do you have u-pick tomatoes and basil?"), `pages/pumpkin-patch.html` from `<h3>U-pick tomatoes &amp; basil</h3>` to `href="index.html#tomatoes"`, `js/features.js` at `{ id: 'tomatoes'` and `tomatoes: { g: 1`, and `js/season.js` at `{ id: 'fall'`. The tomato sauce and basil in the pizza menu (`index.html` from `data-t="td48b3939"` to `data-t="t71087d7e"`, and `data-t="tb2e89922"`) stay. Delete the README row "Tomatoes & basil". Questions 7 to 9 then do not matter.
 
 **Question 7: Are the tomato and basil prices right: $4.50 per pound for tomatoes and $1 per stem for basil?**
 
-- **If the prices are different:** change `index.html` at `data-t="t48324abe"`, `data-t="t6b47c02f"`, `data-t="te71161d2"`, `id="shop-upick"` (the two prices of the u-pick card) and `data-t="t398007b0"`, and `pages/pumpkin-patch.html` at `New this year. Certified organic cherry tomatoes` (the generated pumpkin-patch page follows on rebuild).
+- **If the prices are different:** change `index.html` at `data-t="t48324abe"`, `data-t="t6b47c02f"`, `data-t="te71161d2"`, `id="shop-upick"` (the two prices of the u-pick card) and `data-t="t96e7263a"`, and `pages/pumpkin-patch.html` at `New this year. Certified organic cherry tomatoes` (the generated pumpkin-patch page follows on rebuild).
 - **If they are right:** no change.
 
 **Question 8: Are all 15 tomato varieties and all 4 basil varieties listed on the site growing this year?**
@@ -855,13 +855,13 @@ Places in files are named by words you can find with Ctrl+F, not by line numbers
 
 **Question 10: Does the scavenger hunt still happen at the farm?**
 
-- **If Yes:** put it back where commit 2b09373 removed it (`git show 2b09373 -U0` shows each line): `index.html` at `data-t="tb6c0c855"` (2 places) and `data-t="tb2ff1037"` (the three "Playgrounds, animals ..." lines on the farm cards), `index.html` at `data-t="t6933d769"` (the "Every reservation includes" list), `index.html` at `data-t="tb604c4f8"` (school-tour list, add "Educational scavenger hunt"), `index.html` at `data-t="tf7ddcce0"` (party text), `index.html` at `data-t="t7eaa8aa3"` and `data-t="t7f553727"` (only if corporate events stay), `pages/first-visit.html` at `A farm reservation includes` and `<li>Meet the animals</li>`, `pages/pumpkin-patch.html` at `<li>A small sunn hemp maze</li>` and `pages/school-field-trips.html` at `<li>Meet and feed the farm animals</li>` and `<li>Unlimited access to playground areas</li>`.
+- **If Yes:** put it back where commit 2b09373 removed it (`git show 2b09373 -U0` shows each line): `index.html` at `data-t="tb6c0c855"` (2 places) and `data-t="tb2ff1037"` (the three "Playgrounds, animals ..." lines on the farm cards), `index.html` at `data-t="t6933d769"` (the "Every reservation includes" list), `index.html` at `data-t="tb604c4f8"` (school-tour list, add "Educational scavenger hunt"), `index.html` at `data-t="tf7ddcce0"` (party text), `index.html` at `data-t="t7eaa8aa3"` and `data-t="t7f553727"` (only if corporate events stay), `pages/first-visit.html` at `A farm reservation includes` and `<li>Meet the animals</li>`, `pages/pumpkin-patch.html` at `<li>A sunn hemp maze</li>` and `pages/school-field-trips.html` at `<li>Meet and feed the farm animals</li>` and `<li>Unlimited access to playground areas</li>`.
 - **If No:** no change.
 
-**Question 11: Is the maze this year a small sunn hemp maze?**
+**Question 11: Is the maze this year a sunn hemp maze?**
 
-- **If it is a small sunn hemp maze:** change the label "Corn maze" by re-marking it in the Farm Map Marker and running `python3 tools/farm_map.py tools/saved-map.json` (it is written to `js/farm-map-data.js` at `"label": "Corn maze"`; do not edit that file by hand; text labels are translated like other names, see the README). Delete the maze sentence of the README row "Farm map".
-- **If it is a corn maze:** change "small sunn hemp maze" in `index.html` at `data-t="t447b4ee9"`, `<li data-t="t39573dd5">`, `data-t="t8c64d6c3"`, `<th data-t="t39573dd5"`, `<h4 data-t="t39573dd5"` (the Shop card) and `data-t="t0b5eaa9e"`, and `pages/pumpkin-patch.html` at `<li>A small sunn hemp maze</li>`.
+- **If it is a sunn hemp maze:** change the label "Corn maze" by re-marking it in the Farm Map Marker and running `python3 tools/farm_map.py tools/saved-map.json` (it is written to `js/farm-map-data.js` at `"label": "Corn maze"`; do not edit that file by hand; text labels are translated like other names, see the README). Delete the maze sentence of the README row "Farm map".
+- **If it is a corn maze:** change "sunn hemp maze" in `index.html` at `data-t="te1a07fa0"`, `<li data-t="t38498f20">`, `data-t="ta04da337"`, `<th data-t="t38498f20"`, `<h4 data-t="t38498f20"` (the Shop card) and `data-t="tf7a7ad06"`, and `pages/pumpkin-patch.html` at `<li>A sunn hemp maze</li>`.
 
 **Question 12: Will Christmas trees be sold at The GreenHouse (5503 Poplin Rd), starting the Friday after Thanksgiving?**
 
@@ -1017,7 +1017,7 @@ Everything in this section was checked against the code on 3 October 2026.
 
 - **If the people agreed (and Foster Village, for its name):** keep the picture and change its `caption` to `"Photo: <name>"` (the gallery shows the caption) in `js/content.js` at `src: "assets/photos/foster-village-table.webp"`, the last entry in `photos`.
 - **If No, or no answer:** delete that entry (`js/content.js` at `src: "assets/photos/foster-village-table.webp"`), delete `assets/photos/foster-village-table.webp` and the rule that mentions it (`css/extras.css` at `img[src$="foster-village-table.webp"]`).
-- **If the animal is a goat:** use an `alt` such as "A goat kid wearing a green knitted frog hat" in `js/content.js` at `src: "assets/photos/goat-in-green-frog-hat.webp"` and at its tile in "Meet the goats" (`index.html` at `data-ta-alt="ted43ffcd"`); both are translated in four languages, so ask Claude. **If it is another animal:** rename `goat-in-green-frog-hat.webp` (in both places), write the right `alt`, and take it out of the "Meet the goats" strip.
+- **If the animal is a goat:** use an `alt` such as "A goat kid wearing a green knitted frog hat" in `js/content.js` at `src: "assets/photos/goat-in-green-frog-hat.webp"` and at its tile in "Meet the animals" (`index.html` at `data-ta-alt="ted43ffcd"`); both are translated in four languages, so ask Claude. **If it is another animal:** rename `goat-in-green-frog-hat.webp` (in both places), write the right `alt`, and take it out of the "Meet the animals" strip.
 
 **Question 40: Photos with words in the picture**
 
@@ -1151,8 +1151,8 @@ Everything in this section was checked against the code on 3 October 2026; the g
 
 **Question 61: After 31 December 2026, should the site stop calling the u-pick tomatoes and basil "new"?**
 
-- **If she stops calling them new:** change the words in `index.html` at `data-t="td6ecd1d8"`, `data-t="t1c989256"`, `data-t="tedce5b9f"`, `data-t="tbc119a85"`, `data-t="t4eb3e326"`, `data-t="t247dcbc5"` and `data-t="t398007b0"`, and `pages/pumpkin-patch.html` at `New this year. Certified organic cherry tomatoes`; delete the red-dot rule `css/sections.css` at `html[data-season="fall"] .nav-tomato a::after`. The ribbon (`index.html` at `data-until="2026-12-31"`), the chip and the "New" badge (`index.html` at `data-until="2026-10-31"` (2 places)) hide themselves.
-- **If she keeps saying new:** change those last days (`index.html` at `data-until="2026-12-31"` and at `data-until="2026-10-31"` (2 places)) to her date.
+- **If she stops calling them new:** change the words in `index.html` at `data-t="td6ecd1d8"`, `data-t="t850262cb"`, `data-t="t3e399cd9"`, `data-t="tbc119a85"`, `data-t="t6af84b8c"`, `data-t="tf6fccf62"` and `data-t="t96e7263a"`, and `pages/pumpkin-patch.html` at `New this year. Certified organic cherry tomatoes`; delete the two red-dot rules `css/sections.css` at `html[data-season="fall"] .nav-tomato .nav-group-btn::after` and `html[data-season="fall"] .nav-tomato .nav-group-title::after`. The ribbon (`index.html` at `data-until="2026-12-31"`), the chip and the "New" badge (`index.html` at `data-in-season data-until="2026-11-08"` (2 places)) hide themselves.
+- **If she keeps saying new:** change those last days (`index.html` at `data-until="2026-12-31"` and at `data-in-season data-until="2026-11-08"` (2 places)) to her date.
 - **If she decides in December:** no change now; it all has to be done before 1 January 2027.
 
 **Question 62: Keep two backgrounds that never showed?**
@@ -1165,7 +1165,7 @@ Everything in this section was checked against the code on 3 October 2026; the g
 
 - **If the Pick button snips sunflowers too:** the optional patch `games-B-pick-snips-sunflowers.patch` (DECISION_PLAYBOOK, "Patches on disk").
 - **If a lower number:** `js/hero.js` at `sunflower: { icon: 'sunflower', at: 100` and the badge text `js/hero.js` at `100 sunflowers snipped!` (a JavaScript string with four translations: ask Claude).
-- **If sunflowers in the middle:** `js/hero.js` at `sunflower(24, 205, 128, '')`: add two or three sunflowers near the middle of the picture (ask Claude).
+- **If sunflowers in the middle:** `js/hero.js` at `const springFore` (and at `const summerFore`): add two or three sunflowers near the middle of the picture (ask Claude).
 - **If she leaves it:** no change.
 
 **Question 64: In winter the message "Every tree is lit!" appears at the 12th light, but the picture has 22 trees. Should it change?**

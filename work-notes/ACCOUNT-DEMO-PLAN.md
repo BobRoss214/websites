@@ -44,7 +44,7 @@ Shared files:
 - `js/demo-data.js`: sample family, prices, slots, pizza menu (read from the page, see below), `sample(todayDate)`. Owner: A.
 - `js/demo-app.js` (the family shell: tabs, sign-in state, notices bell, view registry `DemoApp.view(name, {label, render(root, ctx)})`), `js/demo-ui.js`
   (formatters: "Saturday, Nov 14", "2:00 pm", money; a modal; a toast), `css/demo.css` (shared look). Owner: A.
-- `js/demo-view-visits.js`, `js/demo-view-pizza.js`: A. `js/demo-view-family.js`, `-alerts.js`, `-year.js`: B (who also owns `js/demo-view-kit.js`, a small shared helper for the
+- `js/demo-view-visits.js`, `js/demo-view-pizza.js`: A. `js/demo-view-family.js`, `-alerts.js`: B (who also owns `js/demo-view-kit.js`, a small shared helper for the
   family views: DOM builder, fields, switch, chip, toast, redraw-on-change; load it before the view files; it should use `DemoUI` from A where that exists, one toast
   only). `js/demo-view-messages.js`, `-photos.js`, `-event.js`: B2.
 - `js/demo-desk.js`, `js/demo-kitchen.js`, `css/demo-staff.css`: C.
@@ -63,15 +63,15 @@ A thin strip: DEMO label, a switch "Family | Mrs. Cathy's desk | Kitchen" (links
 Plain JavaScript, no libraries, loadable by the browser and by Node (`module.exports` when `module` exists; a factory `DemoStore.create(storage)` so tests
 can pass a fake storage). State in `localStorage['wa-demo-v1']`; falls back to memory if storage is blocked. Other tabs update live (listen to the
 `storage` event). Every change calls the subscribers: `DemoStore.subscribe(fn) -> unsubscribe`. All methods are synchronous and return plain objects.
-- Account: `createAccount({name, email})`, `signIn(email)` (ok if that email was created in this browser), `signOut()`, `current()` (account or null), `reset()`,
-  `seedSample()` (fills the sample family, visits, orders, event from `DemoData.sample(today)`; called by `createAccount`).
+- Account: `createAccount({name, email, eventKind})` (eventKind: the answer to the sign-up question, 'none' | 'party' | 'school' | 'other'; left out = the ready-made sample, with the school trip), `signIn(email)` (ok if that email was created in this browser), `signOut()`, `current()` (account or null), `reset()`,
+  `seedSample()` (fills the sample family, visits, orders and the school trip from `DemoData.sample(today)`; `createAccount` fills the same, with the event of the chosen kind or none), `addEvent(kind)` ("I also plan an event").
 - Generic lists: `list(coll)`, `get(coll, id)`, `add(coll, obj)` (adds an `id`), `update(coll, id, patch)`. Collections: `visits`, `orders`, `requests`,
-  `messages`, `notices`, `reviews`, `photos`, `events`, `waitlist`; plus `family` (one object), `alerts` (map key -> bool), `closedDays` (list of dates), `badges`.
+  `messages`, `notices`, `reviews`, `photos`, `events`, `waitlist`; plus `family` (one object), `alerts` (map key -> bool), `closedDays` (list of dates). (There was a `badges` object for the My year screen; it is gone.)
 - Requests: `ask({kind, to: 'cathy'|'kitchen', target: {coll, id}, patch, from, summary})` -> request with status `waiting`;
   `reply(id, {answer: 'yes'|'no'|'suggest', note, suggestion: {patch, summary}})`: yes applies `patch` to the target, no changes nothing,
   suggest keeps the suggestion and sets `suggested`; `respond(id, 'ok'|'decline')`: ok applies `suggestion.patch` (status `accepted`), decline keeps the old
   (status `declined`); `cancel(id)`. Every step is added to `request.history` with a time and a plain sentence, and makes a notice for the other side.
-- Messages: `post(threadId, from: 'family'|'cathy', text)`, `thread(threadId)`. Notices: `notify(text, link)`, `markRead(id)`.
+- Messages: `post(threadId, from: 'family'|'cathy', text)`, `thread(threadId)`. Notices: `postNotice(text, link)` (it was called `notify` until 3 Nov 2026; that is also the name of a browser property), `markRead(id)`.
 - Weather: `closeDay(date, reason)` (marks every visit on that date `closed: true`, makes a notice for the family), `openDay(date)`.
 - Alerts: `setAlert(key, bool)`, `alertCounts()`, `fireAlert(key)` (notice for the family if subscribed).
 - Reviews and photos: `submitReview({visitId, stars, text, photoName})` (status `waiting`), `decideReview(id, true|false)`.
@@ -83,7 +83,7 @@ closeDay, alerts, reset, and that two stores on the same storage see each other'
 ## Prices and rules (all from this website; check them against `index.html` before you use them, and add a test that the numbers in `demo-data.js` still appear on the page)
 - Visit with pizza (Friday, Saturday, Sunday): $31 base price, includes 2 Wise Pie pizzas, plus $3 per person ages 3 and up. Children 2 and younger are free.
 - Farm fun only (Thursday to Sunday): $3 per person ages 3 and up; 2 and younger free.
-- Add-ons: wagon ride $4.50 per person (2 and younger free); barrel train $3 per child (ages 12 and under only); corn pit $4 per person (on Thursdays buy one,
+- Add-ons: wagon ride $4.50 per person (3 and younger free); barrel train $3 per child (ages 12 and under only); corn pit $4 per person (on Thursdays buy one,
   get one free with a reservation: keep the sample visit off Thursdays, or compute it). Tomatoes and basil are paid by weight at pick-up, not in the visit.
 - THE PIZZA RULE: pizzas are ready 1 hour after the reservation time (a 2:00 pm visit means pizza at 3:00 pm). That is the default pizza time. The family can
   ask for earlier or later; the kitchen decides.
@@ -95,9 +95,10 @@ closeDay, alerts, reset, and that two stores on the same storage see each other'
 - School tours and parties: read the Groups section. Use amounts only if the page has them; otherwise show the status only ("Deposit: paid").
 - Time slots are pretend: on the hour from 10 am to 2 pm (the farm side of the day is 10 am to 4 pm on the pizza page). Say "sample times" near them.
 
-## Family screens (`account.html`; one page, tabs by `#hash`: `#visits` (default), `#pizza`, `#family`, `#alerts`, `#year`, `#messages`, `#photos`, `#event`)
-1. Create account (name, email, pretend password) and Sign in (email, any password). Creating one loads the sample family and says so: "We added a sample
-   visit so you can try the buttons." Sign-out in the header menu. Not signed in: the tabs show the sign-in box.
+## Family screens (`account.html`; one page, tabs by `#hash`: `#visits` (default), `#pizza`, `#family`, `#alerts`, `#messages`, `#photos`, `#event`; `#event` only when the family has an event)
+1. Create account (name, email, pretend password, and ONE plain question "Do you plan or manage a party, an event or a school trip?" with four big buttons: No / Yes: a party /
+   Yes: a school trip / Yes: another event; No is chosen to begin with) and Sign in (email, any password). Creating one loads the sample family and says so: "We added a sample
+   visit so you can try the buttons." Only a yes adds an event of that kind (and so the My event tab). Sign-out in the header menu. Not signed in: the tabs show the sign-in box.
 2. My visits: the upcoming visit card (date, time, party, package, add-ons, "Paid" with the itemized lines and total, receipt number), buttons "Request a
    different day", "Add to calendar" (a real .ics download is fine), "Directions" (link to the farm's map link already on the site), "What to bring" (link
    to the first-visit guide). Past visits below, each with "View receipt", "Leave a review", "Add photos".
@@ -114,16 +115,20 @@ closeDay, alerts, reset, and that two stores on the same storage see each other'
 4. My family: adults, kids (names, ages), allergies, gluten-free / vegan flags; saved. A line says the kitchen sees them on pizza orders.
 5. Tell me when: switches for "Strawberries open", "Blueberries and sunflowers open", "Pumpkins and tomatoes open", "Christmas trees arrive", and
    "A spot opens on a full day" (pick a day). Saved. (The site already has a waitlist and an email list; this shows them in one place.)
-6. My year: the kids' badges and the pumpkin basket count (reuse the achievements the hero game already keeps: find where in `js/` it stores them and read
-   the same keys; do not change that code), visits so far, "Visits this year". A line: "On a real account this would follow you to any phone."
+6. (There was a "My year" screen here: the kids' badges and how many times the family came. The builder asked on 3 Nov 2026 to take out how many times they come and
+   everything related to it, to save space, so the screen, the badges, the visit counts and their words are gone. Nothing like a stamp card, streak or season pass is built.
+   The real badges of the home page game belong to the home page and stay there.)
 7. Receipts and questions: receipts list with itemized lines; "Ask the farm" box (a message thread with Mrs. Cathy; her reply shows here).
 8. Photos and reviews: after a past visit: pick ONE OF THREE SAMPLE PICTURES (from `assets/photos`; there is NO file picker anywhere: the site's privacy rule and
    `tests/privacy.test.mjs` forbid it; a real version would let families add their own) and give 1-5 stars and a sentence. Status "Waiting for Mrs. Cathy to
    approve" -> approved shows under "Shared with the farm (demo)". It never touches the real gallery or the real reviews.
-9. My event (groups and schools): a sample school trip ("Sample Elementary, 2nd grade") that follows the page's own rules (Groups section and
-   `school-field-trips.html`: $11 per student, minimum group size 100 students, parents and siblings ages 3 and up who come also pay $11): a head count of
-   100 students or more (editable as a request), a checklist (permission slips received so far, sample), the amount computed from those page prices, and a
-   message thread with Mrs. Cathy. Show a deposit only if the page mentions one.
+9. My event (groups and schools), ONLY for a family that has an event: it said yes to the sign-up question, or it added one later with the small link "I also plan an event"
+   at the bottom of My family. Without an event the tab is not on the bar and `#event` opens the first tab. A sample school trip ("Sample Elementary, 2nd grade") follows the
+   page's own rules (Groups section and `school-field-trips.html`: $11 per student, minimum group size 100 students, parents and siblings ages 3 and up who come also pay $11):
+   a head count of 100 students or more (editable as a request), a checklist (permission slips received so far, sample), the amount computed from those page prices, and a
+   message thread with Mrs. Cathy. A party follows the Parties card (one price for the whole party, farm entry included, up to 50 guests, children age 2 and younger free and not
+   counted); another event shows no price (the site names none), only the guest count, a checklist and the thread. Show a deposit only if the page mentions one. A school trip also
+   shows "Questions? Email Vanessa" (her address is already on the site).
 10. A bell with the latest notices (replies, alerts, weather) and a count; each links to the right tab.
 
 ## Farm desk (`farm-desk.html`, for Mrs. Cathy and Rob; no login, a line says "Demo: you are Mrs. Cathy / Rob")
@@ -144,7 +149,7 @@ closeDay, alerts, reset, and that two stores on the same storage see each other'
 ## Hooks for the tour
 Put `data-tour="<name>"` on the key controls so the tour can point at them (they are invisible). Required names: demo bar `demo-bar`, `demo-switch`, `demo-reset`;
 family `acct-signup`, `acct-sample-note`, `acct-visit-card`, `acct-paid`, `acct-request-day`, `acct-request-status`, `acct-reply`, `acct-pizza-card`,
-`acct-pizza-edit`, `acct-pizza-time`, `acct-family`, `acct-alerts`, `acct-year`, `acct-messages`, `acct-photos`, `acct-event`, `acct-closed-banner`, `acct-bell`;
+`acct-pizza-edit`, `acct-pizza-time`, `acct-family`, `acct-alerts`, `acct-messages`, `acct-photos`, `acct-event`, `acct-closed-banner`, `acct-bell`;
 desk `desk-waiting`, `desk-card`, `desk-yes`, `desk-no`, `desk-suggest`, `desk-week`, `desk-weather`, `desk-people`, `desk-approvals`, `desk-groups`;
 kitchen `kit-queue`, `kit-card`, `kit-yes`, `kit-no`, `kit-change`, `kit-notes`. The tour drives the demo through the store functions above, so keep
 their names exactly as in the contract and keep them in `docs/ACCOUNT_DEMO.md`.

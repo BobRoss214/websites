@@ -1,1 +1,90 @@
-/* Wise Acres account demo: a stub, so the page has no style sheet that is missing. It is owned by helper C (the look of the pizza editor and the My pizza screen), who replaces this file. */
+/* ==========================================================================
+   Wise Acres account demo: the look of the pizza editor (js/demo-pizza-editor.js) and of the family's "My pizza" screen (js/demo-view-pizza.js).
+   Loaded by the family page (account.html) and by the kitchen page (kitchen.html), after css/demo.css. Every class starts with dp-.
+   Same family as the rest of the site (colours and fonts from css/styles.css, ink borders, rounded cards); big touch targets (44px and more).
+   ========================================================================== */
+
+.dp-ico{width:1.3em;height:1.3em;flex:none;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round}
+
+/* ---------- My pizza: the order card ---------- */
+.dp-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px;margin-bottom:14px}
+.dp-head h3{margin:0}
+.dp-sub{margin:20px 0 8px;font-size:1.15rem}
+.dp-ready{margin:0;padding:14px 18px;background:#fff1b8;border:3px solid var(--ink);border-radius:18px}
+.dp-ready-big{display:flex;align-items:center;gap:10px;margin:0;font:700 1.35rem/1.2 var(--display)}
+.dp-ready-big strong{font-size:1.9rem}
+.dp-ready-note{margin:6px 0 0;font-weight:600}
+.dp-pizzas{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.dp-pizzas li{padding:10px 14px;background:#fffdf6;border:2.5px solid var(--ink);border-radius:14px}
+.dp-pizza-name{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0;font-size:1.1rem}
+.dp-tag{display:inline-block;padding:.1em .7em;background:#d9f3e6;border:2px solid var(--ink);border-radius:999px;font:700 .85rem/1.5 var(--display)}
+.dp-pizza-detail{margin:2px 0 0;color:var(--ink-soft);font-weight:600}
+.dp-allergy{margin:16px 0 0;padding:12px 16px;background:#ffdde4;border:3px solid var(--ink);border-radius:16px}
+.dp-allergy p{margin:0 0 4px}
+.dp-allergy a{display:inline-flex;align-items:center;min-height:44px;font-weight:800}
+.dp-contact{margin:14px 0 0}
+.dp-contact a{display:inline-flex;align-items:center;min-height:44px;font-weight:800;color:var(--ink)}
+.dp-price-total{margin:10px 0 0;font-weight:600}
+.dp-edit-box{margin-top:6px}
+
+/* what the kitchen did with a request */
+.dp-request{margin-top:18px;padding:14px 18px;background:#fff;border:3px solid var(--ink);border-radius:18px}
+.dp-is-wait{background:#fff1b8}
+.dp-is-suggest{background:#d9f0ff}
+.dp-is-good{background:#d9f3e6}
+.dp-is-plain{background:#f1ead8}
+.dp-request-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 8px}
+.dp-request-head strong{font:700 1.15rem/1.3 var(--display)}
+.dp-diff p{margin:0 0 6px}
+.dp-diff-title{font-weight:800}
+.dp-changes{margin:6px 0 8px;padding-left:1.3em;list-style:disc}
+.dp-changes li{margin:2px 0;font-weight:600}
+.dp-quote{margin:0 0 10px;padding:4px 0 4px 14px;border-left:6px solid var(--sun-deep)}
+.dp-quote-who{display:block;color:var(--ink-soft);font:700 .8rem/1.2 var(--display);letter-spacing:.06em;text-transform:uppercase}
+.dp-quote p{margin:0;font-weight:600}
+.dp-hist{margin-top:10px}
+.dp-hist summary{display:flex;align-items:center;min-height:44px;cursor:pointer;font-weight:800}
+.dp-hist summary::before{content:"";flex:none;width:.5em;height:.5em;margin:0 .8em 0 .3em;border-right:3px solid currentColor;border-bottom:3px solid currentColor;transform:rotate(-45deg)}
+.dp-hist[open] > summary::before{transform:rotate(45deg)}
+.dp-hist ol{margin:6px 0 0;padding-left:1.4em;list-style:decimal}
+.dp-hist li{margin:4px 0;font-weight:600}
+.dp-hist-at{display:inline-block;margin-right:6px;color:var(--ink-soft);font-weight:800}
+
+/* ---------- the editor (family and kitchen) ---------- */
+.dp-editor{display:grid;gap:16px;margin:0}
+.dp-rows{display:grid;gap:14px}
+.dp-row{min-width:0;margin:0;padding:12px 16px 16px;background:#fffdf6;border:3px solid var(--ink);border-radius:20px}
+.dp-row-title{padding:0 .5em;font:700 1.15rem/1.2 var(--display)}
+.dp-field{margin:0 0 12px}
+.dp-field label,.dp-label{display:block;margin-bottom:6px;font-weight:800}
+.dp-select,.dp-text{display:block;width:100%;min-height:48px;padding:.5em .8em;background:#fff;border:2.5px solid var(--ink);border-radius:14px;color:var(--ink);font:600 1.05rem/1.3 var(--body)}
+.dp-text{min-height:5.5em}
+.dp-toppings,.dp-extras{display:flex;flex-wrap:wrap;gap:8px 10px}
+.dp-extras{margin:0 0 12px}
+.dp-check{display:inline-flex;align-items:center;gap:.6em;min-height:44px;margin:0;padding:.3em .9em .3em .7em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;font-weight:700;cursor:pointer}
+.dp-field label.dp-check{display:inline-flex;margin:0;font-weight:700}
+.dp-check input{flex:none;width:22px;height:22px;margin:0;cursor:pointer}
+.dp-remove{min-height:44px;padding:.4em 1.1em;background:#fff;border:2.5px solid var(--ink);border-radius:999px;color:var(--ink);font:700 .98rem/1 var(--display);cursor:pointer}
+.dp-add-row{display:flex}
+.dp-plus{font-size:1.4em;line-height:1}
+.dp-empty{margin:0;padding:14px 16px;background:rgba(255,255,255,.65);border:3px dashed var(--ink-soft);border-radius:16px;color:var(--ink-soft);font-weight:700}
+.dp-time{min-width:0;margin:0;padding:12px 16px 14px;background:#fff;border:3px solid var(--ink);border-radius:20px}
+.dp-legend{padding:0 .5em;font:700 1.15rem/1.2 var(--display)}
+.dp-time-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px}
+.dp-time-select{width:auto;min-width:11em}
+.dp-step[disabled]{opacity:.45;cursor:not-allowed}
+.dp-hint{margin:10px 0 0;color:var(--ink-soft);font-size:.98rem;font-weight:600}
+.dp-summary{padding:14px 18px;background:#fff1b8;border:3px solid var(--ink);border-radius:18px}
+.dp-summary p{margin:0 0 6px}
+.dp-summary-h{margin:0 0 8px;font-size:1.15rem}
+.dp-same{margin:0;font-weight:700}
+.dp-message{margin:0;padding:10px 14px;background:#ffdde4;border:3px solid var(--ink);border-radius:14px;font-weight:800}
+.dp-actions{display:flex;flex-wrap:wrap;gap:10px 14px}
+
+@media (max-width:560px){
+  .dp-row{padding:10px 12px 14px}
+  .dp-time-row .btn,.dp-actions .btn{flex:1 1 100%}
+  .dp-time-select{width:100%}
+  .dp-ready-big{font-size:1.15rem}
+  .dp-ready-big strong{font-size:1.6rem}
+}

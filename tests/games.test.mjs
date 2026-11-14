@@ -3,7 +3,8 @@
 // covers: js/hero.js, js/content.js, css/hero.css, css/extras.css
 /* The mini games on the home page: picking fruit, snipping sunflowers, lighting trees, stoking fires, the friends, the sun, the paper cup of flowers, the goat.
  *   - every achievement can be earned: 100 strawberries, blueberries, sunflowers, pumpkins, 100 lights and sparks in winter, 1,000 picks in all
- *     (real mouse clicks on things that really are on top; the 99th pick shows no badge, the 100th does; a computer and a phone)
+ *     (real mouse clicks on things that really are on top; the 99th pick shows no badge, the 100th does; a computer and a phone); the sunflowers
+ *     at the sides of the spring field are snipped too (100 of them, in spring alone, are the same badge as the summer ones; a snip is never a strawberry)
  *   - the number in the basket matches what the badge counts, and is written 1,000 like the badge text (and 1.000 in Vietnamese)
  *   - a badge, the basket line and the cup line follow a language change made while they are on screen
  *   - the keyboard can earn the winter badge (the "Light a tree" button stokes a fire when every tree is lit)
@@ -145,7 +146,7 @@ await run('games', async ({ browser, base, errs }) => {
       } else {
         const reach = await p.evaluate((k) => window.__g.all(k, 40).pts.length, kind);
         ok(`${badge}: at least 20 plants can be hit with the mouse at once (${reach}), so 100 need at most five waits for them to grow back`, reach >= 20, String(reach));
-        const r = await direct(p, s === 'summer' ? '#hero-scene [data-pick]:not(.flower-cut)' : '#hero-scene [data-pick]', 99);
+        const r = await direct(p, '#hero-scene [data-pick]:not(.flower-cut)', 99);   // (the sunflowers of the spring and summer fields are snipped, they are not fruit)
         ok(`${badge}: 99 picks (${r.clicks} clicks, ${r.rounds} waits)`, r.count === 99, JSON.stringify(r));
       }
       ok(`${badge}: no badge at 99`, (await toast(p)) === null);
@@ -178,7 +179,7 @@ await run('games', async ({ browser, base, errs }) => {
     const p = await page(1440, 900);
     await season(p, 'spring');
     // the reach of the mouse was shown in part 1; here the clicks go straight to the strawberries
-    const r = await direct(p, '#hero-scene [data-pick]', 999);
+    const r = await direct(p, '#hero-scene [data-pick]:not(.flower-cut)', 999);
     ok(`1,000: 999 picks in one season (${r.clicks} clicks, ${r.rounds} times the plants grew back)`, r.count === 999, JSON.stringify(r));
     ok('999 is written 999', (await p.textContent('#pick-count')) === '999');
     await closeToast(p);
@@ -197,6 +198,24 @@ await run('games', async ({ browser, base, errs }) => {
   }
 
   lap('1b 1,000');
+  // ---- 1c. the sunflowers at the sides of the spring field are snipped like the summer ones: 100 of them are the badge "Sunflower Whisperer", and a snip is never counted as a strawberry
+  {
+    const p = await page(1440, 900);
+    await season(p, 'spring');
+    const flowers = await p.evaluate(() => ({ all: document.querySelectorAll('#hero-scene .flower-cut[data-pick]').length, reach: window.__g.all('sunflower').pts.length }));
+    ok(`spring: five sunflowers to snip, ${flowers.reach} of them can be hit with the mouse`, flowers.all === 5 && flowers.reach >= 3, JSON.stringify(flowers));
+    const some = await playTo(p, 'sunflower', 4);
+    ok(`spring: real mouse clicks snip the sunflowers (${some.count} in ${some.clicks} clicks)`, some.count === 4, JSON.stringify(some));
+    const r = await direct(p, '#hero-scene .flower-cut', 99);
+    ok(`spring sunflowers: 99 snips (${r.clicks} clicks, ${r.rounds} times the plants grew back)`, r.count === 99, JSON.stringify(r));
+    ok('spring sunflowers: no badge at 99 (a snip is not a strawberry)', (await toast(p)) === null);
+    ok('spring sunflowers: the 100th click is a real mouse click on a flower', await lastClick(p, 'sunflower'));
+    await okSoon('spring sunflowers: the badge opens at 100: "Sunflower Whisperer"', () => toast(p), (t) => t && t.cls === 'ach-sunflower' && t.title === 'Sunflower Whisperer' && t.msg.startsWith('100 sunflowers'));
+    await closeToast(p);
+    await p.context().close();
+  }
+
+  lap('1c spring sunflowers');
   // ---- 2. the phone (390 px): taps reach enough to earn the badges that are on screen
   {
     const p = await page(390, 844);
@@ -416,7 +435,7 @@ await run('games', async ({ browser, base, errs }) => {
     await hide(p, true);   // only the badge is looked at here, and every click goes straight to a plant
     await p.evaluate(() => { window.__direct = (sel, n, rep) => { let d = 0; for (const el of document.querySelectorAll(sel)) { if (d >= n) break; if (el.dataset.state === 'picked' || el.classList.contains('lit')) continue; for (let r = 0; r < rep; r++) el.dispatchEvent(new MouseEvent('click', { bubbles: true })); d++; } return d; }; });
     // [season, what to click, how many times each, the badge it is for]; whichever badge shows up is checked, in whatever order they come
-    const PLAN = [['spring', '#hero-scene [data-pick]', 1, 'ach-strawberry'], ['summer', '#hero-scene [data-pick]:not(.flower-cut)', 1, 'ach-blueberry'], ['summer', '#hero-scene .flower-cut', 1, 'ach-sunflower'], ['fall', '#hero-scene [data-pick]', 1, 'ach-pumpkin'], ['winter', '#hero-scene [data-pick]', 1, null], ['winter', '#hero-scene [data-fire]', 60, 'ach-winter']];
+    const PLAN = [['spring', '#hero-scene [data-pick]:not(.flower-cut)', 1, 'ach-strawberry'], ['summer', '#hero-scene [data-pick]:not(.flower-cut)', 1, 'ach-blueberry'], ['summer', '#hero-scene .flower-cut', 1, 'ach-sunflower'], ['fall', '#hero-scene [data-pick]', 1, 'ach-pumpkin'], ['winter', '#hero-scene [data-pick]', 1, null], ['winter', '#hero-scene [data-fire]', 60, 'ach-winter']];
     const seen = new Set(), bad = [];
     const check = async () => {
       const m = await p.evaluate(() => {

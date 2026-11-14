@@ -35,45 +35,37 @@ index cc2e77d..1e3c995 100644
      </div>
      <p data-t="tc0fb43cb" class="wrap copyright" data-year>2026 &copy; Wise Acres Organic Farm &middot; USDA Certified Organic &middot; Indian Trail, NC</p>
 diff --git a/lang/src/es.json b/lang/src/es.json
-index 564bde8..e544970 100644
+index 8c1b1bb..2138fb2 100644
 --- a/lang/src/es.json
 +++ b/lang/src/es.json
-@@ -1493,3 +1493,4 @@
-   "t58a21ae5": "<svg/> Pausar animaciones",
--  "t363d0898": "Abre la guía completa de primera visita <svg/>"
-+  "t363d0898": "Abre la guía completa de primera visita <svg/>",
-+  "t286f8cf3": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a><br> <a2>704-628-6232</a>"
-  }
+@@ -552,2 +552,3 @@
+   "t37c5399a": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a>",
++  "t286f8cf3": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a><br> <a2>704-628-6232</a>",
+   "t38a1d40a": "Mira qué hay de temporada",
 diff --git a/lang/src/hi.json b/lang/src/hi.json
-index 34b5d86..eb59273 100644
+index f443547..84888bd 100644
 --- a/lang/src/hi.json
 +++ b/lang/src/hi.json
-@@ -1493,3 +1493,4 @@
-   "t58a21ae5": "<svg/> एनिमेशन रोकें",
--  "t363d0898": "पहली विज़िट की पूरी गाइड खोलें <svg/>"
-+  "t363d0898": "पहली विज़िट की पूरी गाइड खोलें <svg/>",
-+  "t286f8cf3": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a><br> <a2>704-628-6232</a>"
-  }
+@@ -552,2 +552,3 @@
+   "t37c5399a": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a>",
++  "t286f8cf3": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a><br> <a2>704-628-6232</a>",
+   "t38a1d40a": "इस मौसम में क्या-क्या है, देखें",
 diff --git a/lang/src/vi.json b/lang/src/vi.json
-index c598e7f..bda2afe 100644
+index e47bcf9..d218a24 100644
 --- a/lang/src/vi.json
 +++ b/lang/src/vi.json
-@@ -1493,3 +1493,4 @@
-   "t58a21ae5": "<svg/> Tạm dừng hoạt ảnh",
--  "t363d0898": "Mở hướng dẫn đầy đủ cho lần đầu đến <svg/>"
-+  "t363d0898": "Mở hướng dẫn đầy đủ cho lần đầu đến <svg/>",
-+  "t286f8cf3": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a><br> <a2>704-628-6232</a>"
-  }
+@@ -552,2 +552,3 @@
+   "t37c5399a": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a>",
++  "t286f8cf3": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a><br> <a2>704-628-6232</a>",
+   "t38a1d40a": "Xem có gì theo mùa",
 diff --git a/lang/src/zh.json b/lang/src/zh.json
-index 768d581..3a2f4ad 100644
+index 1b484f4..7535cff 100644
 --- a/lang/src/zh.json
 +++ b/lang/src/zh.json
-@@ -1493,3 +1493,4 @@
-   "t58a21ae5": "<svg/> 暂停动画",
--  "t363d0898": "打开完整的首次到访指南 <svg/>"
-+  "t363d0898": "打开完整的首次到访指南 <svg/>",
-+  "t286f8cf3": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a><br> <a2>704-628-6232</a>"
-  }
+@@ -552,2 +552,3 @@
+   "t37c5399a": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a>",
++  "t286f8cf3": "4701 Hartis Road<br>Indian Trail, NC 28079<br> <a1>cathy@wiseacresorganic.com</a><br> <a2>704-628-6232</a>",
+   "t38a1d40a": "看看当季有什么",
 diff --git a/tools/test_check_facts.py b/tools/test_check_facts.py
 index 3b2a3cd..a640a2a 100644
 --- a/tools/test_check_facts.py

@@ -82,12 +82,14 @@
     perPerson: 3,         // field fee, ages 3 and up (both packages): $3 per person
     freeAge: 2,           // children age 2 and younger are free
     wagon: 4.5,           // wagon ride, $4.50 per person
-    wagonFreeAge: 2,      // ages 2 and younger ride free
+    wagonFreeAge: 3,      // ages 3 and younger ride the wagon free (the site builder, Nov 3 2026; the farm's older page said 2 and younger)
     barrel: 3,            // barrel train, $3 per child
     barrelMaxAge: 12,     // ages 12 and under only
     corn: 4,              // corn pit, $4 per person (on Thursdays buy one, get one free, with a reservation)
     schoolPerStudent: 11, // school tours: $11 per student; parents and siblings ages 3 and older who come pay the same $11
     schoolMinStudents: 100,
+    partyPrice: 300,      // parties (Groups section): $300 per party, not per person; the farm entry fee is included
+    partyMaxGuests: 50,   // "Up to 50 guests. Children age 2 and younger are free and do not count toward the total."
     pizzasIncluded: PD.PRICES.pizzasIncluded,   // from js/demo-pizza-data.js: the 2 pizzas of the package, the gluten-free crust (+$9) and the vegan cheese (+$3)
     glutenFree: PD.PRICES.glutenFree,
     veganCheese: PD.PRICES.veganCheese
@@ -102,13 +104,21 @@
   // Sample time slots: on the hour from 10 am to 2 pm. Pretend: the demo says "sample times" next to them.
   var SLOTS = ['10:00', '11:00', '12:00', '13:00', '14:00'];
 
-  // The "Tell me when" switches. `spot` also has one entry per chosen day in the waitlist (see js/demo-store.js).
+  // The pretend phone number the "Tell me when" screen shows next to "Text message" (the sample family has it; the family record keeps it as `phone`).
+  // Not a real number: the exchange 555 with a line from 0100 to 0199 is set aside for made-up numbers, so it cannot ring anyone. Never put a real number here.
+  var SAMPLE_PHONE = '(704) 555-0123';
+
+  // The "Tell me when" choices, in the order the family sees them: the two about a visit first (a spot on a full day, then new reservations), then the farm's seasons
+  // in the site's season order. `label` is the title, `note` the line under it, `notice` what the family reads in the bell when the farm sends it.
+  // `spot` also has one entry per chosen day in the waitlist (see js/demo-store.js). The sentence about when reservations with pizza open is the site's own
+  // (home page, Wise Pie page); tests/demo-data.test.mjs checks it against the page.
   var alertKinds = [
-    { key: 'strawberries', label: 'Strawberries open', notice: 'Strawberries are open at Wise Acres.' },
-    { key: 'blueberries', label: 'Blueberries and sunflowers open', notice: 'Blueberries and sunflowers are open at Wise Acres.' },
-    { key: 'pumpkins', label: 'Pumpkins and tomatoes open', notice: 'Pumpkins and tomatoes are open at Wise Acres.' },
-    { key: 'trees', label: 'Christmas trees arrive', notice: 'Christmas trees have arrived at Wise Acres.' },
-    { key: 'spot', label: 'A spot opens on a full day', notice: 'A spot opened on a day you were waiting for.' }
+    { key: 'spot', label: 'A spot opens on a full day', notice: 'A spot opened on a day you were waiting for.', note: 'Choose a day that is full. If a spot opens up, you hear about it.' },
+    { key: 'reservations', label: 'Reservations open', notice: 'New reservations are open at Wise Acres.', note: 'A notice when new reservations open. Reservations with pizza open every Tuesday at 5:00 PM for the upcoming weekend.' },
+    { key: 'strawberries', label: 'Strawberries open', notice: 'Strawberries are open at Wise Acres.', note: 'A notice when strawberry picking opens.' },
+    { key: 'blueberries', label: 'Blueberries and sunflowers open', notice: 'Blueberries and sunflowers are open at Wise Acres.', note: 'A notice when blueberry and sunflower picking opens.' },
+    { key: 'pumpkins', label: 'Pumpkins and tomatoes open', notice: 'Pumpkins and tomatoes are open at Wise Acres.', note: 'A notice when pumpkin and tomato picking opens.' },
+    { key: 'trees', label: 'Christmas trees arrive', notice: 'Christmas trees have arrived at Wise Acres.', note: 'A notice when the Christmas trees arrive.' }
   ];
 
   // Links that already exist on the site.
@@ -122,11 +132,36 @@
   // The sentences of the site's own "Changes and rain" card (first-visit.html), shown near the buttons that change a visit.
   var RULES = {
     change: 'You can change your reservation at no charge until 11:59 PM the night before your visit',
-    weather: 'If severe weather forces us to close, we\u2019ll email you and give a full refund'
+    weather: 'If severe weather forces us to close, we\u2019ll email you and give a full refund',
+    partyTime: '2 hours of party time, plus 15 minutes before for set-up and 15 minutes after for clean-up'   // the Parties card: 2.5 hours in all
   };
 
-  // The standard sample account (the tour and the "Fill in sample details" button use it): the sample family is Alex, Jordan, Riley, Casey and baby Sam.
-  var SAMPLE_ACCOUNT = { name: 'Alex', email: 'alex@example.com' };
+  // The two e-mail addresses the pretend account shows, both already on the site (the school tours card and page; the Wise Pie page). The subject lines are the site's own.
+  // No phone number and no other contact is shown anywhere in the demo.
+  var CONTACTS = {
+    vanessa: { name: 'Vanessa', email: 'vanessa@wiseacresorganic.com', href: 'mailto:vanessa@wiseacresorganic.com?subject=School%20tour%20question', text: 'Questions? Email Vanessa' },
+    ava: { name: 'Ava', email: 'ava@wiseacresorganic.com', href: 'mailto:ava@wiseacresorganic.com?subject=Wise%20Pie%20question', text: 'Pizza questions? Email Ava' }
+  };
+
+  // The standard sample account (the tour and the "Fill in sample details" button use it): the sample family is Alex, Jordan, Riley, Casey and baby Sam,
+  // and they said yes to "Do you plan or manage a party, an event or a school trip?" with a school trip, so the ready-made sample has a My event tab.
+  var SAMPLE_ACCOUNT = { name: 'Alex', email: 'alex@example.com', eventKind: 'school' };
+
+  // The sign-up question "Do you plan or manage a party, an event or a school trip?" and its four big buttons. `key` is what the account keeps (account.eventKind);
+  // `short` names the kind in the "I also plan an event" box of My family. 'none' = no event, and then the My event tab is not shown.
+  var EVENT_KINDS = [
+    { key: 'none', label: 'No' },
+    { key: 'party', label: 'Yes: a party', short: 'A party' },
+    { key: 'school', label: 'Yes: a school trip', short: 'A school trip' },
+    { key: 'other', label: 'Yes: another event', short: 'Another event' }
+  ];
+  // An answer (saved or typed) -> one of the four keys. Nothing given at all (undefined) means the ready-made sample, which has the school trip; anything else that is not a kind means no event.
+  function eventKindOf(x) {
+    if (x === undefined) return 'school';
+    var k = String(x === null ? '' : x).toLowerCase();
+    for (var i = 0; i < EVENT_KINDS.length; i++) if (EVENT_KINDS[i].key === k) return k;
+    return 'none';
+  }
 
   // Who is who in sentences.
   var WHO = { family: 'You', cathy: 'Mrs. Cathy', rob: 'Rob', kitchen: 'The kitchen' };
@@ -168,16 +203,24 @@
   }
 
   /* ------------------------------------------------------------------ *
-   * School trips (Groups section and school-field-trips.html)
+   * School trips, parties and other events (the Groups section; school-field-trips.html)
    * ------------------------------------------------------------------ */
-  // event = { students, guests } -> { lines, total }. $11 per student; parents and siblings ages 3 and older who come pay the same $11.
+  // event = { kind, students, guests } -> { lines, total }. No kind means a school trip.
+  //   school: $11 per student; parents and siblings ages 3 and older who come pay the same $11.
+  //   party:  one price for the whole party ($300), the farm entry fee included; up to 50 guests.
+  //   other:  the website names no price for other events (the corporate prices there are a draft), so there are no lines and the total is null: Mrs. Cathy gives a quote.
   function priceEvent(e) {
-    var P = PRICES, lines = [{ id: 'students', label: 'Students', qty: e.students || 0, unit: 'per student', amount: cents((e.students || 0) * P.schoolPerStudent) }];
+    var P = PRICES;
+    if (e.kind === 'party') return { lines: [{ id: 'party', label: 'Party package, farm entry included', qty: 1, unit: 'per party', amount: P.partyPrice }], total: P.partyPrice };
+    if (e.kind === 'other') return { lines: [], total: null };
+    var lines = [{ id: 'students', label: 'Students', qty: e.students || 0, unit: 'per student', amount: cents((e.students || 0) * P.schoolPerStudent) }];
     if (e.guests) lines.push({ id: 'guests', label: 'Parents and siblings, ages 3 and up', qty: e.guests, unit: 'each', amount: cents(e.guests * P.schoolPerStudent) });
     return { lines: lines, total: cents(lines.reduce(function (s, l) { return s + l.amount; }, 0)) };
   }
   // '' when the head count is fine, else the page's own rule in plain words
   function eventProblem(e) {
+    if (e.kind === 'party') return (e.guests || 0) > PRICES.partyMaxGuests ? 'A party is for up to ' + PRICES.partyMaxGuests + ' guests. For a larger event, ask Mrs. Cathy.' : '';
+    if (e.kind === 'other') return '';
     return (e.students || 0) < PRICES.schoolMinStudents ? 'The minimum group size for a school tour is ' + PRICES.schoolMinStudents + ' students.' : '';
   }
 
@@ -191,9 +234,26 @@
     rec.paid = { receipt: o.receipt, on: o.paidOn, lines: price.lines, total: price.total };
     return rec;
   }
+  // The sample event of one kind ('party', 'school' or 'other') for the day `todayDate`, and the first message of Mrs. Cathy in its thread: { event, welcome }.
+  // The event has no id and no thread yet (the store gives them). Only the head counts, the title and the dates are made up; prices and rules come from PRICES.
+  // The school trip is two weeks and a few days after the sample visit (a Tuesday); a party or another event is on a Saturday. No start time is made up: the site gives none.
+  function sampleEvent(kind, todayDate) {
+    var t = todayDate || today(), next = nextWeekday(t, 6);   // the next Saturday: where the sample visit is
+    if (kind === 'party') {
+      return { event: { kind: 'party', title: 'Sample birthday party', date: addDays(next, 14), guests: 24 },
+        welcome: 'Thank you for booking a party! Write to us here if the guest count changes.' };
+    }
+    if (kind === 'other') {
+      return { event: { kind: 'other', title: 'Sample group event', date: addDays(next, 21), guests: 30 },
+        welcome: 'Thank you for planning an event with us! Write to us here with your date, group size and any special requests.' };
+    }
+    return { event: { kind: 'school', title: 'Sample Elementary, 2nd grade', date: addDays(next, 17), students: PRICES.schoolMinStudents, guests: 8, slipsReceived: 72 },
+      welcome: 'Thank you for booking a school tour! Write to us here if the head count changes.' };
+  }
   // The whole starting state of the demo, for the day `todayDate` ('YYYY-MM-DD'); `nowTime` is only for the timestamps ('HH:MM').
-  function sample(todayDate, nowTime) {
-    var t = todayDate || today(), at = t + ' ' + (nowTime || '09:00');
+  // `eventKind` is the answer to the sign-up question: 'school' (the ready-made sample, also when nothing is given), 'party', 'other' or 'none' (no event at all).
+  function sample(todayDate, nowTime, eventKind) {
+    var t = todayDate || today(), at = t + ' ' + (nowTime || '09:00'), kind = eventKindOf(eventKind);
     var next = nextWeekday(t, 6);                          // the next Saturday: the upcoming visit
     var last = prevWeekday(t, 6);                          // the most recent Saturday: a past visit
     var upcoming = visitRecord({ id: 'v1', date: next, time: '14:00', package: 'pizza', addons: [{ id: 'wagon', qty: 4 }, { id: 'barrel', qty: 2 }], receipt: 'DEMO-1003', paidOn: t });
@@ -203,21 +263,21 @@
       id: 'o1', visitId: 'v1', pickup: PD.defaultPickup(upcoming.time), notes: '', status: 'new',
       pizzas: [PD.withDefaults({ type: 'pepperoni', count: 1 }), PD.withDefaults({ type: 'margherita', count: 1 })]
     };
-    var tour = addDays(next, 17);                          // a Tuesday, about two weeks after the upcoming visit
-    var event = { id: 'e1', kind: 'school', title: 'Sample Elementary, 2nd grade', date: tour, students: PRICES.schoolMinStudents, guests: 8, slipsReceived: 72, thread: 'event-e1' };
+    var made = kind === 'none' ? null : sampleEvent(kind, t), event = null;
+    if (made) { event = made.event; event.id = 'e1'; event.thread = 'event-e1'; }
     return {
       family: {
         name: 'Alex', adults: [{ name: 'Alex' }, { name: 'Jordan' }], kids: KIDS.map(function (k) { return { name: k.name, age: k.age }; }),
-        allergies: 'Riley: peanut allergy.', glutenFree: false, vegan: false
+        allergies: 'Riley: peanut allergy.', glutenFree: false, vegan: false,
+        phone: SAMPLE_PHONE, notifyBy: { text: true, email: true }   // "Tell me when": the pretend phone, and where the messages go (text, email or both; at least one stays on)
       },
       visits: [upcoming, recent, older],
       orders: [order],
-      events: [event],
-      messages: [{ id: 'm1', thread: 'event-e1', from: 'cathy', text: 'Thank you for booking a school tour! Write to us here if the head count changes.', at: at }],
+      events: event ? [event] : [],
+      messages: event ? [{ id: 'm1', thread: 'event-e1', from: 'cathy', text: made.welcome, at: at }] : [],
       notices: [{ id: 'n1', to: 'family', text: 'We added a sample visit so you can try the buttons.', link: '#visits', at: at, read: false }],
       requests: [], reviews: [], photos: [], waitlist: [],
-      alerts: {}, closedDays: [],
-      badges: { strawberry: 100, blueberry: 88, sunflower: 31, pumpkin: 64, winter: 0 }   // sample picks counted by the hero game (it keeps nothing, so these are made up)
+      alerts: {}, closedDays: []
     };
   }
 
@@ -254,7 +314,9 @@
   }
 
   var api = {
+    SAMPLE_PHONE: SAMPLE_PHONE,
     PRICES: PRICES, PACKAGES: PACKAGES, PIZZAS: PD.PIZZAS, SLOTS: SLOTS, alertKinds: alertKinds, LINKS: LINKS, RULES: RULES, WHO: WHO, SAMPLE_ACCOUNT: SAMPLE_ACCOUNT,
+    CONTACTS: CONTACTS, EVENT_KINDS: EVENT_KINDS, eventKindOf: eventKindOf,
     FARM_OPENS: PD.FARM_OPENS, FARM_CLOSES: PD.FARM_CLOSES,
     // dates and times
     farmParts: farmParts, today: today, parse: parse, isDate: isDate, addDays: addDays, weekday: weekday, daysBetween: daysBetween, nextWeekday: nextWeekday, prevWeekday: prevWeekday,
@@ -262,7 +324,7 @@
     // words
     weekdayName: weekdayName, dateShort: dateShort, dateLong: dateLong, time12: time12, money: money, words: words, plural: plural,
     // rules: visits and school trips here, the pizza ones from js/demo-pizza-data.js under the same names
-    openDays: openDays, priceVisit: priceVisit, priceEvent: priceEvent, eventProblem: eventProblem,
+    openDays: openDays, priceVisit: priceVisit, priceEvent: priceEvent, eventProblem: eventProblem, sampleEvent: sampleEvent,
     pizzaById: PD.pizzaById, defaultPickup: PD.defaultPickup, pickupSlots: PD.pickupSlots, pizzaCount: PD.pizzaCount, withDefaults: PD.withDefaults,
     describeOrder: PD.describeOrder, priceOrder: PD.priceOrder, diffOrders: PD.diffOrders,
     sample: sample, visitICS: visitICS

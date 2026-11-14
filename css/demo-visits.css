@@ -1,0 +1,22 @@
+/* Wise Acres account demo: the look of the "My visits" screen (js/demo-view-visits.js). The request boxes use the shared dp-* look of css/demo-pizza.css.
+ * THE DEMO IS PRETEND: see docs/ACCOUNT_DEMO.md. */
+.dv-card{display:grid;gap:12px;margin-bottom:18px}
+.dv-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 14px}
+.dv-head h3{margin:0}
+.dv-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 18px;margin:0}
+.dv-facts dt{font-weight:800;font-size:.9rem;color:var(--ink-soft)}
+.dv-facts dd{margin:0;font-weight:700}
+.dv-sub{margin:.4em 0 0;font-size:1.1rem}
+.dv-paid .demo-lines{margin-bottom:6px}
+.dv-weather{padding:14px 16px;background:#c9e6f7;border:3px solid var(--ink);border-radius:18px}
+.dv-weather p{margin:0 0 10px}
+.dv-buttons{margin-top:6px}
+.dv-past-title{margin:26px 0 12px;font-size:1.3rem}
+.dv-form{display:grid;gap:14px}
+.dv-fieldset{margin:0;padding:12px 14px;border:3px solid var(--ink);border-radius:16px;min-width:0}
+.dv-fieldset legend{padding:0 6px;font-weight:800}
+.dv-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:2px 12px}
+.dv-choice{display:flex;align-items:center;gap:10px;min-height:44px;padding:4px 6px;font-weight:700;cursor:pointer}
+.dv-choice input{width:22px;height:22px;flex:none}
+.dv-note{width:100%;padding:10px 12px;font:600 1rem/1.4 var(--body);border:3px solid var(--ink);border-radius:14px;resize:vertical}
+.dv-error{margin:0;min-height:1.2em;font-weight:800;color:var(--red-deep)}

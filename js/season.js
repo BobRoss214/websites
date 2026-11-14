@@ -70,6 +70,12 @@
     return SEASONS.filter(function (s) { return inWindow(s, now); });
   }
 
+  // The season that starts next and is not on yet ("Next up" in the countdown and the top bar, the "Next" tag on the hero's season buttons).
+  function upcoming(now) {
+    now = now || new Date();
+    return SEASONS.filter(function (s) { return !inWindow(s, now); }).sort(function (a, b) { return daysUntilStart(a, now) - daysUntilStart(b, now); })[0];
+  }
+
   // The season in progress. Between seasons, whichever boundary is closest, so
   // the site never looks "empty" (e.g. it stays wintry through the holidays).
   function current(now) {
@@ -100,7 +106,7 @@
   }
 
   W.rand = rand;
-  W.seasons = { list: SEASONS, live: live, current: current, inWindow: inWindow, daysUntilStart: daysUntilStart, farmDay: farmDay, apply: apply, active: null };
+  W.seasons = { list: SEASONS, live: live, upcoming: upcoming, current: current, inWindow: inWindow, daysUntilStart: daysUntilStart, farmDay: farmDay, apply: apply, active: null };
   if (W.seasonPicker === undefined) W.seasonPicker = true;
 
   document.documentElement.classList.add('js-scene');

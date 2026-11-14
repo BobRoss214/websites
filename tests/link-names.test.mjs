@@ -3,7 +3,7 @@
 // covers: *.html, pages/*, js/main.js, js/features.js, js/hero.js, js/i18n.js, lang/*
 /* Link names and screen reader noise (a blind visitor listening to the list of links and walking the page): two links with the same words must lead to the same
  * place, or carry a second word that tells them apart ("Directions The u-pick farm" and "Directions The GreenHouse", built from the card's own heading, so every
- * language gets it for free); the game score in the hero is not read as a bare number; the drawings are hidden from screen readers (nothing exposes an
+ * language gets it for free; the two named exceptions are the menu's "Directions" and, on First visit, "Farm map", pinned to their two places); the game score in the hero is not read as a bare number; the drawings are hidden from screen readers (nothing exposes an
  * unnamed picture); the hero buttons have names; the live countdown is a timer (silent), not a live region that talks every second.
  * Home page and First-visit page, English at 1280 px and Chinese at 390 px (Latin words left over would show in the names). Quick: about 15 seconds. */
 import { run, open, ok } from './lib.mjs';
@@ -17,6 +17,17 @@ const SAME_WORDS_OK = [
   'pranee@wiseacresorganic.com',
   'ava@wiseacresorganic.com',
 ];
+
+// Two menu lines whose words are fixed by the menu plan (work-notes/MENU-PLAN.md) are also the words of a button that goes somewhere else. They are allowed, but only
+// as exactly these two places: the same words leading anywhere else, or a new pair, still fails. `places` = one pattern for each of the two places; each must be there once.
+// The other languages are held to the same two places (their words differ, the places do not).
+const MENU_PAIRS_OK = [
+  { words: 'Directions', places: [/^(?:index\.html)?#contact$/, /^https:\/\/www\.google\.com\/maps\/dir\//],
+    why: 'the Visit menu line goes to the "Directions & contact" section (with the Drive time box); the button in the bottom bar (and in the top of First visit) opens Google Maps' },
+  { words: 'Farm map', places: [/^index\.html#farm-map$/, /^#farm-map$/],
+    why: 'on First visit the menu line goes to the farm map of the home page; the "Farm map" button of that page goes to the map further down the same page' },
+];
+const menuPairOk = (name, hrefs, lang) => MENU_PAIRS_OK.some((p) => (lang !== 'en' || name === p.words) && hrefs.length === p.places.length && p.places.every((re) => hrefs.filter((h) => re.test(h)).length === 1));
 
 // the accessible name the way a browser works it out for a link: aria-labelledby, then aria-label, then the words inside
 const NAMES = () => {
@@ -45,7 +56,7 @@ await run('link-names', async ({ browser, base, errs }) => {
     for (const l of links) { if (!byName.has(l.name)) byName.set(l.name, { hrefs: new Set(), ts: new Set() }); const g = byName.get(l.name); g.hrefs.add(l.href); g.ts.add(l.t); }
     const key = (g) => [...g.hrefs].sort().join(' | ');
     if (lang === 'en') for (const [n, g] of byName) if (SAME_WORDS_OK.includes(n) && g.hrefs.size > 1) okPairs.add(key(g));
-    const clash = [...byName].filter(([n, g]) => n && g.hrefs.size > 1 && !SAME_WORDS_OK.includes(n) && !okPairs.has(key(g))).map(([n, g]) => `"${n}" -> ${g.hrefs.size} different places`);
+    const clash = [...byName].filter(([n, g]) => n && g.hrefs.size > 1 && !SAME_WORDS_OK.includes(n) && !okPairs.has(key(g)) && !menuPairOk(n, [...g.hrefs], lang)).map(([n, g]) => `"${n}" -> ${g.hrefs.size} different places`);
     ok(`${pg} ${lang}: no two links share their name and lead to different places (${links.length} links)`, clash.length === 0, clash.slice(0, 5).join('; '));
     // a name must still contain the words on the button (a visitor who speaks the words to a voice control)
     const lost = links.filter((l) => l.visible && l.name && !l.name.toLowerCase().includes(l.visible.toLowerCase().slice(0, 12))).map((l) => `"${l.visible.slice(0, 30)}" is named "${l.name.slice(0, 40)}"`);

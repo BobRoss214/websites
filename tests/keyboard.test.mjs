@@ -216,7 +216,7 @@ async function phoneMenus(p) {
   ok('phone menu (Chinese): Enter opens it with focus on its first link, Escape closes it and gives focus back; the button is named in Chinese', open1.exp === 'true' && open1.inMenu && shut.exp === 'false' && shut.back === 'menu-toggle' && /[\u4e00-\u9fff]/.test(open1.name) && /[\u4e00-\u9fff]/.test(shut.name), JSON.stringify({ open1, shut }));
   await p.keyboard.press('Enter'); await settle(p);
   let last = null;
-  for (let i = 0; i < 30; i++) { await p.keyboard.press('Tab'); last = await p.evaluate(() => ({ inMenu: !!document.activeElement.closest('#nav'), at: document.activeElement.tagName })); if (!last.inMenu) break; }
+  for (let i = 0; i < 60; i++) { await p.keyboard.press('Tab'); last = await p.evaluate(() => ({ inMenu: !!document.activeElement.closest('#nav'), at: document.activeElement.tagName })); if (!last.inMenu) break; }   // 37 lines and the Reserve button: 38 stops
   ok('phone menu: Tab goes through the open menu and out of it (no trap)', !!last && !last.inMenu, JSON.stringify(last));
   // Tab past the menu's last link reaches the globe button in the header: the menu is still open around it
   await focusOn(p, '.lang-btn'); await p.keyboard.press('Enter'); await settle(p);
@@ -244,15 +244,16 @@ async function controls(p) {
   await p.keyboard.press('Tab');
   ok('skip link: Enter moves focus to the main content, and the next Tab stays in it', onMain && await p.evaluate(() => !!document.activeElement.closest('main')), await active(p));
 
-  await focusOn(p, '.nav-more-btn'); await p.keyboard.press('Enter'); await settle(p);
-  const more = await p.evaluate(() => document.querySelector('.nav-more-btn').getAttribute('aria-expanded'));
-  await p.keyboard.press('Tab'); const inside = await p.evaluate(() => !!document.activeElement.closest('.nav-more-list'));
+  const VISIT = 'button[aria-controls="nav-list-visit"]';   // one of the seven drop-down buttons of the top menu (tests/menu-groups.test.mjs does all seven)
+  await focusOn(p, VISIT); await p.keyboard.press('Enter'); await settle(p);
+  const more = await p.evaluate((q) => document.querySelector(q).getAttribute('aria-expanded'), VISIT);
+  await p.keyboard.press('Tab'); const inside = await p.evaluate(() => !!document.activeElement.closest('#nav-list-visit'));
   await p.keyboard.press('Escape'); await settle(p);
-  ok('"More" menu: Enter opens it, Tab goes into it, Escape closes it and gives focus back to the button', more === 'true' && inside && await p.evaluate(() => document.querySelector('.nav-more-btn').getAttribute('aria-expanded') === 'false' && document.activeElement.classList.contains('nav-more-btn')), JSON.stringify({ more, inside, now: await active(p) }));
+  ok('top menu, Visit: Enter opens its list, Tab goes into it, Escape closes it and gives focus back to the button', more === 'true' && inside && await p.evaluate((q) => document.querySelector(q).getAttribute('aria-expanded') === 'false' && document.activeElement === document.querySelector(q), VISIT), JSON.stringify({ more, inside, now: await active(p) }));
   await p.keyboard.press('Enter'); await settle(p);
-  for (let i = 0; i < 12; i++) await p.keyboard.press('Tab');
+  for (let i = 0; i < 12; i++) await p.keyboard.press('Tab');   // the six lines of the list, then on past it
   await settle(p);
-  ok('"More" menu: tabbing out of it closes it', await p.evaluate(() => document.querySelector('.nav-more-btn').getAttribute('aria-expanded') === 'false'), await active(p));
+  ok('top menu, Visit: tabbing out of its list closes it', await p.evaluate((q) => document.querySelector(q).getAttribute('aria-expanded') === 'false', VISIT), await active(p));
 
   await focusOn(p, '.lang-btn'); await p.keyboard.press('Enter'); await settle(p);
   const l1 = await active(p); await p.keyboard.press('ArrowDown'); const l2 = await active(p);

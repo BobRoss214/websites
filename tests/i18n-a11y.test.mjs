@@ -9,8 +9,10 @@ import { run, open, ok, okSoon, until, txt } from './lib.mjs';
 
 const EXTRA = `WISE_ACRES.signup.demo = true;`;
 const HTML_LANG = { en: 'en', es: 'es', hi: 'hi', zh: 'zh-Hans', vi: 'vi' };
-const BUTTON = { en: 'Language: English', es: 'Idioma: Español', hi: 'भाषा: हिन्दी', zh: '语言：中文', vi: 'Ngôn ngữ: Tiếng Việt' };
+// the language button's name: the word, the language, and (except in Chinese, where the button's own words are the name) the short code on the button, so the words you see are in the name (WCAG 2.5.3)
+const BUTTON = { en: 'Language: English, EN', es: 'Idioma: Español, ES', hi: 'भाषा: हिन्दी, हिं', zh: '语言：中文', vi: 'Ngôn ngữ: Tiếng Việt, VI' };
 const NOW = { es: 'ahora', hi: 'अभी', zh: '现在', vi: 'bây giờ' };
+const NEXT = { es: 'siguiente', hi: 'अगला', zh: '接下来', vi: 'tiếp theo' };   // the other little tag on the season buttons (on the page's test day, a fall day: "now" is on Fall, "next" on Winter)
 const MENU = { es: ['Abrir menú', 'Cerrar menú'], hi: ['मेनू खोलें', 'मेनू बंद करें'], zh: ['打开菜单', '关闭菜单'], vi: ['Mở menu', 'Đóng menu'] };
 
 // the names the page must say in an English voice: any of them left outside a lang="en" element is a miss
@@ -44,7 +46,7 @@ await run('i18n-a11y', async ({ browser, base, errs }) => {
   const en = await open(browser, base, 'index.html', errs, { extra: EXTRA });
   const enTitle = await en.title();
   const enDesc = await en.evaluate(() => document.querySelector('meta[name=description]').content);
-  ok('English: html lang = en, no wrapper, the button says "Language: English"', (await en.evaluate(() => document.documentElement.lang)) === 'en' && (await en.locator('wa-en').count()) === 0 && (await en.getAttribute('.lang-btn', 'aria-label')) === BUTTON.en, await en.getAttribute('.lang-btn', 'aria-label'));
+  ok('English: html lang = en, no wrapper, the button says "Language: English, EN"', (await en.evaluate(() => document.documentElement.lang)) === 'en' && (await en.locator('wa-en').count()) === 0 && (await en.getAttribute('.lang-btn', 'aria-label')) === BUTTON.en, await en.getAttribute('.lang-btn', 'aria-label'));
   ok('no page sets a text direction (none of the languages is right to left)', await en.evaluate(() => !document.querySelector('[dir]') && getComputedStyle(document.documentElement).direction === 'ltr'));
 
   for (const lang of ['es', 'hi', 'zh', 'vi']) {
@@ -59,6 +61,7 @@ await run('i18n-a11y', async ({ browser, base, errs }) => {
         ok(`${lang}: every language in the menu is written in itself and carries its own lang`, await p.evaluate(() => [...document.querySelectorAll('.lang-list [data-lang]')].every((b) => b.getAttribute('lang') === ({ en: 'en', es: 'es', hi: 'hi', zh: 'zh-Hans', vi: 'vi' })[b.dataset.lang])));
         ok(`${lang}: the menu marks the current language`, await p.evaluate((c) => document.querySelector('.lang-list [aria-checked="true"]').dataset.lang === c, lang));
         ok(`${lang}: the "now" tag on the season buttons is translated`, (await txt(p, '.ss-now')) === NOW[lang], await txt(p, '.ss-now'));
+        ok(`${lang}: the "next" tag on the season buttons is translated`, (await txt(p, '.ss-next')) === NEXT[lang], await txt(p, '.ss-next'));
 
         // text written later by JavaScript is marked too, and an English quotation is left alone
         await p.evaluate(() => {
@@ -69,9 +72,9 @@ await run('i18n-a11y', async ({ browser, base, errs }) => {
 
         // live switches
         await p.evaluate(() => WISE_ACRES.setLang('en'));
-        await okSoon(`${lang}: back to English: no wrapper left in the page text, html lang = en`, () => p.evaluate(() => ({ w: document.querySelectorAll('[data-t] wa-en').length, l: document.documentElement.lang, b: document.querySelector('.lang-btn').getAttribute('aria-label'), n: document.querySelector('.ss-now').textContent })), (v) => v.w === 0 && v.l === 'en' && v.b === BUTTON.en && v.n === 'now');
+        await okSoon(`${lang}: back to English: no wrapper left in the page text, html lang = en`, () => p.evaluate(() => ({ w: document.querySelectorAll('[data-t] wa-en').length, l: document.documentElement.lang, b: document.querySelector('.lang-btn').getAttribute('aria-label'), n: document.querySelector('.ss-now').textContent, x: document.querySelector('.ss-next').textContent })), (v) => v.w === 0 && v.l === 'en' && v.b === BUTTON.en && v.n === 'now' && v.x === 'next');
         await p.evaluate((c) => WISE_ACRES.setLang(c), lang);
-        await okSoon(`${lang}: and forward again`, () => p.evaluate(() => ({ w: document.querySelectorAll('[data-t] wa-en').length, l: document.documentElement.lang })), (v) => v.w > 10 && v.l === HTML_LANG[lang]);
+        await okSoon(`${lang}: and forward again`, () => p.evaluate(() => ({ w: document.querySelectorAll('[data-t] wa-en').length, l: document.documentElement.lang, n: document.querySelector('.ss-now').textContent, x: document.querySelector('.ss-next').textContent })), (v) => v.w > 10 && v.l === HTML_LANG[lang] && v.n === NOW[lang] && v.x === NEXT[lang]);
       }
       await p.context().close();
     }
@@ -98,7 +101,7 @@ await run('i18n-a11y', async ({ browser, base, errs }) => {
     // the language file does not arrive (offline, blocked): the page is English and says so everywhere, and no name is marked
     {
       const f = await open(browser, base, 'index.html', errs, { lang, routes: (pg) => pg.route(`**/lang/${lang}.js`, (r) => r.abort()) });
-      const got = await f.evaluate(() => ({ lang: document.documentElement.lang, btn: document.querySelector('.lang-btn').getAttribute('aria-label'), marked: document.querySelectorAll('wa-en').length, nav: document.querySelector('.nav li:first-child a').textContent.trim() }));
+      const got = await f.evaluate(() => ({ lang: document.documentElement.lang, btn: document.querySelector('.lang-btn').getAttribute('aria-label'), marked: document.querySelectorAll('wa-en').length, nav: document.querySelector('.nav .nav-group-btn span').textContent.trim() }));
       ok(`${lang}: language file missing: English page, html lang = en, the button says so, no wrapper`, got.lang === 'en' && got.btn === BUTTON.en && got.marked === 0 && got.nav === 'Visit', JSON.stringify(got));
       await f.context().close();
     }

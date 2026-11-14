@@ -3,9 +3,9 @@
 // covers: index.html, pages/first-visit.html, first-visit.html, js/main.js, css/extras.css, css/features.css, tools/pages.py, lang/*
 /* The short first-visit guide on the home page (index.html at id="first-visit").
  * Why it exists: in some viewers (a page shown inside another site, in a frame) a link to another page file ends on the bottom of the page, while a link to a place
- * on the same page always works. So the menu, the More list, the footer and the "First time at Wise Acres?" line go to #first-visit, and the guide is on the home page.
+ * on the same page always works. So the menu (the First-visit guide line of its Visit list), the footer and the "First time at Wise Acres?" line go to #first-visit, and the guide is on the home page.
  * Checks, with no browser: the links, the order of the sections, every sentence is also on first-visit.html (so it is already translated and it cannot drift), the
- * extra pages still link to the real guide page. Checks with a browser: More (wide screen) and the menu button (phone) lead to the section and stay on the home page,
+ * extra pages still link to the real guide page. Checks with a browser: the Visit list (wide screen) and the menu button (phone) lead to the section and stay on the home page,
  * the menu closes, the right link is highlighted; the same inside a sandboxed frame from another address (a viewer like the farm's preview), in three languages. */
 import fs from 'node:fs';
 import os from 'node:os';
@@ -24,9 +24,10 @@ ok('index.html has the section id="first-visit" (once)', a >= 0 && index.split('
 ok('it has a heading and the one button to the full page at the end', /<h2[^>]*id="fv-h"/.test(sec) && sec.trimEnd().match(/<a [^>]*href="first-visit\.html"[^>]*>[^<]*Open the full first-visit guide/) !== null && (sec.match(/href="first-visit\.html"/g) || []).length === 1);
 
 // the places that said first-visit.html now say #first-visit (the FAQ buttons keep first-visit.html#parking, #strollers, #checklist: they are not the menu)
-const hrefs = (re) => [...index.matchAll(re)].map((m) => m[1]);
-ok('the menu bar and the More list link to #first-visit', hrefs(/<li class="nav-first(?:-more)?"><a [^>]*href="([^"]*)"/g).join(' ') === '#first-visit #first-visit');
-ok('the footer link and the "First time at Wise Acres?" line link to #first-visit', hrefs(/<li><a [^>]*href="([^"]*)">First-visit guide<\/a><\/li>/g).join(' ') === '#first-visit' && /class="first-time[^"]*">.*?<a href="#first-visit">/.test(index));
+const visitList = (txt) => ((txt.match(/<ul class="nav-group-list" id="nav-list-visit"[^>]*>([\s\S]*?)<\/ul>/) || [])[1] || '');
+ok('the Visit list of the menu has one First-visit guide line and it links to #first-visit', [...visitList(index).matchAll(/<a [^>]*href="([^"]*)">First-visit guide<\/a>/g)].map((m) => m[1]).join(' ') === '#first-visit');
+const footerHtml = index.slice(index.indexOf('<footer class="site-footer">'));   // (the menu's own line is checked above; it is written the same way, so look in the footer only)
+ok('the footer link and the "First time at Wise Acres?" line link to #first-visit', footerHtml.length > 100 && [...footerHtml.matchAll(/<li><a [^>]*href="([^"]*)">First-visit guide<\/a><\/li>/g)].map((m) => m[1]).join(' ') === '#first-visit' && /class="first-time[^"]*">.*?<a href="#first-visit">/.test(index));
 const plain = [...index.matchAll(/href="first-visit\.html"/g)].length;
 ok('the only link to first-visit.html (without a place in it) on the home page is the button at the end of the guide', plain === 1, plain === 1 ? '' : plain + ' found');
 
@@ -48,7 +49,7 @@ ok('every text of the guide has its Spanish, Hindi, Chinese and Vietnamese trans
 
 // the extra pages keep the real guide page in their menus: tools/pages.py turns #first-visit back into first-visit.html
 const built = ['first-visit.html', 'pumpkin-patch.html', 'strawberry-picking.html', 'school-field-trips.html', 'wise-pie.html'];
-const wrong = built.filter((f) => /index\.html#first-visit/.test(read(f)) || !/<li class="nav-first"><a [^>]*href="first-visit\.html"/.test(read(f)) || !/<li class="nav-first-more"><a [^>]*href="first-visit\.html"/.test(read(f)));
+const wrong = built.filter((f) => /index\.html#first-visit/.test(read(f)) || [...visitList(read(f)).matchAll(/<a [^>]*href="([^"]*)">First-visit guide<\/a>/g)].map((m) => m[1]).join(' ') !== 'first-visit.html');
 ok('the five extra pages still link to first-visit.html in their menu (never to index.html#first-visit)', wrong.length === 0, wrong.join(', '));
 
 // ---------------------------------------------------------------- browser
@@ -64,9 +65,9 @@ const state = (root) => root.evaluate(() => {
   return {
     path: location.pathname, hash: location.hash, top: Math.round(r.top), header: Math.round(q('#site-header').getBoundingClientRect().bottom),
     fromBottom: Math.round(document.documentElement.scrollHeight - scrollY - innerHeight),
-    menuOpen: q('#nav').classList.contains('is-open'), moreOpen: q('.nav-more').classList.contains('is-open'), locked: document.body.classList.contains('nav-lock'),
-    moreLink: q('.nav-first-more a').hasAttribute('aria-current'), barLink: q('.nav-first a').hasAttribute('aria-current'), moreBtn: q('.nav-more-btn').hasAttribute('aria-current'),
-    visitLink: q('.nav a[href="#visit"]').hasAttribute('aria-current'),
+    menuOpen: q('#nav').classList.contains('is-open'), listOpen: !!document.querySelector('.nav-group.is-open'), locked: document.body.classList.contains('nav-lock'),
+    guideLine: q('#nav-list-visit a[href="#first-visit"]').hasAttribute('aria-current'), visitButton: q('button[aria-controls="nav-list-visit"]').hasAttribute('aria-current'),
+    visitLine: q('#nav-list-visit a[href="#visit"]').hasAttribute('aria-current'),
     shown: getComputedStyle(card).opacity === '1' && getComputedStyle(q('#fv-h')).opacity === '1', lang: document.documentElement.lang,
     order: [...document.querySelectorAll('main > section[id]')].map((x) => x.id),
   };
@@ -74,8 +75,9 @@ const state = (root) => root.evaluate(() => {
 const WIDE = { width: 1366, height: 768 }, PHONE = { width: 390, height: 800 };
 
 async function click(p, root, wide) {
-  if (wide) { await root.locator('.nav-more-btn').click(); await root.locator('.nav-first-more a').click(); }
-  else { await root.locator('#menu-toggle').click(); await root.locator('.nav-first a').click(); }
+  if (wide) await root.locator('button[aria-controls="nav-list-visit"]').click();
+  else await root.locator('#menu-toggle').click();
+  await root.locator('#nav-list-visit a[href="#first-visit"]').click();
   await settle(p, root);
   await p.waitForTimeout(600);   // the "reveal" fade of the cards
 }
@@ -84,8 +86,8 @@ function check(label, st, wide, lang, navigations) {
   ok(`${label}: stays on the home page, the address now ends with #first-visit`, st.path.endsWith('/index.html') && st.hash === '#first-visit', st.path + st.hash);
   ok(`${label}: no other page was loaded`, navigations.every((u) => /\/index\.html/.test(u) || /\/host\.html/.test(u) || u === 'about:blank'), navigations.join(' | '));
   ok(`${label}: the guide is at the top of the screen, just under the header, not the bottom of the page`, st.top >= 0 && st.top <= st.header + 40 && st.fromBottom > 600, `top ${st.top}, header ${st.header}, ${st.fromBottom}px above the bottom`);
-  ok(`${label}: the menu is closed again`, wide ? !st.moreOpen : !st.menuOpen && !st.locked, JSON.stringify({ more: st.moreOpen, menu: st.menuOpen, locked: st.locked }));
-  ok(`${label}: the First-visit guide link is highlighted (${wide ? 'under More, and the More button' : 'in the phone menu'}), the Visit link is not`, st.visitLink === false && (wide ? st.moreLink && st.moreBtn : st.barLink && st.moreLink), JSON.stringify(st));
+  ok(`${label}: the menu is closed again`, wide ? !st.listOpen : !st.menuOpen && !st.locked, JSON.stringify({ list: st.listOpen, menu: st.menuOpen, locked: st.locked }));
+  ok(`${label}: the First-visit guide line is highlighted (in its list${wide ? ', and the Visit button' : ', in the phone menu'}), the "Hours & locations" line is not`, st.visitLine === false && st.guideLine && st.visitButton, JSON.stringify(st));
   ok(`${label}: the cards are shown (the fade-in ran)`, st.shown);
   ok(`${label}: the page is in ${lang}`, st.lang.slice(0, 2) === lang, st.lang);
 }

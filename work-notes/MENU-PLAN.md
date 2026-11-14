@@ -14,7 +14,7 @@ The "target" is on the home page (`index.html#id`). On the five inner pages the 
 
 | Category | Line | Target (add an invisible `id` where none exists) |
 |---|---|---|
-| Visit | The two places & hours | `#visit` |
+| Visit | Hours & locations (was: The two places & hours; changed 3 Nov by the builder) | `#visit` |
 | Visit | Reserve a time | `#steps` ("Three steps to a farm day") |
 | Visit | Choose your package | `#options` |
 | Visit | First-visit guide | `#first-visit` |
@@ -32,7 +32,7 @@ The "target" is on the home page (`index.html#id`). On the five inner pages the 
 | GreenHouse | Wise Pie pizza | `#pizza` (if `link-names` complains because the Shop button of the same name goes to `#shop-greenhouse`, rename THIS new line, e.g. "Wise Pie pizza menu"; never change the page's existing words) |
 | GreenHouse | Ice cream | `#shop-icecream` |
 | GreenHouse | Drinks | `#shop-drinks` |
-| GreenHouse | Meet the goats | the "Meet the goats" block in `#greenhouse`: add an id |
+| (merged 3 Nov) | Meet the animals (under Things to Do) | one block `#animals` at the end of the GreenHouse section: the farm animals and the goats together; there is no "Meet the goats" line any more |
 | GreenHouse | Christmas trees | `#shop-pumpkins` (the Store's "Fall & holidays" group; it is always shown, in every season) |
 | Store | Everything in the store | `#shop` (ADDED by the builder so the top of the Shop, with the price note and buttons, keeps a link) |
 | Store | Snacks | `#shop-snacks` |

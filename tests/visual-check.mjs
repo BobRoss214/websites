@@ -11,7 +11,7 @@
  *   1. Starts its own small web server for the site folder (any free port), so nothing else has to be running.
  *   2. Opens every page (home, first visit, pumpkin patch, school trips, strawberry picking, Wise Pie) in all 5 languages,
  *      on a phone (390 px wide) and a computer (1440 px wide). The home page also shows the hero picture in all 4 seasons.
- *   3. Freezes everything that moves (fixed date, fixed "random" numbers, animations stopped at their first frame, the bee
+ *   3. Freezes everything that moves (fixed date, fixed "random" numbers, animations stopped at their first frame, the bee or butterfly
  *      hidden, all pictures and fonts loaded), so the same site gives the same picture.
  *   4. Cuts each page into its sections (top bar, menu, hero, "Visit", "Pizza" ... footer) and, for each section, writes
  *      down a short fingerprint (a few hundred characters) of how it looks.
@@ -142,7 +142,7 @@ const NO_TRANSITIONS = `(() => { const add = () => { const s = document.createEl
 async function freezePage(p, light) {
   await p.evaluate((light) => {
     const st = document.createElement('style');
-    st.textContent = (light ? '' : 'html.cv .cv-sec{content-visibility:visible!important}') + '*,*::before,*::after{transition:none!important;caret-color:transparent!important}html{scroll-behavior:auto!important}#bee{visibility:hidden!important}';
+    st.textContent = (light ? '' : 'html.cv .cv-sec{content-visibility:visible!important}') + '*,*::before,*::after{transition:none!important;caret-color:transparent!important}html{scroll-behavior:auto!important}#bee-fly{visibility:hidden!important}';
     document.head.appendChild(st);
     if (!light) document.querySelectorAll('img').forEach((i) => { i.loading = 'eager'; });
     document.querySelectorAll('.reveal, .crop-row, .goat-nook').forEach((el) => el.classList.add('in'));
@@ -171,7 +171,7 @@ async function holdAnimations(p, o = {}) {
   await p.evaluate((o) => {
     if (!document.getElementById('vc-hold')) {
       const st = document.createElement('style'); st.id = 'vc-hold';
-      st.textContent = '*,*::before,*::after{animation-play-state:paused!important}#bee{visibility:hidden!important}';
+      st.textContent = '*,*::before,*::after{animation-play-state:paused!important}#bee-fly{visibility:hidden!important}';
       document.head.appendChild(st);
     }
     if (o.timers !== false) {

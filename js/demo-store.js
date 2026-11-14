@@ -15,7 +15,7 @@
 
   var KEY = 'wa-demo-v1';
   var LISTS = { visits: 'v', orders: 'o', requests: 'r', messages: 'm', notices: 'n', reviews: 'rv', photos: 'p', events: 'e', waitlist: 'w' };   // the id prefixes
-  var OBJECTS = { family: 1, alerts: 1, badges: 1 };                       // one object each
+  var OBJECTS = { family: 1, alerts: 1 };                                  // one object each
   var KIND_LINK = { 'visit-change': '#visits', 'pizza-change': '#pizza', 'event-change': '#event' };   // where a notice about a request leads
   var SIDES = { cathy: 1, kitchen: 1 };
 
@@ -27,7 +27,7 @@
     return {
       v: 1, accounts: [], session: null,
       visits: [], orders: [], requests: [], messages: [], notices: [], reviews: [], photos: [], events: [], waitlist: [],
-      family: {}, alerts: {}, closedDays: [], badges: {}, flags: {}
+      family: {}, alerts: {}, closedDays: [], flags: {}
     };
   }
 
@@ -136,24 +136,27 @@
     }
 
     /* ---------------- the account ---------------- */
-    function seed(st) {
-      var n = now(), s = Data.sample(n.date, n.time);
+    function seed(st, eventKind) {   // eventKind: the answer to the sign-up question (see DemoData.eventKindOf); the event of that kind is part of the sample, 'none' has none
+      var n = now(), s = Data.sample(n.date, n.time, eventKind);
       Object.keys(s).forEach(function (k) { st[k] = clone(s[k]); });
       st.flags = { sampleNote: true };
     }
     function accountOf(st) { return st.session ? (st.accounts.filter(function (a) { return a.email === st.session; })[0] || null) : null; }
     var normEmail = function (e) { return trim(e).toLowerCase(); };
+    // createAccount({ name, email, eventKind }): eventKind is the answer to "Do you plan or manage a party, an event or a school trip?": 'none', 'party', 'school' or 'other'.
+    // The account keeps it (account.eventKind) and gets an event of that kind in its sample; with 'none' there is no event and the My event tab is not shown.
+    // Leaving eventKind out gives the ready-made sample (with the school trip). No argument at all: the sample account Alex.
     function createAccount(o) {
       if (o === undefined) o = Data.SAMPLE_ACCOUNT;   // no argument: the standard sample account (Alex)
-      var name = trim(o && o.name), email = normEmail(o && o.email);
+      var name = trim(o && o.name), email = normEmail(o && o.email), kind = Data.eventKindOf(o && o.eventKind);
       if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return null;
       return edit(function (st) {
         var have = st.accounts.filter(function (a) { return a.email === email; })[0];
         if (have) { st.session = have.email; return have; }
-        var acct = { id: 'a1', name: name, email: email, created: stampNow() };
+        var acct = { id: 'a1', name: name, email: email, created: stampNow(), eventKind: kind };
         st.accounts = [acct];          // one demo family per browser
         st.session = email;
-        seed(st);
+        seed(st, kind);
         st.family.name = name;
         return acct;
       });
@@ -170,7 +173,29 @@
     function signOut() { return edit(function (st) { st.session = null; return true; }); }
     function current() { return clone(accountOf(read())); }
     function hasAccount(email) { email = normEmail(email); return read().accounts.some(function (a) { return a.email === email; }); }
-    function seedSample() { return edit(function (st) { var keep = st.family && st.family.name; seed(st); if (keep) st.family.name = keep; return true; }); }
+    // The ready-made sample again (the tour starts from it): the family, the visits, the pizza order and the school trip. So it always has an event, whatever the account answered at sign-up.
+    function seedSample() {
+      return edit(function (st) {
+        var keep = st.family && st.family.name, acct = accountOf(st);
+        seed(st, 'school');
+        if (keep) st.family.name = keep;
+        if (acct) acct.eventKind = 'school';
+        return true;
+      });
+    }
+    // Adds the sample event of one kind ('party', 'school' or 'other') and the first message of Mrs. Cathy in its thread; the account keeps the kind. This is "I also plan an event" in
+    // My family: after it the My event tab shows. A family has one event here, so with an event already there (or any other kind) nothing is added and the answer is null.
+    function addEvent(kind) {
+      if (kind !== 'party' && kind !== 'school' && kind !== 'other') return null;
+      return edit(function (st) {
+        if (st.events.length) return undefined;
+        var n = now(), made = Data.sampleEvent(kind, n.date), rec = addRec(st, 'events', made.event), acct = accountOf(st);
+        rec.thread = 'event-' + rec.id;
+        addRec(st, 'messages', { thread: rec.thread, from: 'cathy', text: made.welcome, at: stampNow() });
+        if (acct) acct.eventKind = kind;
+        return rec;
+      });
+    }
     function reset() { io.remove(); cache = null; changed(); return true; }
 
     /* ---------------- lists and single objects ---------------- */
@@ -190,7 +215,7 @@
       if (!LISTS[coll]) return null;
       return edit(function (st) { return addRec(st, coll, obj); });
     }
-    // update(coll, id, patch) for a list; update('family', null, patch) or update('family', patch) for family, alerts or badges. The patch is merged into the record.
+    // update(coll, id, patch) for a list; update('family', null, patch) or update('family', patch) for family or alerts. The patch is merged into the record.
     function update(coll, id, patch) {
       if (OBJECTS[coll]) {
         if (patch === undefined) patch = id;
@@ -215,7 +240,6 @@
     }
     function getFamily() { return get('family'); }
     function setFamily(patch) { return update('family', patch); }
-    function setBadges(patch) { return update('badges', patch); }
     function flag(key) { return !!read().flags[key]; }
     function setFlag(key, on) { return edit(function (st) { st.flags[key] = !!on; return true; }); }
 
@@ -326,7 +350,7 @@
       read().messages.forEach(function (m) { if (!last[m.thread]) order.push(m.thread); last[m.thread] = m; });
       return clone(order.filter(function (t) { return last[t].from === 'family'; }).map(function (t) { return { thread: t, last: last[t] }; }));
     }
-    function notify(text, link, to) {
+    function postNotice(text, link, to) {   // a notice in the bell of one side (the family by default); not called notify: that is also the name of a browser property
       if (!trim(text)) return null;
       return edit(function (st) { return noteTo(st, to || 'family', trim(text), link); });
     }
@@ -373,7 +397,24 @@
       if (!kindOf(key)) return null;
       return edit(function (st) { st.alerts[key] = !!on; return true; });
     }
-    // -> { strawberries, blueberries, pumpkins, trees, spot, days: { 'YYYY-MM-DD': n } }: how many are waiting for each. One family here, so 0 or 1 for a switch.
+    // Where the family wants the farm's messages to go (pretend: nothing is sent): { text: bool, email: bool }. Both are on until the family changes it, and at least
+    // one always stays on. It is kept inside the family record (family.notifyBy), so a state saved before this existed still works, and Start over or a new sample sets
+    // both back on.
+    function notifyOf(st) {
+      var n = (st.family && st.family.notifyBy) || {}, text = n.text !== false, email = n.email !== false;
+      return text || email ? { text: text, email: email } : { text: true, email: true };   // a hand-edited "both off" is read as both on
+    }
+    function getNotify() { return notifyOf(read()); }
+    // setNotify({ text: bool, email: bool }) changes one or both and returns the new answer. It returns null, and saves nothing, when the change would turn both off,
+    // or when it names neither. A change that changes nothing is not saved (the subscribers hear nothing).
+    function setNotify(patch) {
+      if (!patch || typeof patch !== 'object' || (!('text' in patch) && !('email' in patch))) return null;
+      var now = notifyOf(read()), next = { text: 'text' in patch ? !!patch.text : now.text, email: 'email' in patch ? !!patch.email : now.email };
+      if (!next.text && !next.email) return null;
+      if (next.text === now.text && next.email === now.email) return next;
+      return edit(function (st) { st.family = st.family || {}; st.family.notifyBy = next; return next; });
+    }
+    // -> { spot, reservations, strawberries, blueberries, pumpkins, trees, days: { 'YYYY-MM-DD': n } }: how many are waiting for each. One family here, so 0 or 1 for a switch.
     function alertCounts() {
       var st = read(), out = { days: {} };
       Data.alertKinds.forEach(function (k) { out[k.key] = k.key === 'spot' ? 0 : (st.alerts[k.key] ? 1 : 0); });
@@ -445,12 +486,12 @@
     }
 
     return {
-      createAccount: createAccount, signIn: signIn, signOut: signOut, current: current, hasAccount: hasAccount, reset: reset, seedSample: seedSample,
-      list: list, get: get, add: add, update: update, remove: remove, getFamily: getFamily, setFamily: setFamily, setBadges: setBadges, flag: flag, setFlag: setFlag,
+      createAccount: createAccount, signIn: signIn, signOut: signOut, current: current, hasAccount: hasAccount, reset: reset, seedSample: seedSample, addEvent: addEvent,
+      list: list, get: get, add: add, update: update, remove: remove, getFamily: getFamily, setFamily: setFamily, flag: flag, setFlag: setFlag,
       ask: ask, reply: reply, respond: respond, cancel: cancel, openRequestFor: openRequestFor, requestsFor: requestsFor, openRequests: openRequests,
-      post: post, thread: thread, threadsWaiting: threadsWaiting, notify: notify, noticesFor: noticesFor, markRead: markRead, markAllRead: markAllRead,
+      post: post, thread: thread, threadsWaiting: threadsWaiting, postNotice: postNotice, noticesFor: noticesFor, markRead: markRead, markAllRead: markAllRead,
       closeDay: closeDay, openDay: openDay, isClosed: isClosed, openDays: openDays,
-      setAlert: setAlert, alertCounts: alertCounts, fireAlert: fireAlert,
+      setAlert: setAlert, alertCounts: alertCounts, fireAlert: fireAlert, getNotify: getNotify, setNotify: setNotify,
       submitReview: submitReview, decideReview: decideReview, submitPhoto: submitPhoto, decidePhoto: decidePhoto,
       subscribe: subscribe, now: now, today: function () { return now().date; }, snapshot: function () { return clone(read()); }, saveStatus: function () { return io.status(); }
     };
