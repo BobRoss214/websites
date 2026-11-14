@@ -731,6 +731,10 @@
       parts.soundIcon = h('span', { 'class': 'kit-sound-icon', 'aria-hidden': 'true' }, icon('mute'));
       parts.sound = h('button', { type: 'button', 'class': 'btn btn-white kit-sound', 'data-tour': 'kit-sound', 'data-kf': 'sound', 'aria-pressed': 'false', 'aria-describedby': 'kit-sound-note', onclick: toggleSound },
         parts.soundIcon, h('span', { 'class': 'kit-sound-word', text: 'Sound' }), parts.soundState);
+      parts.keysState = h('span', { 'class': 'kit-keys-state', 'aria-hidden': 'true', text: 'On' });   // (a screen reader hears the button's pressed state, not this word)
+      parts.keysBtn = h('button', { type: 'button', 'class': 'btn btn-white kit-keytoggle', 'data-kf': 'keys', 'aria-pressed': 'true', 'aria-describedby': 'kit-keys-note', onclick: toggleKeys },
+        h('span', { 'class': 'kit-keytoggle-word', text: 'Keys' }), parts.keysState);
+      parts.keysNote = h('span', { 'class': 'kit-keysnote', id: 'kit-keys-note' });
       parts.title = hasH1 ? null : h('h1', { 'class': 'demo-h1 kit-title', text: 'Pizza kitchen' });
       parts.top = h('header', { 'class': 'kit-top' },
         h('ul', { 'class': 'kit-tally', 'data-tour': 'kit-counters', 'aria-label': 'Tickets' }, parts.tWait.el, parts.tDone.el, parts.tLate.el),
@@ -739,10 +743,6 @@
       parts.soundNote = h('p', { 'class': 'kit-soundnote', id: 'kit-sound-note' });
       parts.live = h('p', { 'class': 'sr-only', role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' });
       parts.strip = live ? live.strip() : null;
-      parts.keysState = h('span', { 'class': 'kit-keys-state', 'aria-hidden': 'true', text: 'On' });   // (a screen reader hears the button's pressed state, not this word)
-      parts.keysBtn = h('button', { type: 'button', 'class': 'btn btn-white kit-keytoggle', 'data-kf': 'keys', 'aria-pressed': 'true', 'aria-describedby': 'kit-keys-note', onclick: toggleKeys },
-        h('span', { 'class': 'kit-keytoggle-word', text: 'Keys' }), parts.keysState);
-      parts.keysNote = h('span', { 'class': 'kit-keysnote', id: 'kit-keys-note' });
       parts.settings = h('div', { 'class': 'kit-settings' },
         live ? h('div', { 'class': 'kit-set-group', role: 'group', 'aria-label': 'Answer-by times' },
           h('span', { 'class': 'kit-settings-title', text: 'Answer by' }), stepper('order', 'New order'), stepper('change', 'Change')) : null,
