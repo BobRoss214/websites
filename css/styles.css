@@ -350,7 +350,9 @@ svg.layer{bottom:0;height:64%;overflow:visible}
 .season-copy h3{font-size:clamp(1.7rem,3vw,2.3rem);margin:.15em 0 .4em}
 .season-copy p{font-weight:600;color:var(--ink-soft)}
 .season-when{display:inline-flex;align-items:center;gap:.45em;background:var(--cream);border:2.5px solid var(--ink);border-radius:999px;padding:.35em .9em;font:600 .92rem/1.2 var(--display)!important;color:var(--ink)!important;margin:0!important}
-.season-when [data-tree-dates]{display:contents;white-space:nowrap}   /* Winter: the pill is a flex box, and a box inside it (the dates) would be an item of its own, wrapping alone in a narrow column with its brackets left behind. display:contents takes that box away, so the words before it, the dates and the closing bracket are ONE run of text; nowrap keeps the dates (and the brackets that touch them) in one piece: they move to the next line together. */
+/* Winter pill: the sentence has inner spans (the dates), and every child of a flex box becomes its own item, so the winter pill is ordinary running text instead: the icon sits in the line, the words wrap at spaces, and the dates (class nb) keep their month and day together. */
+#panel-winter .season-when{display:inline-block;text-align:left}
+#panel-winter .season-when .ico{display:inline-block;vertical-align:-.22em;margin-right:.45em}
 .season-copy .ticks{margin:1em 0 1.4em}
 
 /* ---------- Eat & drink ---------- */

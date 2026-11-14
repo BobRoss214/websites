@@ -32,6 +32,12 @@ Everything below is what was true when it stopped. Her own words for every reque
   language polish (e-mail in one piece, no-break dates/units, vi tag, Hindi month names); tests: old winter dates moved, exact counts back; the owner-calendar sanity floors follow the real counts (12 dates, 9 rows).
 - `patches/optional/winter-hide-tomatoes.patch` (decision d93) is READY BUT NOT APPLIED: it hides the all-year tomato parts (section, menu link, FAQ, calendar row, Store card, hero line) in winter. It is her call.
 
+## 3a. Known red checks on 14 Nov (pushed on purpose, the builder asked for the latest version; each is explained)
+- `tests/slow-phone.test.mjs`: index.html is 432 KB (limit 420) and pumpkin-patch 313 KB (limit 300). Cause: the growth of the site since 3 Nov. Safe fix: font subset (-27.6 KB, `SPEED_BUDGET_OPTIONS.md`), needs her OK.
+- `tests/hero.test.mjs`, check "winter, window 1440 x 900: ... at least 13 of the 16 trees can be seen": the winter top bar is now 3 lines at 1440 (the live "Next up / In season" line + the 2-line winter sentence), so the hero (788 px high)
+  ends 59 px below a 900 px window and the bottom row of trees is cut (5 trees at 38 %). Visitors just scroll (the 1440 x 780 case passes). Fixes to consider: shorter winter bar words (needs her OK: it is her wording), or make the hero height follow the real bar height.
+  Do NOT loosen the check; decide with her.
+
 ## 3. Not done / open, in the order I would do it
 1. `tests/shop-pop.test.mjs`: 3 checks failed under load: "every other block of the page is hidden while open" (one body DIV without aria-hidden/inert; the pop-up code skips the "verbs" box on purpose, js/shop-pop-box.js ~line 103,
    the test does not), "page as before after it shuts", then a null-element error. Run it alone on a quiet machine on integ, then decide: fix the code (the dimmed page must not be reachable by a screen reader) or the test (with a reason).
