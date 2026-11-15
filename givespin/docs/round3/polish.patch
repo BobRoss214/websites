@@ -1,0 +1,1146 @@
+diff -ruN base/givespin/README.md work/givespin/README.md
+--- base/givespin/README.md	2026-11-04 06:52:31.006596186 +0000
++++ work/givespin/README.md	2026-11-04 19:52:35.352412140 +0000
+@@ -131,7 +131,7 @@
+ payment method (demo credit or a preview saved card). You can also **give directly** to any charity, no luck
+ involved.
+ 
+-**Filters.** Causes (30, in six groups), who they help, where they work, how they help and when they were founded.
++**Filters.** Causes (30, in six groups), who they help, where they work, how they help (seven ways, two of them about protecting: "Protects land & wildlife" and "Protects people", the second for child safety, trafficking, landmine clearance and protecting people hit by conflict) and when they were founded.
+ Choices combine as OR within a group and AND between groups, with a live count. Filter values that fewer than three
+ charities have are hidden so a filter cannot just empty the pool. There are two Filters dialogs and they do different jobs:
+ 
+@@ -208,7 +208,7 @@
+ Everything here is made up.**, plus a made-up title, favourite cause, favourite game, habit and "pretend streak" worked out from the name alone. The rules are in `js/profile.js`, the
+ page in `js/ui/profile.js` and `css/profile.css`.
+ 
+-**Leaderboards (`#boards`).** Crews, charities and players ranked, for **This week** and **All time**, from the Leaderboards link in the side menu (and a "This week's leaders" block on the lobby, the top three crews, in demo mode). Three tabs (a real tablist: arrow keys, Home and End) and a This week / All time toggle; each list is a real table with the top ten, then the visitor's own row at its real rank when it is further down ("You are #38 of 61"). **Everything except the visitor's own numbers is simulated and says so**: a note at the top, "simulated" in every table's label, a BOT pill beside every bot and crew, and the same rank chips as everywhere else. There is no server, so every number is a pure function of the clock (`js/boards.js`, unit-tested): the week is the ISO week in local time (Monday to Sunday) cut into 672 slots of about 15 minutes; inside a slot the numbers are fixed, through the week they only grow (each one is its final number for the week times a shared busy-evening curve raised to a small seeded power, so a lead can change hands), and on Monday a new week starts small. A bot's all-time total is one fixed made-up amount that sits inside the rank and level its chip shows (the Rank 3 Level 5 bot really has given an amount that is Rank 3 Level 5), and its week is a small share of that. **Crews**: a crew's total is exactly what its seven bot members gave (the same numbers as on the Players tab) plus the visitor's own gifts if they have joined it; each crew has a **weekly goal in dollars** (a bar and the words "$X of $Y", never under $250, worked out from what its bots will have given by Sunday), and a visitor with no crew can join one from the table (the same call as on the Crews page; leaving is on the Crews page). **Share my crew** draws a picture of the crew's week (name, rank, total, goal bar; a gold frame when the goal is reached) in the same style as the share cards, with Download PNG, Share and Copy; it carries no name of yours. **Charities** are ranked by times backed (a gift landing on a charity, in any game): a made-up count from a fixed popularity plus the times the visitor's own gifts landed on it, and the page says it is not a ranking of how good a charity is or an endorsement. The visitor's numbers come from the saved history (this week's rounds; the store keeps the latest 60, and the page says when that may be short) and the saved totals: nothing is added to the save, nothing is stored. The page is demo-friendly in real-donation mode too (it says the visitor's numbers then count what was sent to checkout) but the lobby block is demo-only, like the ticker. Help has an answer, "What are the leaderboards?" (`#help-boards`).
++**Leaderboards (`#boards`).** Crews, charities and players ranked, for **This week** and **All time**, from the Leaderboards link in the side menu (and a "This week's leaders" block on the lobby, the top three crews, in demo mode). Three tabs (a real tablist: arrow keys, Home and End) and a This week / All time toggle; each list is a real table with the top ten, then the visitor's own row at its real rank when it is further down ("You are #38 of 61"); the Players tab has a **Show all 61** button above its list (a real button with `aria-expanded`, it does not move when pressed) for the rest, and a new visit starts with the top ten again. **Everything except the visitor's own numbers is simulated and says so**: a note at the top, "simulated" in every table's label, a BOT pill beside every bot and crew, and the same rank chips as everywhere else. There is no server, so every number is a pure function of the clock (`js/boards.js`, unit-tested): the week is the ISO week in local time (Monday to Sunday) cut into 672 slots of about 15 minutes; inside a slot the numbers are fixed, through the week they only grow (each one is its final number for the week times a shared busy-evening curve raised to a small seeded power, so a lead can change hands), and on Monday a new week starts small. A bot's all-time total is one fixed made-up amount that sits inside the rank and level its chip shows (the Rank 3 Level 5 bot really has given an amount that is Rank 3 Level 5), and its week is a small share of that. **Crews**: a crew's total is exactly what its seven bot members gave (the same numbers as on the Players tab) plus the visitor's own gifts if they have joined it; each crew has a **weekly goal in dollars** (a bar and the words "$X of $Y", never under $250, worked out from what its bots will have given by Sunday), and a visitor with no crew can join one from the table (the same call as on the Crews page; leaving is on the Crews page). **Share my crew** draws a picture of the crew's week (name, rank, total, goal bar; a gold frame when the goal is reached) in the same style as the share cards, with Download PNG, Share and Copy; it carries no name of yours. **Charities** are ranked by times backed (a gift landing on a charity, in any game): a made-up count from a fixed popularity plus the times the visitor's own gifts landed on it, and the page says it is not a ranking of how good a charity is or an endorsement. The visitor's numbers come from the saved history (this week's rounds; the store keeps the latest 60, and the page says when that may be short) and the saved totals: nothing is added to the save, nothing is stored. The page is demo-friendly in real-donation mode too (it says the visitor's numbers then count what was sent to checkout) but the lobby block is demo-only, like the ticker. Help has an answer, "What are the leaderboards?" (`#help-boards`).
+ 
+ **Leagues, crews and cards.** All play, no cash value, and everything with other people is simulated and labelled.
+ - **Leagues.** A weekly XP table against 14 simulated rivals (the same table for everyone that week), with promotion
+@@ -243,7 +243,7 @@
+ live-table and daily-wheel quests are left out where those do not exist). "Give to 3 different charities today", "Play a live table", "Verify one of your rounds", "Back the charity of the week", "Keep a 3-day giving streak
+ going" and so on. **Progress is worked out from the saved rounds, the streak, the cards, the daily wheel and the Charity Cup**, so an old save works and nothing needs "events"; the one thing the save only keeps as a total
+ (rounds verified) is turned into per-day counts by watching the total go up, and because the store keeps only the latest 60 rounds a quest's progress never goes down within its day or week. Days and weeks are the
+-visitor's local ones (Monday to Sunday). Finishing a quest toasts once (after the receipt is closed) and a **Claim** button adds season points: 20 for a daily quest, 60 for a weekly one. The **season** is the calendar
++visitor's local ones (Monday to Sunday). A quest that is still open is a link to where it is done (the lobby, Slots or Races, the Charity of the week page, Live tables, Fair Play, the Charities page, Your cards, Leagues; the table is `LINKS` in `js/quests.js`, "Spin the daily bonus wheel" opens the wheel), and a finished one is plain words. While the page is open one timer runs to the next local midnight and draws it again (the new day's quests, the "Ends..." line, the badge); it is cleared when the page is left. Finishing a quest toasts once (after the receipt is closed) and a **Claim** button adds season points: 20 for a daily quest, 60 for a weekly one. The **season** is the calendar
+ month (a name for each month, and "Ends in 12 days" counted on calendar days so a clock change never shifts it) with a **track of 30 tiers, 90 points each**. Points also come from rounds played, 10 each and only the first 10
+ of a day, whatever the size of the gift: **points never come from money**. Every tier gives one free reward: a little bonus XP (12 tiers, 875 XP in all, paid with `store.grantXp`, the call the daily wheel and the Charity Cup use, so
+ every XP number on the site includes it), six emblem frames and four profile titles (added to the profile page's own lists), four card backs and four confetti styles. A cosmetic the visitor already has pays 25 XP instead (the same track comes
+@@ -500,7 +500,7 @@
+ node --test givespin/tests/*.test.js
+ ```
+ 
+-398 unit tests: daily and weekly quests (the picks from the date alone, progress from the saved rounds on the right local day, the season's end text and the 30 tiers' arithmetic, the head start, claiming once, the cosmetics store and its damaged-storage fallbacks, run in several time zones), the leaderboards (the ISO week and its 15-minute slots, numbers that only grow, your own row at its real place, crew goals, charities by times backed), Stream Mode's simulated chat vote (seeded and repeatable, shares that add up to 100, the leader), the overlay link and the keyboard shortcuts, the message format of the live protocol (every type, who may send what, limits, odd input that must never throw), the local transport (order, `seq`, a seeded clock, no spoofing), the real live engine turned into messages that pass the commit and reveal check, the waitlist rules, the manifest and icons, the service worker's file list against `index.html` and what it does with each kind of request, when it may be registered, the reminder schedule against the real events, the settings file and money step being unchanged, the Make it real page against its checklist, and the wording rules for all of it, the brand voice in the source (no "cash out", no "Give responsibly", no visitor-facing "jackpot", the shared loading lines and house-edge strip, the style guide's shape), money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
++402 unit tests: daily and weekly quests (the picks from the date alone, progress from the saved rounds on the right local day, the season's end text and the 30 tiers' arithmetic, the head start, claiming once, the cosmetics store and its damaged-storage fallbacks, run in several time zones), the leaderboards (the ISO week and its 15-minute slots, numbers that only grow, your own row at its real place, crew goals, charities by times backed), Stream Mode's simulated chat vote (seeded and repeatable, shares that add up to 100, the leader), the overlay link and the keyboard shortcuts, the message format of the live protocol (every type, who may send what, limits, odd input that must never throw), the local transport (order, `seq`, a seeded clock, no spoofing), the real live engine turned into messages that pass the commit and reveal check, the waitlist rules, the manifest and icons, the service worker's file list against `index.html` and what it does with each kind of request, when it may be registered, the reminder schedule against the real events, the settings file and money step being unchanged, the Make it real page against its checklist, and the wording rules for all of it, the brand voice in the source (no "cash out", no "Give responsibly", no visitor-facing "jackpot", the shared loading lines and house-edge strip, the style guide's shape), money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
+ within a group, AND between), XP, levels, ranks (every boundary from $999.99 to $1,000,000.00 and beyond, a cent either
+ side, the ten levels inside each rank, the top rank, the standing never going down, labels, the simulated players' spread
+ and what a round reports about a rank-up), streaks, badges, boards of any size (fill spots evenly, always include the
+@@ -527,7 +527,7 @@
+ live (redirect) mode including rejecting non-https links, a phone-sized viewport, loading from `file://`, and a check
+ that the site never contacts another host and the console stays clean. Set `SHOTS=/some/dir` to save screenshots,
+ and `AXE=/path/to/axe.min.js` to add an axe-core accessibility scan of every page and dialog.
+-`ONLY=13zs,19z` runs just those sections. The checks for the newer features live in their own files, `tests/sections/*.mjs` (run in file-name order, each handed the helpers of `tests/e2e.mjs`), so a feature's tests never have to be edited into the big file. The axe-core version the checks were run with is 4.10.3 (a newer one, 4.14, also flags the games' tile labels and the side card as "label in name" mismatches). The files are `22-voice` (brand voice), `23-ticker` (ticker and charity of the week), `24-share` (share cards and the fair-play checker), `25-profile`, `26-quests`, `27-boards`, `28-stream`, `29-app` (Make it real, transports, install), `30-review` (regression checks for what the independent review found, plus guards for damaged saves and for pages that are revisited) and `31-walk` (phone, tablet and big-screen layout regressions: Stream Mode on narrow windows, focus not hidden under the bars, the lobby blocks under the game tiles).
++`ONLY=13zs,19z` runs just those sections. The checks for the newer features live in their own files, `tests/sections/*.mjs` (run in file-name order, each handed the helpers of `tests/e2e.mjs`), so a feature's tests never have to be edited into the big file. The axe-core version the checks were run with is 4.10.3 (a newer one, 4.14, also flags the games' tile labels and the side card as "label in name" mismatches). The files are `22-voice` (brand voice), `23-ticker` (ticker and charity of the week), `24-share` (share cards and the fair-play checker), `25-profile`, `26-quests`, `27-boards`, `28-stream`, `29-app` (Make it real, transports, install), `30-review` (regression checks for what the independent review found, plus guards for damaged saves and for pages that are revisited) and `31-walk` (phone, tablet and big-screen layout regressions: Stream Mode on narrow windows, focus not hidden under the bars, the lobby blocks under the game tiles) and `35-polish` (the "Protects people" tag, quest links, the Quests page at midnight with a fake clock, the account dialog's name, the Back a charity chip, "Show all 61").
+ 
+ Append `?fast=1` to the URL to squeeze every animation (the tests use it; it is handy for quick demos too).
+ 
+diff -ruN base/givespin/css/boards.css work/givespin/css/boards.css
+--- base/givespin/css/boards.css	2026-11-04 02:56:04.886556775 +0000
++++ work/givespin/css/boards.css	2026-11-04 19:42:57.206378727 +0000
+@@ -20,6 +20,8 @@
+ .bd__lede, .bd__you { max-width: 78ch; color: var(--muted); font-size: 0.88rem; line-height: 1.5; margin-bottom: 10px; }
+ .bd__you { color: var(--text); }
+ .bd__you b, .bd__lede b { color: #fff; }
++.bd__more { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 2px 0 6px; color: var(--muted); font-size: 0.86rem; }
++.bd__more .btn { margin: 0; }
+ .bd__mine { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 12px 14px; margin-bottom: 12px; border-radius: var(--r); background: rgba(34, 240, 122, 0.08); border: 1px solid rgba(34, 240, 122, 0.4); }
+ .bd__mine p { color: var(--text); font-size: 0.9rem; line-height: 1.5; min-width: 0; flex: 1 1 260px; }
+ .bd__mine a { color: #7dffb0; }
+diff -ruN base/givespin/css/quests.css work/givespin/css/quests.css
+--- base/givespin/css/quests.css	2026-11-04 02:48:44.847855026 +0000
++++ work/givespin/css/quests.css	2026-11-04 19:41:02.903031135 +0000
+@@ -100,6 +100,11 @@
+ .qcard__main { display: grid; gap: 7px; min-width: 0; }
+ .qcard__t { font: 700 0.95rem/1.3 var(--f-display); overflow-wrap: anywhere; }
+ .qcard__n { font-size: 0.8rem; color: var(--muted); }
++/* a quest that is still open links to where it is done: the words stay the words, underlined, with a small arrow */
++.qcard__go { color: inherit; text-decoration: underline; text-decoration-color: var(--green); text-decoration-thickness: 2px; text-underline-offset: 4px; }
++.qcard__go .ico { width: 0.9em; height: 0.9em; margin-left: 0.3em; vertical-align: -0.1em; color: var(--green); }
++.qcard__go:hover { color: #fff; text-decoration-color: #fff; }
++.qcard__go:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; border-radius: 3px; }
+ .qcard__act { display: grid; justify-items: end; }
+ .qcard.is-done { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 7%, var(--bg-2)); }
+ .qcard.is-claimed .qcard__t { color: var(--muted); }
+diff -ruN base/givespin/docs/next-steps.md work/givespin/docs/next-steps.md
+--- base/givespin/docs/next-steps.md	2026-11-04 06:28:37.971584986 +0000
++++ work/givespin/docs/next-steps.md	2026-11-04 19:52:12.708092796 +0000
+@@ -46,8 +46,6 @@
+ - Bot names in a live table's feed are each a tab stop (up to 24 more); a roving tabindex (`ui.rove`) would fix it.
+ - Link targets under 24 px tall: the charity-of-the-week link (21 px at 768 px and wider), the Live tables' charity links, the ticker's Pause button (26 px).
+ - The receipt dialog body can pan sideways by 8 px at 360 and 390 wide, and 62 px at 320 (it did before this round, a little worse).
+-- Roster data: seven charities (NSPCC, Daniel Morcombe Foundation, Missing & Exploited Kids, STOP THE TRAFFIK, HALO Trust, IRC UK, ...) carry the how-tag `protection`, whose facet name reads "Protects land & wildlife".
+-- Back a charity chip: after typing a board size, the first click on the chip's x does nothing (the field blurs and the chip is redrawn). It was in the base.
+ - The crew share card repeats about 140 lines of drawing code from `js/ui/sharecard.js` (`js/ui/boards.js`); export those helpers once and delete the copy.
+ - The favourites on the profile and the visitor's week on the boards come from the 60 rounds the store keeps; a longer record would need a new field in the save.
+ - A live table result has no Share button; the Fair Play page has no "Try the checker" button (`ui.fairshow.openChecker()` exists).
+diff -ruN base/givespin/js/data.js work/givespin/js/data.js
+--- base/givespin/js/data.js	2026-11-03 22:07:10.577463911 +0000
++++ work/givespin/js/data.js	2026-11-04 19:39:23.549617236 +0000
+@@ -274,7 +274,8 @@
+       { id: 'advocacy', name: 'Advocacy & policy', icon: 'megaphone' },
+       { id: 'training', name: 'Education & training', icon: 'graduation-cap' },
+       { id: 'funding', name: 'Funds other groups', icon: 'hand-coins' },
+-      { id: 'protection', name: 'Protects land & wildlife', icon: 'shield' }
++      { id: 'protection', name: 'Protects land & wildlife', icon: 'shield' },
++      { id: 'safeguard', name: 'Protects people', icon: 'shield-half' }   // (child safety, trafficking, landmines, refugees: these used to share 'protection', whose name is about land and wildlife)
+     ],
+     era: [
+       { id: 'e1', name: 'Before 1950', icon: 'hourglass', test: function (y) { return y < 1950; } },
+@@ -394,7 +395,7 @@
+     {"id":"creative-commons","name":"Creative Commons","short":"Creative Commons","url":"creativecommons.org","causes":["knowledge","arts"],"serves":[],"where":["global"],"how":["advocacy"],"founded":null,"hq":"","blurb":"Provides free licenses and tools that let creators share their work and build on others'.","about":"A global nonprofit whose licenses make it simple to share creative work and knowledge legally."},
+     {"id":"crohns-colitis","name":"Crohn's & Colitis Foundation","short":"Crohn's & Colitis","url":"crohnscolitisfoundation.org","causes":["chronic","health"],"serves":["patients","children"],"where":["us"],"how":["research","direct"],"founded":1967,"hq":"New York, NY","blurb":"Funds research to find cures for Crohn's disease and ulcerative colitis and supports people affected by them.","about":"The Crohn's & Colitis Foundation launched in 1967 as the National Foundation for Ileitis and Colitis. It is a volunteer-fueled nonprofit that funds research into inflammatory bowel disease and works to improve quality of life for children and adults."},
+     {"id":"cff","name":"Cystic Fibrosis Foundation","short":"CF Foundation","url":"cff.org","causes":["chronic","health"],"serves":["patients","children","families"],"where":["us"],"how":["research","direct","funding"],"founded":1955,"hq":"Bethesda, MD","blurb":"Funds research and care to cure cystic fibrosis and help people with the disease lead full lives.","about":"The Cystic Fibrosis Foundation, established in 1955, funds research and drug development, promotes individualized treatment and accredits specialized CF care centers across the United States."},
+-    {"id":"daniel-morcombe-foundation","name":"Daniel Morcombe Foundation Inc","short":"Daniel Morcombe Foundation","url":"danielmorcombe.com.au","causes":["safety","kids"],"serves":["children","families"],"where":["australia"],"how":["protection"],"founded":null,"hq":"Palmwoods, QLD","blurb":"Registered Australian charity focused on the safety of children and young people, based in Palmwoods, Queensland.","about":"A registered Australian charity based in Palmwoods, QLD, on the ACNC register since 2012. Its registered purposes include advancing social or public welfare and advancing the security or safety of the Australian public; its listed beneficiaries include children and families."},
++    {"id":"daniel-morcombe-foundation","name":"Daniel Morcombe Foundation Inc","short":"Daniel Morcombe Foundation","url":"danielmorcombe.com.au","causes":["safety","kids"],"serves":["children","families"],"where":["australia"],"how":["safeguard"],"founded":null,"hq":"Palmwoods, QLD","blurb":"Registered Australian charity focused on the safety of children and young people, based in Palmwoods, Queensland.","about":"A registered Australian charity based in Palmwoods, QLD, on the ACNC register since 2012. Its registered purposes include advancing social or public welfare and advancing the security or safety of the Australian public; its listed beneficiaries include children and families."},
+     {"id":"dav","name":"DAV (Disabled American Veterans)","short":"DAV","url":"dav.org","causes":["veterans","disability"],"serves":["veterans","disability","families"],"where":["us"],"how":["direct","advocacy"],"founded":1920,"hq":"Cold Spring, KY","blurb":"Supports disabled veterans and their families with benefits assistance, advocacy and empowerment programs.","about":"DAV was founded in 1920 by Judge Robert S. Marx in Cincinnati. It works to make medical care, employment, education and other earned benefits accessible to disabled veterans and their families."},
+     {"id":"dave-thomas-foundation","name":"Dave Thomas Foundation for Adoption","short":"Dave Thomas Foundation","url":"davethomasfoundation.org","causes":["kids"],"serves":["children","families"],"where":["us"],"how":["funding","advocacy"],"founded":1992,"hq":"Dublin, OH","blurb":"Funds recruiters at adoption agencies to find permanent families for children waiting in foster care in the United States and Canada.","about":"Created in 1992 by Wendy's founder Dave Thomas, who was adopted himself. Its Wendy's Wonderful Kids program pays for child-focused recruiters, and the foundation is based in Dublin, Ohio."},
+     {"id":"dc-central-kitchen","name":"DC Central Kitchen","short":"DC Central Kitchen","url":"dccentralkitchen.org","causes":["hunger","poverty"],"serves":[],"where":["us"],"how":["direct","training"],"founded":1989,"hq":"Washington, DC","blurb":"Nonprofit and social enterprise that fights hunger and poverty by providing culinary job training and preparing meals made from donated and purchased food.","about":"Founded in 1989 by Robert Egger, it moved into a new headquarters, the Michael R. Klein Center for Jobs and Justice, in Washington, DC in 2023."},
+@@ -479,7 +480,7 @@
+     {"id":"ifaw","name":"International Fund for Animal Welfare (IFAW)","short":"IFAW","url":"ifaw.org","causes":["animals","wildlife"],"serves":[],"where":["uk","global"],"how":["direct","advocacy","protection"],"founded":null,"hq":"Southwark, United Kingdom","blurb":"Rescues and protects animals around the world, and campaigns against animal cruelty and for the protection of wildlife and habitats.","about":"Registered charity in England and Wales since 1993, based in Southwark. The register lists overseas activity in countries including Canada, China, India, Kenya, South Africa and the United States."},
+     {"id":"imc","name":"International Medical Corps","short":"Intl Medical Corps","url":"internationalmedicalcorps.org","causes":["health","disaster","global-health"],"serves":["patients","refugees"],"where":["global"],"how":["direct","training"],"founded":1984,"hq":"Los Angeles, CA","blurb":"Delivers emergency medical relief and training in disasters, conflicts and underserved communities.","about":"International Medical Corps was founded in 1984 by Dr. Robert Simon to provide medical services and training inside war-torn Afghanistan. It has since worked in more than 85 countries, helping people in disaster and conflict settings."},
+     {"id":"irc","name":"International Rescue Committee","short":"Intl Rescue Committee","url":"rescue.org","causes":["refugees","disaster","health"],"serves":["refugees","families","children"],"where":["global","us"],"how":["direct","advocacy"],"founded":1933,"hq":"New York, NY","blurb":"Emergency aid and long-term help for people uprooted by conflict and disaster, and refugee resettlement in the U.S.","about":"The IRC was founded in 1933 at the call of Albert Einstein. It works in more than 40 countries and in U.S. cities where it resettles refugees, providing health care, education and support so people can recover and rebuild."},
+-    {"id":"irc-uk","name":"International Rescue Committee, UK","short":"IRC UK","url":"rescue-uk.org","causes":["refugees","disaster","justice"],"serves":["refugees"],"where":["uk","global","africa","asia","mideast"],"how":["direct","advocacy","protection"],"founded":null,"hq":"City of London, United Kingdom","blurb":"British charity in the International Rescue Committee network, providing emergency relief, human rights protection, resettlement help and advocacy for people hit by conflict and disaster.","about":"A registered charity in England and Wales, on the register since 1997. Its address on the register is in City of London. It was established in 1997 as part of the IRC network; the register lists overseas activity in many countries, including Afghanistan, Bangladesh and Iraq."},
++    {"id":"irc-uk","name":"International Rescue Committee, UK","short":"IRC UK","url":"rescue-uk.org","causes":["refugees","disaster","justice"],"serves":["refugees"],"where":["uk","global","africa","asia","mideast"],"how":["direct","advocacy","safeguard"],"founded":null,"hq":"City of London, United Kingdom","blurb":"British charity in the International Rescue Committee network, providing emergency relief, human rights protection, resettlement help and advocacy for people hit by conflict and disaster.","about":"A registered charity in England and Wales, on the register since 1997. Its address on the register is in City of London. It was established in 1997 as part of the IRC network; the register lists overseas activity in many countries, including Afghanistan, Bangladesh and Iraq."},
+     {"id":"internet-archive","name":"Internet Archive","short":"Internet Archive","url":"archive.org","causes":["knowledge","education"],"serves":[],"where":["global"],"how":["direct"],"founded":null,"hq":"San Francisco, CA","blurb":"A nonprofit digital library with free access to millions of books, websites, media and more.","about":"Preserves and provides free public access to web pages, books, audio, video and software. Its own website gives based in San Francisco, CA."},
+     {"id":"jane-goodall","name":"Jane Goodall Institute","short":"Jane Goodall Inst.","url":"janegoodall.org","causes":["wildlife","planet"],"serves":[],"where":["global","africa"],"how":["protection","research","training"],"founded":1977,"hq":"Arlington, VA","blurb":"Protects chimpanzees and their habitats while empowering the communities that live alongside them.","about":"Founded in 1977, the Jane Goodall Institute advances the vision of primatologist Dr. Jane Goodall through community-led conservation, chimpanzee protection, and programs that train young people as conservation leaders."},
+     {"id":"jesuit-social-services","name":"Jesuit Social Services Limited","short":"Jesuit Social Services","url":"jss.org.au","causes":["community","justice"],"serves":["teens","homeless"],"where":["australia"],"how":["direct","advocacy"],"founded":1977,"foundedFrom":"register","hq":"Richmond, VIC","faith":true,"blurb":"Registered Australian charity advancing social and public welfare, working with people experiencing disadvantage, including young people, families and people leaving prison.","about":"Registered Australian charity on the ACNC register (registered 2012), based in Richmond, VIC, with an established year of 1977 on the register. Its listed purposes are advancing social or public welfare; beneficiary groups include young people, families, people at risk of homelessness and people before or after release from prison."},
+@@ -540,7 +541,7 @@
+     {"id":"national-4-h-council","name":"National 4-H Council","short":"National 4-H Council","url":"4-h.org","causes":["kids","education"],"serves":["children","teens"],"where":["us"],"how":["direct","funding"],"founded":1976,"hq":"","blurb":"Private-sector nonprofit that supports the 4-H youth development program in the United States.","about":"Private-sector nonprofit that supports the 4-H youth development program in the United States. Its own website says it was founded in 1976."},
+     {"id":"audubon","name":"National Audubon Society","short":"Audubon","url":"audubon.org","causes":["wildlife","planet"],"serves":[],"where":["us"],"how":["protection","advocacy"],"founded":1905,"hq":"","blurb":"Protects birds and the places they need, today and tomorrow.","about":"A conservation organization with chapters and centers across the country that protects bird habitats through science, advocacy and education. Its own website says it was founded in 1905."},
+     {"id":"national-casa","name":"National CASA/GAL Association for Children","short":"CASA for Children","url":"nationalcasagal.org","causes":["kids","safety","justice"],"serves":["children"],"where":["us"],"how":["advocacy","direct"],"founded":1977,"hq":"Seattle, WA","blurb":"Supports trained volunteers who speak up in court for children who have experienced abuse or neglect.","about":"The CASA idea began in 1977 when a Seattle judge used trained community volunteers to speak for the best interests of children in court. The national association supports state and local programs in 48 states and Washington, DC."},
+-    {"id":"ncmec","name":"National Center for Missing & Exploited Children","short":"Missing & Exploited Kids","url":"missingkids.org","causes":["safety","kids"],"serves":["children","families"],"where":["us"],"how":["direct","protection","training"],"founded":1984,"hq":"Alexandria, VA","blurb":"A private nonprofit created to help find missing children and to reduce child sexual exploitation in the United States.","about":"A private nonprofit established in 1984 with support from the U.S. Congress, prompted by high-profile abductions such as that of Adam Walsh. It is headquartered in Alexandria, Virginia."},
++    {"id":"ncmec","name":"National Center for Missing & Exploited Children","short":"Missing & Exploited Kids","url":"missingkids.org","causes":["safety","kids"],"serves":["children","families"],"where":["us"],"how":["direct","safeguard","training"],"founded":1984,"hq":"Alexandria, VA","blurb":"A private nonprofit created to help find missing children and to reduce child sexual exploitation in the United States.","about":"A private nonprofit established in 1984 with support from the U.S. Congress, prompted by high-profile abductions such as that of Adam Walsh. It is headquartered in Alexandria, Virginia."},
+     {"id":"svdp-usa","name":"National Council of the United States, Society of St. Vincent de Paul","short":"St. Vincent de Paul USA","url":"ssvpusa.org","causes":["poverty","housing","hunger"],"serves":["families","homeless"],"where":["us"],"how":["direct"],"founded":1845,"hq":"Maryland Heights, MO","faith":true,"blurb":"Catholic lay society whose local conferences run food pantries, thrift stores, rent and utility help and homelessness prevention across the United States.","about":"The US society was established on 20 November 1845 in St. Louis, Missouri, and its national council is based in Maryland Heights, Missouri. Its work covers homelessness prevention, rent and utility help, food pantries and disaster recovery."},
+     {"id":"ncoa","name":"National Council on Aging","short":"Council on Aging","url":"ncoa.org","causes":["seniors","poverty","health"],"serves":["seniors"],"where":["us"],"how":["advocacy","training"],"founded":1950,"hq":"Arlington, VA","blurb":"Helps older adults age well with health and financial security through resources and advocacy.","about":"Founded in 1950, NCOA was the first charitable organization in the United States dedicated to advocating for older Americans. It works with national and local partners on resources, best practices and policy."},
+     {"id":"national-domestic-violence-hotline","name":"National Domestic Violence Hotline","short":"Domestic Violence Hotline","url":"thehotline.org","causes":["safety","women"],"serves":["women","families"],"where":["us"],"how":["direct"],"founded":1996,"hq":"Austin, TX","blurb":"Runs the 24-hour national domestic violence hotline by phone, chat and text, offering support, resources and safety planning.","about":"Took its first call on 21 February 1996 and is headquartered in Austin, Texas. It serves the United States and its territories."},
+@@ -556,7 +557,7 @@
+     {"id":"nextsense","name":"NextSense","short":"NextSense","url":"nextsense.org.au","causes":["disability","kids","health"],"serves":["children","disability"],"where":["australia"],"how":["direct"],"founded":1860,"hq":"Macquarie Park, NSW","blurb":"Registered Australian charity advancing health, with a focus on early childhood and on people with disability, including people with hearing or vision loss.","about":"Registered with the ACNC in 2012 and based in Macquarie Park, New South Wales. Founded in 1860, the same year the register lists."},
+     {"id":"no-kid-hungry","name":"No Kid Hungry","short":"No Kid Hungry","url":"nokidhungry.org","causes":["hunger","kids"],"serves":["children","families"],"where":["us"],"how":["funding","advocacy"],"founded":1984,"hq":"Washington, DC","blurb":"Works to end childhood hunger in America by connecting kids to school meals and food programs.","about":"No Kid Hungry is the campaign of Share Our Strength, a nonprofit founded in 1984. It funds and supports programs that connect kids to school breakfast, summer meals and other nutrition programs, and works with partners on policy."},
+     {"id":"north-shore-animal-league","name":"North Shore Animal League America","short":"North Shore Animal League","url":"animalleague.org","causes":["animals"],"serves":[],"where":["us"],"how":["direct","advocacy"],"founded":1944,"hq":"Port Washington, NY","blurb":"Saves the lives of pets through adoption, rescue, spay and neuter and advocacy.","about":"Marianne H. Sanders founded the League in 1944. It describes itself as the largest no-kill animal rescue and adoption organization in the world, placing nearly 20,000 pets a year."},
+-    {"id":"nspcc","name":"NSPCC","short":"NSPCC","url":"nspcc.org.uk","causes":["kids","safety"],"serves":["children","families"],"where":["uk"],"how":["direct","advocacy","protection"],"founded":1884,"hq":"London, United Kingdom","blurb":"Works to protect children from abuse and neglect in the UK, and is the only UK children's charity with statutory powers to act to safeguard children at risk.","about":"Founded in 1884 as the London Society for the Prevention of Cruelty to Children by Reverend Benjamin Waugh, and renamed the National Society in 1889. It is the only UK children's charity with statutory child protection powers."},
++    {"id":"nspcc","name":"NSPCC","short":"NSPCC","url":"nspcc.org.uk","causes":["kids","safety"],"serves":["children","families"],"where":["uk"],"how":["direct","advocacy","safeguard"],"founded":1884,"hq":"London, United Kingdom","blurb":"Works to protect children from abuse and neglect in the UK, and is the only UK children's charity with statutory powers to act to safeguard children at risk.","about":"Founded in 1884 as the London Society for the Prevention of Cruelty to Children by Reverend Benjamin Waugh, and renamed the National Society in 1889. It is the only UK children's charity with statutory child protection powers."},
+     {"id":"ocean-conservancy","name":"Ocean Conservancy","short":"Ocean Conservancy","url":"oceanconservancy.org","causes":["oceans","planet"],"serves":[],"where":["us","global"],"how":["advocacy","protection"],"founded":1972,"hq":"Washington, DC","blurb":"Takes on threats to the ocean, from plastic pollution to climate change.","about":"Ocean Conservancy promotes healthy, diverse ocean ecosystems and works against marine pollution and other threats. It organized the first International Coastal Cleanup in 1986."},
+     {"id":"oceana","name":"Oceana","short":"Oceana","url":"oceana.org","causes":["oceans","planet","wildlife"],"serves":[],"where":["global"],"how":["advocacy","protection"],"founded":2001,"hq":"Washington, DC","blurb":"An international advocacy organization focused solely on ocean conservation.","about":"Campaigns to protect and restore the world's oceans, with policy wins focused on fisheries, pollution and marine habitats. Its own website gives founded in 2001 and based in Washington, DC."},
+     {"id":"one-acre-fund","name":"One Acre Fund","short":"One Acre Fund","url":"oneacrefund.org","causes":["poverty","hunger"],"serves":["families"],"where":["africa"],"how":["funding","training"],"founded":2006,"hq":"Kakamega, Kenya","blurb":"Helps Africa's smallholder farmers become more productive and resilient with financing, seeds and training.","about":"One Acre Fund was founded in 2006. It supplies smallholder farmers in East Africa and beyond with asset-based financing, seeds, fertilizer, training and market access to reduce hunger and poverty."},
+@@ -663,7 +664,7 @@
+     {"id":"st-jude","name":"St. Jude Children's Research Hospital","short":"St. Jude","url":"stjude.org","causes":["kids","cancer","health"],"serves":["children","patients","families"],"where":["us","global"],"how":["direct","research"],"founded":1962,"hq":"Memphis, TN","blurb":"Pioneering research and care for childhood cancer and other life-threatening diseases. Families never receive a bill from St. Jude.","about":"Founded by entertainer Danny Thomas in 1962, St. Jude treats children at its Memphis hospital and shares its research findings with scientists around the world. Families do not pay St. Jude for treatment, travel, housing or food."},
+     {"id":"su2c","name":"Stand Up To Cancer","short":"Stand Up To Cancer","url":"standuptocancer.org","causes":["cancer","health"],"serves":["patients"],"where":["us"],"how":["research","funding"],"founded":2008,"hq":"Los Angeles, CA","blurb":"Raises funds to speed up groundbreaking cancer research that gets new therapies to patients quickly.","about":"Stand Up To Cancer was founded in 2008 by a group of women touched by cancer. Its mission is to accelerate translational research that can get new therapies to patients quickly and save lives."},
+     {"id":"starlight-childrens-foundation-australia","name":"Starlight Children's Foundation Australia","short":"Starlight Australia","url":"starlight.org.au","causes":["kids","health"],"serves":["children","families","patients","disability"],"where":["australia"],"how":["direct"],"founded":1988,"foundedFrom":"register","hq":"North Sydney, NSW","blurb":"Registered Australian charity supporting children and families, including those living with chronic illness or disability.","about":"A registered Australian charity based in North Sydney, New South Wales. The register lists an established year of 1988, and the charity registered with the ACNC in 2012; the register lists operations in 7 Australian states and territories."},
+-    {"id":"stop-the-traffik","name":"STOP THE TRAFFIK","short":"STOP THE TRAFFIK","url":"stopthetraffik.org","causes":["safety","justice"],"serves":[],"where":["global"],"how":["advocacy","research","protection"],"founded":2006,"hq":"London, United Kingdom","blurb":"A UK-based campaign coalition and registered charity working to end human trafficking worldwide.","about":"Founded in 2006 by Steve Chalke as a campaign coalition against human trafficking. It is a registered charity based in London with offices in several other countries."},
++    {"id":"stop-the-traffik","name":"STOP THE TRAFFIK","short":"STOP THE TRAFFIK","url":"stopthetraffik.org","causes":["safety","justice"],"serves":[],"where":["global"],"how":["advocacy","research","safeguard"],"founded":2006,"hq":"London, United Kingdom","blurb":"A UK-based campaign coalition and registered charity working to end human trafficking worldwide.","about":"Founded in 2006 by Steve Chalke as a campaign coalition against human trafficking. It is a registered charity based in London with offices in several other countries."},
+     {"id":"surf-life-saving-nsw","name":"Surf Life Saving New South Wales","short":"Surf Life Saving NSW","url":"surflifesaving.com.au","causes":["safety","community"],"serves":[],"where":["australia"],"how":["direct"],"founded":1903,"foundedFrom":"register","hq":"Belrose, NSW","blurb":"Registered Australian charity for surf life saving in New South Wales, with the general community as its listed beneficiary.","about":"A registered Australian charity, listed on the ACNC register since 2012, with an established year of 1903 on the register. Based in Belrose, New South Wales. Its listed beneficiary is the general community in Australia."},
+     {"id":"surfrider","name":"Surfrider Foundation","short":"Surfrider","url":"surfrider.org","causes":["oceans","planet"],"serves":[],"where":["us","global"],"how":["advocacy","protection"],"founded":1984,"hq":"San Clemente, CA","blurb":"Protects the world's ocean, waves and beaches through a grassroots activist network.","about":"A grassroots nonprofit with local chapters that work on coastal protection, clean water and beach access. Its own website gives founded in 1984 and based in San Clemente, CA."},
+     {"id":"susan-g-komen","name":"Susan G. Komen","short":"Susan G. Komen","url":"komen.org","causes":["cancer","women"],"serves":["women","patients"],"where":["us"],"how":["research","direct","advocacy"],"founded":1982,"hq":"Dallas, TX","blurb":"Breast cancer organization that funds research, supports patients through navigation and care services, and advocates for policy change.","about":"Founded in Dallas by Nancy Goodman Brinker in memory of her sister, Susan G. Komen runs research grants, patient support programmes and advocacy on breast cancer."},
+@@ -695,7 +696,7 @@
+     {"id":"fred-hollows-foundation","name":"The Fred Hollows Foundation","short":"Fred Hollows Foundation","url":"hollows.org","causes":["global-health","disability"],"serves":["patients"],"where":["global"],"how":["direct","training"],"founded":1992,"hq":"Sydney, Australia","blurb":"Australian-founded organisation that works to prevent and treat avoidable blindness through eye care, local training and affordable technology, and to improve Indigenous Australian health.","about":"Set up in 1992 by Fred Hollows and his wife Gabi, the foundation is based in Sydney and works in around 25 countries, training eye-care workers and supplying affordable technology."},
+     {"id":"greater-boston-food-bank","name":"The Greater Boston Food Bank","short":"Greater Boston Food Bank","url":"gbfb.org","causes":["hunger"],"serves":["families"],"where":["us"],"how":["direct","advocacy"],"founded":1981,"hq":"Boston, MA","blurb":"Food bank that supplies a network of more than 600 partner agencies across 190 cities and towns in eastern Massachusetts.","about":"Incorporated in 1981 and founded with the involvement of activist Kip Tiernan, it distributes over 100 million pounds of food a year from its South Bay facility in Boston."},
+     {"id":"gurkha-welfare-trust","name":"The Gurkha Welfare Trust","short":"Gurkha Welfare Trust","url":"gwt.org.uk","causes":["veterans","poverty","health"],"serves":["veterans","families"],"where":["uk","asia"],"how":["direct"],"founded":null,"hq":"Wiltshire, United Kingdom","blurb":"Provides financial, medical and development aid to Gurkha veterans, their families and communities, with work in Nepal and India.","about":"A registered charity in England and Wales, registered in 2004 and based in Wiltshire. Its objects are to relieve Gurkhas and their dependants, wherever resident."},
+-    {"id":"halo-trust","name":"The Halo Trust","short":"HALO Trust","url":"halotrust.org","causes":["safety","disaster"],"serves":[],"where":["uk","global","africa","asia","latam","mideast"],"how":["direct","protection"],"founded":null,"hq":"Dumfries and Galloway, United Kingdom","blurb":"Humanitarian organisation that clears landmines and explosive remnants of war, secures munitions stockpiles, and works to protect civilians and reduce armed violence.","about":"A registered charity in England and Wales, on the register since 1991. Its address on the register is in Dumfries and Galloway. The register lists overseas activity in many countries, including Afghanistan, Angola, Cambodia and Iraq."},
++    {"id":"halo-trust","name":"The Halo Trust","short":"HALO Trust","url":"halotrust.org","causes":["safety","disaster"],"serves":[],"where":["uk","global","africa","asia","latam","mideast"],"how":["direct","safeguard"],"founded":null,"hq":"Dumfries and Galloway, United Kingdom","blurb":"Humanitarian organisation that clears landmines and explosive remnants of war, secures munitions stockpiles, and works to protect civilians and reduce armed violence.","about":"A registered charity in England and Wales, on the register since 1991. Its address on the register is in Dumfries and Galloway. The register lists overseas activity in many countries, including Afghanistan, Angola, Cambodia and Iraq."},
+     {"id":"hunger-project","name":"The Hunger Project","short":"Hunger Project","url":"thp.org","causes":["hunger","poverty","women"],"serves":["women","families"],"where":["africa","asia","latam"],"how":["training","direct"],"founded":1977,"hq":"New York, NY","blurb":"Mobilizes rural communities to achieve sustainable progress in health, education, nutrition and income.","about":"The Hunger Project was founded in 1977 and runs programs in Africa, Asia and Latin America that mobilize grassroots rural communities to lead their own development."},
+     {"id":"jed","name":"The Jed Foundation","short":"Jed Foundation","url":"jedfoundation.org","causes":["mental","kids"],"serves":["teens","students"],"where":["us"],"how":["training","advocacy"],"founded":2000,"hq":"New York, NY","blurb":"Protects emotional health and prevents suicide for teens and young adults.","about":"Phil and Donna Satow founded JED in 2000 after their son Jed died by suicide in college. It partners with schools, colleges and community organizations on programming, training and strategic advising."},
+     {"id":"legal-aid-society-nyc","name":"The Legal Aid Society","short":"Legal Aid Society (NYC)","url":"legalaidnyc.org","causes":["justice"],"serves":["families"],"where":["us"],"how":["direct","advocacy"],"founded":1876,"hq":"New York, NY","blurb":"Provides civil legal services, criminal defence and juvenile rights representation to low-income New Yorkers.","about":"Founded on 8 March 1876 as the German Legal Aid Society and later widened to serve others, becoming the Legal Aid Society in 1890. It is based in New York City."},
+@@ -704,7 +705,7 @@
+     {"id":"live-love-laugh-foundation","name":"The Live Love Laugh Foundation","short":"Live Love Laugh Foundation","url":"thelivelovelaughfoundation.org","causes":["mental"],"serves":[],"where":["asia"],"how":["advocacy"],"founded":2015,"hq":"Bangalore, India","blurb":"Raises awareness of mental health in India, works to reduce stigma and shares credible mental health resources.","about":"Raises awareness of mental health in India, works to reduce stigma and shares credible mental health resources. It was founded in 2015 and is based in Bangalore."},
+     {"id":"marine-mammal-center","name":"The Marine Mammal Center","short":"Marine Mammal Center","url":"marinemammalcenter.org","causes":["oceans","animals","wildlife"],"serves":[],"where":["us"],"how":["direct","research"],"founded":1975,"hq":"Sausalito, CA","blurb":"Rescues and rehabilitates sick and injured marine mammals and advances ocean health.","about":"A California hospital and research center for marine mammals, with programs in education and science. Its own website gives founded in 1975 and based in Sausalito, CA."},
+     {"id":"michael-j-fox","name":"The Michael J. Fox Foundation for Parkinson's Research","short":"Michael J. Fox Fdn.","url":"michaeljfox.org","causes":["neuro","health"],"serves":["patients"],"where":["us","global"],"how":["research","funding"],"founded":2000,"hq":"New York, NY","blurb":"Dedicated to finding a cure for Parkinson's disease through an aggressively funded research agenda.","about":"Actor Michael J. Fox and Deborah W. Brooks founded the foundation in 2000. It funds research toward better therapies and a cure for Parkinson's disease and is committed to improved treatments for those living with it today."},
+-    {"id":"mines-advisory-group","name":"The Mines Advisory Group","short":"Mines Advisory Group","url":"maginternational.org","causes":["safety","disaster"],"serves":[],"where":["uk","global","africa","asia","latam","mideast"],"how":["direct","protection"],"founded":null,"hq":"United Kingdom","blurb":"Works with people affected by armed violence and conflict through landmine and cluster munition clearance and the management and destruction of weapons and munitions.","about":"A registered charity in England and Wales, on the register since 2000. The register lists overseas activity in many countries, including Angola, Cambodia, Iraq and Lebanon."},
++    {"id":"mines-advisory-group","name":"The Mines Advisory Group","short":"Mines Advisory Group","url":"maginternational.org","causes":["safety","disaster"],"serves":[],"where":["uk","global","africa","asia","latam","mideast"],"how":["direct","safeguard"],"founded":null,"hq":"United Kingdom","blurb":"Works with people affected by armed violence and conflict through landmine and cluster munition clearance and the management and destruction of weapons and munitions.","about":"A registered charity in England and Wales, on the register since 2000. The register lists overseas activity in many countries, including Angola, Cambodia, Iraq and Lebanon."},
+     {"id":"ndcs","name":"The National Deaf Children's Society","short":"NDCS","url":"ndcs.org.uk","causes":["disability","kids","education"],"serves":["children","teens","families"],"where":["uk","africa","asia","latam"],"how":["direct","advocacy"],"founded":null,"hq":"Westminster, United Kingdom","blurb":"National charity for deaf children and young people that supports them and their families, campaigns for their rights and works to further their education.","about":"A registered charity in England and Wales, registered in 1993 and based in Westminster. Its register entry also lists overseas work in countries including Bangladesh, India, Kenya and Peru."},
+     {"id":"national-youth-theatre","name":"The National Youth Theatre of Great Britain","short":"National Youth Theatre","url":"nyt.org.uk","causes":["arts","education"],"serves":["teens"],"where":["uk","asia","mideast"],"how":["direct","training"],"founded":null,"hq":"Islington, United Kingdom","blurb":"Advances the education of young people aged 14 to 25 through drama, music and the spoken word.","about":"A registered charity in England and Wales, registered in 1961 and based in Islington. Its register entry lists activity in China and Saudi Arabia."},
+     {"id":"nature-conservancy","name":"The Nature Conservancy","short":"Nature Conservancy","url":"nature.org","causes":["planet","wildlife"],"serves":[],"where":["global","us"],"how":["protection","research"],"founded":1951,"hq":"Arlington, VA","blurb":"Protects the lands and waters on which all life depends.","about":"The Nature Conservancy began in the United States in 1951 and now works in dozens of countries and territories, protecting land and water and developing science-based solutions for climate and biodiversity."},
+diff -ruN base/givespin/js/profile.js work/givespin/js/profile.js
+--- base/givespin/js/profile.js	2026-11-03 22:45:13.486370799 +0000
++++ work/givespin/js/profile.js	2026-11-04 19:42:08.669994787 +0000
+@@ -4,7 +4,7 @@
+  *
+  *   GS.profile.validateName(text)     { ok, value, reason, message }: 1 to 20 characters, letters, numbers, spaces and simple punctuation, no links, no < >, no rude words
+  *   GS.profile.sanitize(raw)          what is kept under GS.local 'profile': { name, frame, title } (anything odd becomes '' / 'plain' / '')
+- *   GS.profile.displayName(p, acct)   the chosen name, else the signed-in account's name, else ''
++ *   GS.profile.displayName(p, acct)   the chosen name, else the signed-in account's name (never an email address), else ''
+  *   GS.profile.favourites(history, o) { charities: [{ id, count, cents, last }], causes: [...] }, the top three of each, from the rounds in the history
+  *   GS.profile.recentRounds(h, n, ok) the newest n rounds that can be shown
+  *   GS.profile.facts(save)            the numbers the unlock rules read (rank, streak, totals, badges, cards, sets), safe for any save
+@@ -143,12 +143,17 @@
+     };
+   }
+ 
+-  /** The chosen name, else the signed-in account's name, else ''. */
++  /** An email address typed where a name goes ("ada@example.com"). The account's nickname box takes anything, and an address must never be shown as a name. */
++  function looksLikeEmail(text) { return /[^\s@]+@[^\s@]+/.test(String(text == null ? '' : text)); }
++
++  /** The chosen name, else the signed-in account's name (unless that is an email address), else ''. */
+   function displayName(profile, account) {
+     var p = sanitize(profile);
+     if (p.name) { return p.name; }
+     var a = isObj(account) ? account : {};
+-    return a.signedIn && typeof a.name === 'string' ? cleanName(a.name).slice(0, 40) : '';
++    if (!(a.signedIn && typeof a.name === 'string')) { return ''; }
++    var n = cleanName(a.name).slice(0, 40);
++    return looksLikeEmail(n) ? '' : n;
+   }
+ 
+   /* ------------------------------------------------------------------ what the save says (for the unlock rules) */
+@@ -369,7 +374,7 @@
+   }
+ 
+   return {
+-    NAME_MAX: NAME_MAX, PUNCTUATION: PUNCT, cleanName: cleanName, isBlocked: isBlocked, validateName: validateName, sanitize: sanitize, displayName: displayName,
++    NAME_MAX: NAME_MAX, PUNCTUATION: PUNCT, cleanName: cleanName, isBlocked: isBlocked, validateName: validateName, sanitize: sanitize, displayName: displayName, looksLikeEmail: looksLikeEmail,
+     facts: facts, frames: frames, titles: titles, favourites: favourites, recentRounds: recentRounds, botDetails: botDetails, BOT_TITLES: BOT_TITLES, BOT_HABITS: BOT_HABITS
+   };
+ });
+diff -ruN base/givespin/js/quests.js work/givespin/js/quests.js
+--- base/givespin/js/quests.js	2026-11-04 02:48:44.853867657 +0000
++++ work/givespin/js/quests.js	2026-11-04 19:44:30.948893481 +0000
+@@ -178,6 +178,17 @@
+   var BY_ID = {};
+   DAILY.concat(WEEKLY).forEach(function (t) { BY_ID[t.id] = t; });
+ 
++  // Where a visitor can go to do each quest: the page's link on the quest's row ('' = nowhere to send them, it is done on the Quests page itself). A test checks that
++  // every quest has an entry and that every address is a page the site really has, so a new quest has to say where it is done.
++  var LINKS = {
++    'd-charities3': '#lobby', 'd-games2': '#lobby', 'd-rounds3': '#lobby', 'd-causes2': '#lobby', 'd-back': '#lobby', 'd-spotlight': '#spotlights', 'd-live': '#live',
++    'd-verify': '#fair', 'd-streak3': '#lobby', 'd-split': '#lobby', 'd-direct': '#charities', 'd-slots': '#lobby-slots', 'd-race': '#lobby-races', 'd-card': '#cards', 'd-wheel': '#lobby',
++    'w-charities8': '#lobby', 'w-days4': '#lobby', 'w-games5': '#lobby', 'w-causes4': '#lobby', 'w-spotlight': '#spotlights', 'w-live3': '#live', 'w-verify2': '#fair',
++    'w-streak5': '#lobby', 'w-cup': '#leagues', 'w-dailies5': ''
++  };
++  /** The page to send a visitor to for a quest ('' when there is none). */
++  function linkOf(id) { return Object.prototype.hasOwnProperty.call(LINKS, id) ? LINKS[id] : ''; }
++
+   function available(t, avail) {
+     avail = avail || {};
+     return !t.needs || !!avail[t.needs];
+@@ -223,6 +234,10 @@
+     var id = seasonId(now);
+     return core.daysBetween(core.dayKey(now), core.dayKey(seasonEnd(id)));
+   }
++  /** Milliseconds from `now` to the next local midnight (the end of the day the daily quests belong to). `new Date(y, m, d + 1)` follows clock changes by itself, so a day of 23 or 25 hours is counted right. */
++  function msToMidnight(now) {
++    return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0, 0).getTime() - now.getTime();
++  }
+   /** "Ends in 12 days", "Ends tomorrow", or on the last day "Ends tonight at midnight". */
+   function endsText(now) {
+     var n = seasonDaysLeft(now);
+@@ -642,10 +657,10 @@
+   return {
+     POINTS: POINTS, ROUND_CAP: ROUND_CAP, TIER_COUNT: TIER_COUNT, TIER_POINTS: TIER_POINTS, CATCHUP_PER_DAY: CATCHUP_PER_DAY, CATCHUP_MAX: CATCHUP_MAX, DUPLICATE_XP: DUPLICATE_XP,
+     DAILY_COUNT: DAILY_COUNT, WEEKLY_COUNT: WEEKLY_COUNT, GAME_GROUPS: GAME_GROUPS,
+-    DAILY: DAILY, WEEKLY: WEEKLY, quest: function (id) { return BY_ID[id] || null; },
++    DAILY: DAILY, WEEKLY: WEEKLY, quest: function (id) { return BY_ID[id] || null; }, LINKS: LINKS, linkOf: linkOf,
+     FRAMES: FRAMES, TITLES: TITLES, CARD_BACKS: CARD_BACKS, CONFETTI: CONFETTI, REWARDS: REWARDS, KINDS: KINDS, KIND_NAMES: KIND_NAMES,
+     dayOfTs: dayOfTs, weekOfDay: weekOfDay, pickDaily: pickDaily, pickWeekly: pickWeekly, questKey: questKey,
+-    seasonId: seasonId, seasonName: seasonName, seasonMonth: seasonMonth, seasonEnd: seasonEnd, seasonDaysLeft: seasonDaysLeft, endsText: endsText, seasonDays: seasonDays,
++    seasonId: seasonId, seasonName: seasonName, seasonMonth: seasonMonth, seasonEnd: seasonEnd, seasonDaysLeft: seasonDaysLeft, msToMidnight: msToMidnight, endsText: endsText, seasonDays: seasonDays,
+     catchUp: catchUp, tierInfo: tierInfo, tierReward: tierReward, resolveReward: resolveReward, tierOf: tierOf, itemOf: itemOf,
+     makeCosmetics: makeCosmetics, confettiStyle: confettiStyle,
+     normState: normState, trackCounter: trackCounter, prune: prune, countRounds: countRounds, roundPoints: roundPoints, prepareRows: prepareRows,
+diff -ruN base/givespin/js/ui/account.js work/givespin/js/ui/account.js
+--- base/givespin/js/ui/account.js	2026-11-04 00:22:52.328601954 +0000
++++ work/givespin/js/ui/account.js	2026-11-04 19:42:08.670699144 +0000
+@@ -20,6 +20,9 @@
+ 
+   var flow = { mode: 'signup', step: 1, type: 'email', contact: '' };
+ 
++  /** The name to show the visitor on their own account screens: the one chosen on the profile page, else the account's (see GS.profile.displayName; an email address never counts as a name), else what the profile page calls a visitor with none. */
++  function whoName() { return (ui.displayName ? ui.displayName() : '') || 'Mystery Giver'; }
++
+   function previewNotice() {
+     return '<p class="note note--preview">' + ui.icon('info') + '<span><b>Preview.</b> This is a mock-up of accounts. Nothing is sent anywhere, no login is created on a server, and your password is never stored.</span></p>';
+   }
+@@ -174,7 +177,8 @@
+         '<button type="submit" class="btn btn--green btn--block">Create account</button></form>';
+     } else if (flow.step === 4) {
+       var a = store.account();
+-      body = '<div class="auth-done">' + ui.avatar(a, 64) + '<h2 class="modal__title" id="dlg-auth-title">You’re in, ' + esc(a.name) + '!</h2>' +
++      var me = whoName();
++      body = '<div class="auth-done">' + ui.avatar({ hue: a.hue, name: me }, 64) + '<h2 class="modal__title" id="dlg-auth-title">You’re in, ' + esc(me) + '!</h2>' +
+         '<p class="modal__sub">Your level and giving history now live under your profile (preview, on this device).</p></div>' +
+         '<div class="auth-opts"><button type="button" class="btn btn--green btn--block" data-role="addcard">' + ui.icon('credit-card') + 'Save a card for easy giving</button>' +
+         '<button type="button" class="btn btn--ghost btn--block" data-role="later">Maybe later</button></div>';
+@@ -199,7 +203,7 @@
+         if (!r.ok) { fieldErr(form, r.message, r.field === 'password' ? p : c); return; }
+         GS.bus.emit('account');
+         m.close();
+-        ui.toast('Welcome back, ' + store.account().name + '!', 'user-check');
++        ui.toast('Welcome back, ' + whoName() + '!', 'user-check');
+       });
+     } else if (flow.mode === 'signup' && flow.step === 1 && form) {
+       form.addEventListener('submit', function (e) {
+@@ -263,13 +267,14 @@
+     var spent = store.monthSpent();
+     var lv = core.levelFor(store.get().xp);
+     var st = ui.myStanding();
++    var who = whoName();
+     var cardHTML = a.card
+       ? '<div class="cardrow">' + ui.icon('credit-card') + '<div><b>' + esc(core.BRAND_NAMES[a.card.brand]) + ' ending ' + esc(a.card.last4) + '</b><small>Expires ' + esc(a.card.exp) + ' · preview, never charged</small></div>' +
+           '<button type="button" class="btn btn--sm btn--ghost" data-role="rmcard">Remove</button></div>'
+       : '<p class="muted">No card saved.</p>' + cardFormHTML();
+     m.set(
+       '<h2 class="modal__title" id="dlg-settings-title">Your account</h2>' +
+-      '<div class="acctcard">' + ui.avatar(a, 52) + '<div><b>' + esc(a.name) + '</b><small>' + esc(accounts.maskContact(a.type, a.contact)) + ' · ' + (st.rank ? ui.standingLine(st) : 'Level ' + lv.level + ' ' + esc(lv.name)) + '</small></div></div>' +
++      '<div class="acctcard">' + ui.avatar({ hue: a.hue, name: who }, 52) + '<div><b>' + esc(who) + '</b><small>' + esc(accounts.maskContact(a.type, a.contact)) + ' · ' + (st.rank ? ui.standingLine(st) : 'Level ' + lv.level + ' ' + esc(lv.name)) + '</small></div></div>' +
+       previewNotice() +
+       '<section class="fgroup"><h3 class="fgroup__t">Saved card</h3>' + cardHTML + '</section>' +
+       '<section class="fgroup"><h3 class="fgroup__t">Responsible giving: monthly limit</h3>' +
+@@ -366,7 +371,7 @@
+   function menuHTML(a) {
+     var lv = core.levelFor(store.get().xp);
+     var st = ui.myStanding();
+-    var who = ui.displayName() || a.name;   // the name chosen on the profile page, else the account's
++    var who = whoName();   // the name chosen on the profile page, else the account's
+     var av = { hue: a.hue, name: who };
+     // a ranked player's emblem sits on the corner of the avatar button, and the button's name says the rank
+     var pin = st.rank ? '<span class="acct__rank" aria-hidden="true">' + ui.rankEmblem(st.rank, 22, { animated: false }) + '</span>' : '';
+diff -ruN base/givespin/js/ui/boards.js work/givespin/js/ui/boards.js
+--- base/givespin/js/ui/boards.js	2026-11-04 04:55:02.220131187 +0000
++++ work/givespin/js/ui/boards.js	2026-11-04 19:50:54.113370875 +0000
+@@ -26,6 +26,7 @@
+   var RANGES = [['week', 'This week'], ['all', 'All time']];
+   var tab = 'crews';
+   var range = 'week';
++  var showAll = false;   // the Players tab lists every player (61) instead of the top part
+ 
+   var T = {
+     lede: 'The high-roller board, where all that is on the line is giving. Crews, charities and players, this week and all time.',
+@@ -160,15 +161,21 @@
+     var weekly = range === 'week';
+     var b = B.players(range, now, c);
+     var info = B.weekInfo(now);
+-    var v = B.visible(b, B.SHOWN);
++    var more = b.total > B.SHOWN;
++    var all = more && showAll;
++    var v = all ? { shown: b.rows, extra: [] } : B.visible(b, B.SHOWN);
+     var you = b.you;
+-    var inList = you.rank <= B.SHOWN;
++    var inList = all || you.rank <= B.SHOWN;
++    // The button sits ABOVE the list and first in its line, and nothing above it changes when it is pressed (the words about where the visitor's row is are in the line
++    // next to it), so the rows it adds or takes away never move it from under the pointer or the keyboard focus.
++    var ctl = more ? '<p class="bd__more"><button type="button" class="btn btn--sm" data-role="players-all" aria-expanded="' + all + '" aria-controls="bd-players">' + ui.icon(all ? 'chevron-up' : 'chevron-down') + (all ? 'Show only the top ' + B.SHOWN : 'Show all ' + b.total) + '</button>' +
++      '<span>' + (all ? 'Showing all ' + b.total + '.' : 'Showing the top ' + B.SHOWN + ' of ' + b.total + (inList ? '.' : ', and your row under them.')) + '</span></p>' : '';
+     return headHTML('Top players ' + (weekly ? 'this week' : 'of all time') + ', by amount given', info, weekly) +
+       '<p class="bd__lede">Simulated players only: each bot’s total fits the rank chip next to its name. ' + (weekly ? 'Yours counts the gifts you gave this week on this device.' : 'Yours is everything you have given on this device.') + '</p>' +
+       '<p class="bd__you">You are <b>#' + you.rank + '</b> of ' + b.total + ' ' + (weekly ? 'this week' : 'all time') + ' with <b>' + m(you.cents) + '</b>' + (demo() ? ' given' : ' sent to checkout') + '.' +
+-        (inList ? '' : ' Your row is under the top ' + B.SHOWN + '.') + (b.capped ? ' ' + esc(T.cappedNote) : '') + '</p>' +
+-      table('Top players ' + (weekly ? 'this week' : 'of all time') + ' by amount given. Simulated players, each marked BOT, and you.', ['Player', weekly ? 'Given' : 'Given in all'],
+-        v.shown.map(playerRow).join(''), v.extra.map(playerRow).join(''));
++        (b.capped ? ' ' + esc(T.cappedNote) : '') + '</p>' +
++      ctl + '<div id="bd-players">' + table('Top players ' + (weekly ? 'this week' : 'of all time') + ' by amount given. Simulated players, each marked BOT, and you.', ['Player', weekly ? 'Given' : 'Given in all'],
++        v.shown.map(playerRow).join(''), v.extra.map(playerRow).join('')) + '</div>';
+   }
+ 
+   /* ----------------------------------------------------------------- page */
+@@ -205,6 +212,7 @@
+ 
+   function render() {
+     var root = ui.$('#view-boards');
++    showAll = false;
+     root.innerHTML = '<header class="page-head"><div><h1>Leaderboards</h1><p>' + esc(T.lede) + '</p></div></header>' +
+       '<div class="simbanner" role="note">' + ui.icon('bot') + '<div>' + T.sim + (demo() ? '' : esc(T.simCheckout)) + '</div></div>' +
+       '<div class="bd__controls">' +
+@@ -237,6 +245,13 @@
+       if (t) { selectTab(t.getAttribute('data-tab'), false); return; }
+       var r = e.target.closest('[data-range]');
+       if (r) { range = r.getAttribute('data-range'); drawPanel(); return; }
++      if (e.target.closest('[data-role="players-all"]')) {
++        showAll = !showAll;
++        drawPanel();
++        var again = ui.$('[data-role="players-all"]', root);   // (the panel was drawn again: keep the keyboard where it was)
++        if (again) { again.focus({ preventScroll: true }); }
++        return;
++      }
+       var j = e.target.closest('[data-join]');
+       if (j) { join(j.getAttribute('data-join')); return; }
+       if (e.target.closest('[data-role="share-crew"]')) { openShare(); }
+diff -ruN base/givespin/js/ui/game.js work/givespin/js/ui/game.js
+--- base/givespin/js/ui/game.js	2026-11-04 04:55:02.220814925 +0000
++++ work/givespin/js/ui/game.js	2026-11-04 19:42:36.562432868 +0000
+@@ -623,7 +623,9 @@
+     el.pickBtn.disabled = !!state().busy;
+     el.pickChip.hidden = !ch;
+     // the charity you back: its mark and name open its profile (off while a round is running); the x stops backing it
+-    el.pickChip.innerHTML = ch ? '<button type="button" class="pickchip__open" data-open-charity="' + ch.id + '" aria-label="About ' + esc(ch.short) + ', the charity you are backing"' + (state().busy ? ' disabled' : '') + '>' + ui.mono(ch, 24) + '<span>' + esc(ch.short) + '</span></button><button type="button" class="pickchip__x" data-role="clear-pick" aria-label="Stop backing ' + esc(ch.short) + '"' + (state().busy ? ' disabled' : '') + '>' + ui.icon('x') + '</button>' : '';
++    var chipHtml = ch ? '<button type="button" class="pickchip__open" data-open-charity="' + ch.id + '" aria-label="About ' + esc(ch.short) + ', the charity you are backing"' + (state().busy ? ' disabled' : '') + '>' + ui.mono(ch, 24) + '<span>' + esc(ch.short) + '</span></button><button type="button" class="pickchip__x" data-role="clear-pick" aria-label="Stop backing ' + esc(ch.short) + '"' + (state().busy ? ' disabled' : '') + '>' + ui.icon('x') + '</button>' : '';
++    // (drawn again only when it changed: typing a board size and then clicking this x blurs the box first, which re-runs this function, and a button replaced between the press and the release never gets its click)
++    if (el.pickChip.getAttribute('data-sig') !== chipHtml) { el.pickChip.setAttribute('data-sig', chipHtml); el.pickChip.innerHTML = chipHtml; }
+     el.pickChip.style.setProperty('--c', ch ? ch.accent : 'transparent');
+     el.pickHint.textContent = ch
+       ? ch.short + ' is on the board. If it wins you earn bonus XP and the Called It badge. Your gift always goes to the winner.'
+diff -ruN base/givespin/js/ui/profile.js work/givespin/js/ui/profile.js
+--- base/givespin/js/ui/profile.js	2026-11-04 00:22:52.344544332 +0000
++++ work/givespin/js/ui/profile.js	2026-11-04 19:42:08.670371857 +0000
+@@ -294,7 +294,8 @@
+     var e = effective(f);
+     var a = store.account();
+     var chosen = stored();
+-    var hint = a.signedIn && a.name ? 'Leave it empty to use your account name (' + esc(a.name) + ').' : 'Leave it empty to stay a Mystery Giver.';
++    var acctName = P.displayName({}, a);   // (not an email address: an account whose nickname is one has no name to fall back on)
++    var hint = acctName ? 'Leave it empty to use your account name (' + esc(acctName) + ').' : 'Leave it empty to stay a Mystery Giver.';
+     return '<section class="sect panel pedit" aria-labelledby="me-edit"><h2 class="sect__t" id="me-edit">Make it yours</h2>' +
+       '<p class="pedit__note">' + ui.icon('lock') + '<span>Your name, frame and title are only shown on this device (here, at live tables, in leagues and crews) and on the cards you choose to share. Nothing is sent anywhere.</span></p>' +
+       '<form class="pedit__form" data-role="nameform" novalidate autocomplete="off">' +
+diff -ruN base/givespin/js/ui/quests.js work/givespin/js/ui/quests.js
+--- base/givespin/js/ui/quests.js	2026-11-04 04:55:02.221860121 +0000
++++ work/givespin/js/ui/quests.js	2026-11-04 19:44:30.949365970 +0000
+@@ -164,13 +164,23 @@
+ 
+   /* ------------------------------------------------------------------- quests */
+ 
++  /**
++   * The quest's words. A quest that is still open links to the place where it can be done (Q.LINKS); a finished one is plain text. It is a link, not another button,
++   * so the row still has one button (Claim) and its progress bar. "Spin the daily bonus wheel" has no page: its link opens the wheel (and goes to the lobby, where the wheel's button is, without scripts).
++   */
++  function titleHTML(q) {
++    var href = q.done || q.claimed ? '' : Q.linkOf(q.id);
++    if (!href) { return esc(q.text); }
++    return '<a class="qcard__go" href="' + esc(href) + '"' + (q.id === 'd-wheel' ? ' data-quest-act="daily"' : '') + '>' + esc(q.text) + ui.icon('arrow-right') + '</a>';
++  }
++
+   function questHTML(q) {
+     var text = q.value + ' of ' + q.target;
+     var act = q.claimed ? '<span class="tag tag--plain qdone">' + ui.icon('circle-check') + 'Claimed</span>'
+       : q.done ? '<button type="button" class="btn btn--green btn--sm" data-claim-quest="' + esc(q.key) + '" aria-label="Claim: ' + esc(q.text) + '. Adds ' + q.points + ' season points">Claim +' + q.points + '</button>'
+       : '<span class="qpts">+' + q.points + ' points</span>';
+     return '<li class="qcard' + (q.claimed ? ' is-claimed' : q.done ? ' is-done' : '') + '" tabindex="-1" data-key="' + esc(q.key) + '">' +
+-      '<div class="qcard__main"><b class="qcard__t">' + esc(q.text) + '</b>' + bar(q.text, q.value, q.target, text) + '<span class="qcard__n">' + esc(text) + '</span></div>' +
++      '<div class="qcard__main"><b class="qcard__t">' + titleHTML(q) + '</b>' + bar(q.text, q.value, q.target, text) + '<span class="qcard__n">' + esc(text) + '</span></div>' +
+       '<div class="qcard__act">' + act + '</div></li>';
+   }
+ 
+@@ -357,6 +367,8 @@
+       if (tb) { if (tb.getAttribute('aria-disabled') !== 'true') { claimTier(Number(tb.getAttribute('data-tier'))); } return; }
+       var cq = e.target.closest('[data-claim-quest]');
+       if (cq) { claimQuest(cq.getAttribute('data-claim-quest')); return; }
++      var wheel = e.target.closest('[data-quest-act="daily"]');
++      if (wheel && ui.daily && ui.daily.open) { e.preventDefault(); ui.daily.open(); return; }
+       var act = e.target.closest('[data-act]');
+       if (!act) { return; }
+       var what = act.getAttribute('data-act');
+@@ -387,6 +399,42 @@
+     });
+   }
+ 
++  /* ----------------------------------------------------- the stroke of midnight */
++
++  // While the Quests page is open ONE timeout runs to the next local midnight (none when the page is not open, and no interval): when it fires, "today" is a new day, so the
++  // daily quests, "Ends tomorrow night" and the badge are drawn again. It reads the clock and the timers the page has, so a test that fakes them moves it too.
++  var midnightTimer = 0;
++  var MIDNIGHT_SLACK = 500;   // ms past midnight, so a timer that fires a moment early (the clock and the timers are not the same clock) never finds yesterday
++
++  function disarmMidnight() { if (midnightTimer) { clearTimeout(midnightTimer); midnightTimer = 0; } }
++
++  function armMidnight() {
++    disarmMidnight();
++    if (!shown()) { return; }
++    var now = new Date();
++    var day = core.dayKey(now);
++    var wait = Q.msToMidnight(now) + MIDNIGHT_SLACK;
++    midnightTimer = setTimeout(function () {
++      midnightTimer = 0;
++      if (core.dayKey(new Date()) !== day) { newDay(); }
++      armMidnight();   // for the next midnight (or, if the clock was put back, the rest of today)
++    }, Math.max(1000, wait));
++  }
++
++  /** The day has changed under an open page: new daily quests, the badge, the lobby block, and a page drawn again even when the visitor has focus in it (its old Claim buttons would be dead). */
++  function newDay() {
++    var root = $('#view-quests');
++    var inside = !!root && root.contains(document.activeElement);
++    sync();
++    if (!shown()) { return; }
++    if (inside) {
++      render('', true);
++      var main = $('#main');
++      if (main) { try { main.focus({ preventScroll: true }); } catch (e) { /* not focusable */ } }
++    }
++    ui.toast('A new day has started. Today’s quests are new.', 'list-checks');
++  }
++
+   /* ---------------------------------------------------------- the lobby block */
+ 
+   function blockHTML() {
+@@ -477,10 +525,10 @@
+ 
+   ui.pages['quests'] = function () { run(); render(); };
+ 
+-  ui.quests = { view: function () { return last; }, sync: sync, claimable: claimable, render: render };
++  ui.quests = { view: function () { return last; }, sync: sync, claimable: claimable, render: render, midnightArmed: function () { return midnightTimer !== 0; } };
+ 
+   store.onChange(function () { sync(); });
+-  GS.bus.on('route', function () { sync(); });
++  GS.bus.on('route', function () { sync(); armMidnight(); });
+   GS.bus.on('progress', function () { sync(); });
+   GS.bus.on('receipt:closed', function () { if (waiting.length) { var list = waiting; waiting = []; tellNow(list); } });
+   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', setBack); } else { setBack(); }
+diff -ruN base/givespin/js/weekly.js work/givespin/js/weekly.js
+--- base/givespin/js/weekly.js	2026-11-04 00:28:18.706787878 +0000
++++ work/givespin/js/weekly.js	2026-11-04 19:39:23.550208580 +0000
+@@ -117,7 +117,7 @@
+     homeless: 'people experiencing homelessness', patients: 'patients'
+   };
+   var HOW = {
+-    direct: 'direct help', research: 'research', advocacy: 'advocacy', training: 'training', funding: 'funding for other groups', protection: 'protection work'
++    direct: 'direct help', research: 'research', advocacy: 'advocacy', training: 'training', funding: 'funding for other groups', protection: 'protection work', safeguard: 'work to protect people'
+   };
+   var HOME = { us: 'the United States', uk: 'the United Kingdom', australia: 'Australia' };
+   var FOCUS = { africa: 'Africa', asia: 'Asia', latam: 'Latin America', mideast: 'the Middle East', oceania: 'the Pacific' };
+diff -ruN base/givespin/tests/data.test.js work/givespin/tests/data.test.js
+--- base/givespin/tests/data.test.js	2026-11-03 22:07:10.595883959 +0000
++++ work/givespin/tests/data.test.js	2026-11-04 19:40:02.839765694 +0000
+@@ -71,10 +71,27 @@
+   const f = core.facetCounts(GS.charities);
+   ['children', 'patients', 'families', 'veterans', 'women', 'seniors', 'refugees'].forEach((id) => assert.ok(f.serves[id] >= 5, id));
+   assert.ok(f.where.us >= 100 && f.where.global >= 50);
+-  ['direct', 'research', 'advocacy', 'training', 'funding', 'protection'].forEach((id) => assert.ok(f.how[id] >= 5, id));
++  ['direct', 'research', 'advocacy', 'training', 'funding', 'protection', 'safeguard'].forEach((id) => assert.ok(f.how[id] >= 5, id));
+   core.ERA_IDS.forEach((id) => assert.ok(f.era[id] >= 10, id));
+ });
+ 
++test('"Protects land & wildlife" is only on charities about nature or animals; the ones that protect people have their own "Protects people" tag', () => {
++  const NATURE = ['wildlife', 'planet', 'oceans', 'animals'];
++  const nature = (c) => c.causes.some((x) => NATURE.includes(x));
++  const name = (id) => (GS.facets.how.find((x) => x.id === id) || {}).name;
++  assert.equal(name('protection'), 'Protects land & wildlife');
++  assert.equal(name('safeguard'), 'Protects people');
++  GS.charities.forEach((c) => {
++    if (c.how.includes('protection')) { assert.ok(nature(c), c.id + ' says it "Protects land & wildlife" but its causes are ' + c.causes.join()); }
++    if (c.how.includes('safeguard')) { assert.ok(!nature(c) && c.causes.some((x) => x === 'safety' || x === 'refugees'), c.id + ' says it "Protects people" but its causes are ' + c.causes.join()); }
++    assert.ok(!(c.how.includes('protection') && c.how.includes('safeguard')), c.id + ' carries both');
++  });
++  ['nspcc', 'daniel-morcombe-foundation', 'ncmec', 'stop-the-traffik', 'halo-trust', 'irc-uk', 'mines-advisory-group'].forEach((id) => {
++    const c = GS.charities.find((x) => x.id === id);
++    assert.ok(c && c.how.includes('safeguard') && !c.how.includes('protection'), id + ' is tagged "Protects people", not "Protects land & wildlife"');
++  });
++});
++
+ test('charity names are not duplicated and no entry quietly overstates itself', () => {
+   const names = GS.charities.map((c) => c.name.toLowerCase());
+   assert.equal(new Set(names).size, names.length);
+diff -ruN base/givespin/tests/profile.test.js work/givespin/tests/profile.test.js
+--- base/givespin/tests/profile.test.js	2026-11-03 22:54:19.198820011 +0000
++++ work/givespin/tests/profile.test.js	2026-11-04 19:44:46.789973406 +0000
+@@ -191,6 +191,16 @@
+   assert.equal(P.displayName({}, { signedIn: true, name: 'x'.repeat(100) }).length, 40, 'an account name keeps the 40-character cap the account has');
+ });
+ 
++test('an email address is never shown as a name: an account whose nickname is one has no name to fall back on', () => {
++  ['ada@example.com', ' ada@example.com ', 'Ada ada@example.com', 'ada@localhost', 'a@b.c'].forEach((n) => {
++    assert.equal(P.looksLikeEmail(n), true, n);
++    assert.equal(P.displayName({}, { signedIn: true, name: n }), '', 'not shown: ' + n);
++    assert.equal(P.displayName({ name: 'Captain' }, { signedIn: true, name: n }), 'Captain', 'a chosen name still wins');
++  });
++  ['Ada Lovelace', 'Sam @ Home', '@', 'Sam/Alex', 'Mx. Kind', '', null, undefined, 5].forEach((n) => assert.equal(P.looksLikeEmail(n), false, String(n)));
++  assert.equal(P.displayName({}, { signedIn: true, name: 'Sam @ Home' }), 'Sam @ Home', 'a nickname with an @ and spaces is not an address');
++});
++
+ /* ------------------------------------------------------------------ the numbers the unlock rules read */
+ 
+ test('facts: a missing, empty or odd save gives zeros and never throws', () => {
+diff -ruN base/givespin/tests/quests.test.js work/givespin/tests/quests.test.js
+--- base/givespin/tests/quests.test.js	2026-11-04 01:13:09.979624704 +0000
++++ work/givespin/tests/quests.test.js	2026-11-04 19:44:53.846005377 +0000
+@@ -255,6 +255,51 @@
+   }));
+ });
+ 
++test('every quest says where it is done: a real page of the site, or nowhere only when it is done on the Quests page itself', () => {
++  const app = SRC('app.js');
++  const pages = (/var PAGES = \[([^\]]*)\]/.exec(app)[1].match(/'([a-z-]+)'/g) || []).map((x) => x.replace(/'/g, ''));
++  const routes = new Set(['lobby', 'live'].concat(pages, ['originals', 'slots', 'table', 'races', 'instant'].map((c) => 'lobby-' + c)));
++  assert.ok(routes.has('spotlights') && routes.has('fair') && routes.has('lobby-slots'), 'the route list was read: ' + [...routes].join());
++  const ids = Q.DAILY.concat(Q.WEEKLY).map((t) => t.id);
++  assert.deepEqual(Object.keys(Q.LINKS).sort(), ids.slice().sort(), 'every quest has an entry, and nothing else does');
++  ids.forEach((id) => {
++    const href = Q.linkOf(id);
++    if (href === '') { assert.equal(id, 'w-dailies5', id + ' has nowhere to go'); return; }
++    assert.match(href, /^#[a-z-]+$/, id);
++    assert.ok(routes.has(href.slice(1)), id + ' goes to #' + href.slice(1) + ', which is not a page of the site');
++  });
++  assert.equal(Q.linkOf('d-spotlight'), '#spotlights', 'back the charity of the week goes to its page');
++  assert.equal(Q.linkOf('w-spotlight'), '#spotlights');
++  assert.equal(Q.linkOf('d-live'), '#live');
++  assert.equal(Q.linkOf('d-verify'), '#fair');
++  assert.equal(Q.linkOf('d-games2'), '#lobby');
++  assert.equal(Q.linkOf('nonsense'), '');
++  assert.equal(Q.linkOf('toString'), '', 'an id that is a property of every object is not a quest');
++});
++
++test('the time to the next local midnight: the same wherever the clock is, and right on the days a clock changes', () => {
++  const HOUR = 3600000;
++  const cases = [
++    ['UTC', [2026, 11, 4, 12, 0, 0], 12 * HOUR],
++    ['UTC', [2026, 11, 4, 23, 59, 59], 1000],
++    ['UTC', [2026, 11, 4, 0, 0, 0], 24 * HOUR],
++    ['Asia/Kolkata', [2026, 11, 4, 18, 30, 0], 5.5 * HOUR],
++    ['America/New_York', [2026, 3, 8, 0, 30, 0], 22.5 * HOUR],      // spring forward: that day has 23 hours
++    ['America/New_York', [2026, 11, 1, 0, 30, 0], 24.5 * HOUR],     // fall back: that day has 25 hours
++    ['Europe/London', [2026, 3, 29, 0, 30, 0], 22.5 * HOUR],        // the day loses an hour at 01:00 (23 hours long)
++    ['Europe/London', [2026, 3, 29, 12, 0, 0], 12 * HOUR],          // after the change it is plain again
++    ['Pacific/Auckland', [2026, 4, 5, 0, 30, 0], 24.5 * HOUR]       // the day gains an hour at 03:00 (25 hours long)
++  ];
++  cases.forEach(([tz, a, want]) => zone(tz, () => {
++    assert.equal(Q.msToMidnight(at(...a)), want, tz + ' ' + a.join(':'));
++    const now = at(...a);
++    assert.equal(new Date(now.getTime() + Q.msToMidnight(now)).getHours(), 0, tz + ': it lands on 00:00');
++    assert.equal(new Date(now.getTime() + Q.msToMidnight(now)).getMinutes(), 0);
++    assert.notEqual(core.dayKey(new Date(now.getTime() + Q.msToMidnight(now))), core.dayKey(now), tz + ': and it is the next day');
++  }));
++  assert.ok(Q.msToMidnight(new Date()) > 0 && Q.msToMidnight(new Date()) <= 25 * HOUR, 'never more than a day, never zero or negative');
++});
++
+ test('"Ends in N days": the text on every day of a season', () => {
+   assert.equal(Q.endsText(at(2026, 11, 1, 0, 5)), 'Ends in 30 days');
+   assert.equal(Q.endsText(at(2026, 11, 19, 15)), 'Ends in 12 days');
+diff -ruN base/givespin/tests/sections/35-polish.mjs work/givespin/tests/sections/35-polish.mjs
+--- base/givespin/tests/sections/35-polish.mjs	1970-01-01 00:00:00.000000000 +0000
++++ work/givespin/tests/sections/35-polish.mjs	2026-11-04 19:53:12.314274599 +0000
+@@ -0,0 +1,526 @@
++// Wave 3, helper "polish": accuracy fixes and small improvements found by the earlier helpers. Sections 35a to 35f.
++//   35a  the seven charities that protect people are no longer tagged "Protects land & wildlife": they have their own "Protects people" tag (filters, profile, the sentence about the charity of the week)
++//   35b  a quest that is still open links to the place where it is done (a link, not a second button; progress bar and words intact; a finished quest has none)
++//   35c  the Quests page is drawn again at local midnight (one timeout while the page is open, none elsewhere, no leaks), with a fake clock
++//   35d  "Your account" shows the chosen display name, never an email address as a name; the sign-in preview still says it is a preview
++//   35e  "Back a charity" chip: one click on its x works straight after typing a board size (no blur first)
++//   35f  Leaderboards, Players tab: "Show all 61" (a real button with aria-expanded, above the list, keyboard friendly, no jump)
++// Each check fails on the tree these sections were written against (the wave-3 base) and passes on the polished one.
++import { createRequire } from 'node:module';
++
++const req = createRequire(import.meta.url);
++const Q = req('../../js/quests.js');
++const WK = req('../../js/weekly.js');
++
++export default async function (h) {
++  const { check, newPage, openApp, go, section, a11y, core, GSdata, problems, openOptions } = h;
++  const MAIN = 'givespin:v2';
++  const LOCAL = 'givespin:x:';
++  // where each quest should send a visitor (written out here on purpose, apart from the table in js/quests.js: the two must agree)
++  const EXPECT = {
++    'd-charities3': '#lobby', 'd-games2': '#lobby', 'd-rounds3': '#lobby', 'd-causes2': '#lobby', 'd-back': '#lobby', 'd-spotlight': '#spotlights', 'd-live': '#live',
++    'd-verify': '#fair', 'd-streak3': '#lobby', 'd-split': '#lobby', 'd-direct': '#charities', 'd-slots': '#lobby-slots', 'd-race': '#lobby-races', 'd-card': '#cards', 'd-wheel': '#lobby',
++    'w-charities8': '#lobby', 'w-days4': '#lobby', 'w-games5': '#lobby', 'w-causes4': '#lobby', 'w-spotlight': '#spotlights', 'w-live3': '#live', 'w-verify2': '#fair',
++    'w-streak5': '#lobby', 'w-cup': '#leagues', 'w-dailies5': ''
++  };
++  const ALL = { live: true, demo: true };
++  const ADA = { signedIn: true, name: 'Ada Lovelace', type: 'email', contact: 'ada@example.com', hue: 200, createdAt: 1 };
++  const norm = (s) => String(s).replace(/\s+/g, ' ').trim();
++  const text = (p, sel) => p.evaluate((s) => { const e = document.querySelector(s); return e ? e.innerText.replace(/\s+/g, ' ').trim() : null; }, sel);
++  const noSideways = (p) => p.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
++
++  /**
++   * A page that starts with the given main save and GS.local values (once per page, after the harness has emptied storage) and, when asked, a fixed or running fake clock.
++   * opts: viewport, mobile, fixed (a Date: time stands still), clock (a Date: fake timers that start there and can be moved with page.clock.fastForward).
++   */
++  const seeded = async (save, local = {}, opts = {}) => {
++    const p = await newPage(opts);
++    if (opts.fixed) { await p.clock.setFixedTime(opts.fixed); }
++    if (opts.clock) { await p.clock.install({ time: opts.clock }); }
++    await p.addInitScript(([s, l, m, pre]) => {
++      try {
++        if (sessionStorage.getItem('__seeded')) { return; }
++        if (s) { localStorage.setItem(m, JSON.stringify(s)); }
++        Object.keys(l).forEach((k) => localStorage.setItem(pre + k, typeof l[k] === 'string' ? l[k] : JSON.stringify(l[k])));
++        sessionStorage.setItem('__seeded', '1');
++      } catch (e) { /* ignore */ }
++    }, [save, local, MAIN, LOCAL]);
++    return p;
++  };
++
++  /* ------------------------------------------------------------------------------------------------------ 35a */
++  if (section('35a. "Protects people" is its own how-they-help tag; "Protects land & wildlife" is only for land and wildlife')) {
++    const problems0 = problems.length;
++    const SEVEN = ['nspcc', 'daniel-morcombe-foundation', 'ncmec', 'stop-the-traffik', 'halo-trust', 'irc-uk', 'mines-advisory-group'];
++    const byId = (id) => GSdata.charities.find((c) => c.id === id);
++    const nSafe = GSdata.charities.filter((c) => c.how.includes('safeguard')).length;
++    const nLand = GSdata.charities.filter((c) => c.how.includes('protection')).length;
++    const p = await newPage({ viewport: { width: 1366, height: 900 } });
++    await openApp(p, '#charities');
++    const vocab = await p.evaluate(() => GS.facets.how.map((f) => f.id + '=' + f.name));
++    check(vocab.includes('protection=Protects land & wildlife') && vocab.includes('safeguard=Protects people'), 'the site knows two protection tags: land & wildlife, and people', vocab);
++    check(nSafe === 7 && SEVEN.every((id) => byId(id).how.includes('safeguard') && !byId(id).how.includes('protection')), 'the seven (NSPCC, Daniel Morcombe Foundation, Missing & Exploited Kids, STOP THE TRAFFIK, HALO Trust, IRC UK, Mines Advisory Group) carry "Protects people" and not the land tag', nSafe);
++
++    // the Charities page filters list both, with their real counts, and "Protects people" narrows the list to exactly the seven
++    await p.click('[data-role="browse-filters"]');
++    await p.waitForSelector('#dlg-browse-filters[open]');
++    const chips = await p.evaluate(() => Array.from(document.querySelectorAll('#dlg-browse-filters .chip[data-group="how"]')).map((c) => ({ id: c.getAttribute('data-id'), label: c.textContent.replace(/\s+/g, ' ').trim() })));
++    check(chips.some((c) => c.id === 'protection' && c.label === 'Protects land & wildlife' + nLand) && chips.some((c) => c.id === 'safeguard' && c.label === 'Protects people7'), 'the filter dialog has a chip for each, counting ' + nLand + ' and 7', chips);
++    await p.click('#dlg-browse-filters .chip[data-group="how"][data-id="safeguard"]');
++    await p.waitForTimeout(150);
++    check(/^Show 7 charities$/.test(norm(await p.locator('#dlg-browse-filters [data-role="done"]').innerText())), 'choosing "Protects people" leaves 7 charities', norm(await p.locator('#dlg-browse-filters [data-role="done"]').innerText()));
++    await a11y(p, 'the Charities filters with the new tag');
++    await p.click('#dlg-browse-filters [data-role="done"]');
++    await p.waitForFunction(() => !document.querySelector('#dlg-browse-filters').open);
++    const listText = await p.evaluate(() => document.querySelector('#view-charities').innerText);
++    check(SEVEN.every((id) => listText.includes(byId(id).name)) && !listText.includes('World Wildlife') && !listText.includes('African Parks'), 'the list shows those seven and no wildlife charity', listText.slice(0, 200));
++
++    // the profile says it right: "How they help: ... Protects people" for the seven, "Protects land & wildlife" for a conservation charity
++    const how = async (id) => {
++      await go(p, '#charity-' + id);
++      await p.waitForSelector('#dlg-profile[open] .facts');
++      return p.evaluate(() => { const r = Array.from(document.querySelectorAll('#dlg-profile .facts__row')).find((x) => /How they help/.test(x.querySelector('dt').textContent)); return r ? r.querySelector('dd').textContent.trim() : null; });
++    };
++    const wrong = [];
++    for (const id of SEVEN) {
++      const t = await how(id);
++      if (!t || !/Protects people/.test(t) || /land|wildlife/i.test(t)) { wrong.push(id + ': ' + t); }
++    }
++    check(wrong.length === 0, 'the profile of each of the seven says "Protects people" and nothing about land or wildlife', wrong);
++    for (const id of ['wwf', 'african-parks', 'rspb']) {
++      const t = await how(id);
++      check(/Protects land & wildlife/.test(t || '') && !/Protects people/.test(t || ''), id + ' still says "Protects land & wildlife"', t);
++    }
++
++    // the sentence about the charity of the week reads true for a charity that protects people (a week when one of the seven is in the spotlight)
++    let when = null;
++    for (let i = 0, d = new Date(2026, 10, 9, 12); i < 1500 && !when; i++, d = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7, 12)) {
++      if (SEVEN.includes(WK.current(GSdata.charities, d).id)) { when = d; }
++    }
++    check(!!when, 'a week was found in which one of the seven is the charity of the week', when && when.toDateString());
++    if (when) {
++      const ch = byId(WK.current(GSdata.charities, when).id);
++      const want = WK.explain(ch, GSdata);
++      const q = await newPage({ viewport: { width: 1366, height: 900 } });
++      await q.clock.setFixedTime(when);
++      await openApp(q, '#spotlights');
++      const spot = await q.evaluate(() => Array.from(document.querySelectorAll('#view-spotlights [data-role="text"] span')).map((s) => s.textContent.trim()));
++      check(spot.length === 2 && spot[0] === want.sentences[0] && spot[1] === want.sentences[1], 'the Charity of the week page says what the roster says about ' + ch.short, spot);
++      check(/work to protect people/.test(spot[1] || '') && !/land|wildlife/i.test(spot[1] || ''), 'and the second sentence says it protects people, not land or wildlife', spot[1]);
++      await q.close();
++    }
++    const other = WK.explain(byId('wwf'), GSdata).sentences[1];
++    check(/protection work/.test(other) && !/protect people/.test(other), 'while a conservation charity\'s sentence still says "protection work"', other);
++    await p.close();
++    check(problems.length === problems0, 'section 35a: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ------------------------------------------------------------------------------------------------------ 35b */
++  if (section('35b. A quest that is still open links to the place where it is done')) {
++    const problems0 = problems.length;
++    const dayOf = (d) => core.dayKey(d);
++    // the fewest days of November and December 2026 that between them show all 15 daily and all 10 weekly quests (so every link is seen in the browser)
++    const wanted = new Set(Q.DAILY.concat(Q.WEEKLY).map((t) => t.id));
++    const dates = [];
++    const seen = new Set();
++    for (let guard = 0; guard < 80 && seen.size < wanted.size; guard++) {
++      let best = null; let bestN = 0;
++      for (let k = 2; k <= 58; k++) {
++        const d = new Date(2026, 10, k, 12);
++        const ids = Q.pickDaily(dayOf(d), ALL).concat(Q.pickWeekly(core.weekKey(d), ALL));
++        const n = ids.filter((id) => !seen.has(id)).length;
++        if (n > bestN) { best = { d, ids }; bestN = n; }
++      }
++      if (!best) { break; }
++      best.ids.forEach((id) => seen.add(id));
++      dates.push(best.d);
++    }
++    check(seen.size === wanted.size, 'a handful of days (' + dates.length + ') show every one of the 25 quests', [seen.size, dates.length]);
++
++    const p = await seeded(null, {}, { viewport: { width: 1366, height: 900 }, fixed: dates[0] });
++    await openApp(p, '#quests');
++    await p.waitForSelector('#view-quests .qtrack');
++    const covered = new Set();
++    const clicked = new Set();
++    const bad = [];
++    const VIEW = { lobby: 'lobby', 'lobby-slots': 'lobby', 'lobby-races': 'lobby', spotlights: 'spotlights', live: 'live', fair: 'fair', charities: 'charities', cards: 'cards', leagues: 'leagues' };
++    for (const d of dates) {
++      await p.clock.setFixedTime(d);
++      await go(p, '#lobby');
++      await go(p, '#quests');
++      await p.waitForSelector('#view-quests .qcard');
++      const cards = await p.evaluate(() => Array.from(document.querySelectorAll('#view-quests .qcard')).map((c) => {
++        const a = c.querySelector('a');
++        const bar = c.querySelector('[role="progressbar"]');
++        return { key: c.getAttribute('data-key'), href: a ? a.getAttribute('href') : null, linkText: a ? a.textContent.trim() : null, act: a ? a.getAttribute('data-quest-act') : null,
++          title: c.querySelector('.qcard__t').textContent.trim(), buttons: c.querySelectorAll('button').length, links: c.querySelectorAll('a').length,
++          bar: bar && { label: bar.getAttribute('aria-label'), max: bar.getAttribute('aria-valuemax'), now: bar.getAttribute('aria-valuenow'), min: bar.getAttribute('aria-valuemin'), txt: bar.getAttribute('aria-valuetext') } };
++      }));
++      for (const c of cards) {
++        const id = c.key.split(':')[2];
++        const q = Q.quest(id);
++        covered.add(id);
++        const want = EXPECT[id];
++        if (!want) {
++          if (c.links !== 0) { bad.push(id + ' has a link but should not'); }
++        } else {
++          if (c.href !== want || c.linkText !== q.text || c.links !== 1) { bad.push(id + ' link ' + JSON.stringify([c.href, c.linkText, c.links]) + ' want ' + want); }
++          if (c.buttons !== 0) { bad.push(id + ' has a button besides its link: ' + c.buttons); }
++        }
++        if (c.title !== q.text) { bad.push(id + ' words changed: ' + c.title); }
++        if (!c.bar || c.bar.label !== q.text || c.bar.max !== String(q.target) || c.bar.min !== '0' || !/^\d+ of \d+$/.test(c.bar.txt || '')) { bad.push(id + ' progress bar ' + JSON.stringify(c.bar)); }
++      }
++      // follow the link of one quest for each address, with the mouse: it goes there and the page is the right one
++      for (const c of cards) {
++        const id = c.key.split(':')[2];
++        const want = EXPECT[id];
++        if (!want || clicked.has(want) || id === 'd-wheel') { continue; }
++        clicked.add(want);
++        await p.click('#view-quests .qcard[data-key="' + c.key + '"] a.qcard__go');
++        const route = want.slice(1);
++        const ok = await h.onRoute(p, route);
++        const shown = await p.evaluate((v) => { const e = document.querySelector('#view-' + v); return !!e && !e.hidden; }, VIEW[route]);
++        if (!ok || !shown) { bad.push('following ' + want + ' from ' + id + ' did not open it: ' + JSON.stringify([ok, shown, await p.evaluate(() => GS.app.state.route)])); }
++        await go(p, '#quests');
++        await p.waitForSelector('#view-quests .qcard');
++      }
++    }
++    check(covered.size === wanted.size, 'every quest was seen on the page', [covered.size]);
++    check(bad.length === 0, 'each open quest links to its page (and a link only), keeps its words and its progress bar, and following the link opens that page', bad);
++    check(clicked.size >= 8, 'the links were followed for ' + clicked.size + ' different addresses: ' + Array.from(clicked).join(' '), Array.from(clicked));
++    // quests with a link: the ones about giving go to the lobby, the charity of the week to its page, a live table to Live tables, verifying a round to Fair Play
++    check(JSON.stringify(Q.LINKS || null) === JSON.stringify(EXPECT), 'the table in js/quests.js is the one these checks expect (charity of the week, live table, verify a round, give in 2 different games, ...)');
++
++    // keyboard: the link is a real link in the tab order and Enter follows it
++    await go(p, '#quests');
++    const firstLink = p.locator('#view-quests .qcard a.qcard__go').first();
++    const wantHref = await firstLink.getAttribute('href');
++    await firstLink.focus();
++    check(await p.evaluate(() => document.activeElement && document.activeElement.matches('a.qcard__go')), 'the quest link takes keyboard focus');
++    await p.keyboard.press('Enter');
++    check(await h.onRoute(p, wantHref.slice(1)), 'Enter on it follows the link', wantHref);
++    await p.close();
++
++    // "Spin the daily bonus wheel": no page of its own, so its link opens the wheel (and stays a link to the lobby without scripts)
++    const wheelDay = (() => { for (let k = 2; k <= 58; k++) { const d = new Date(2026, 10, k, 12); if (Q.pickDaily(dayOf(d), ALL).includes('d-wheel')) { return d; } } return null; })();
++    check(!!wheelDay, 'a day with the daily wheel quest exists');
++    const w = await seeded(null, {}, { viewport: { width: 1366, height: 900 }, fixed: wheelDay });
++    await openApp(w, '#quests');
++    await w.waitForSelector('#view-quests .qcard');
++    const wl = w.locator('#view-quests a[data-quest-act="daily"]');
++    const haveWheel = await wl.count() === 1;
++    check(haveWheel && await wl.getAttribute('href') === '#lobby', 'the wheel quest\'s link points to the lobby, where the wheel is');
++    if (haveWheel) {
++      await wl.click();
++      await w.waitForSelector('#dlg-daily[open]');
++      check(await w.evaluate(() => location.hash) === '#quests' && /Daily bonus wheel/.test(await text(w, '#dlg-daily .modal__title')), 'and a click opens the Daily bonus wheel without leaving the page');
++    } else { check(false, 'and a click opens the Daily bonus wheel without leaving the page'); }
++    await w.close();
++
++    // a finished quest is plain words with its Claim button; a claimed one is plain words too
++    const doneDay = (() => { for (let k = 2; k <= 58; k++) { const d = new Date(2026, 10, k, 12); if (Q.pickDaily(dayOf(d), ALL).includes('d-rounds3')) { return d; } } return null; })();
++    const rid = (i) => GSdata.charities[(i * 37 + 5) % GSdata.charities.length].id;
++    const hist = [1, 2, 3].map((i) => ({ id: 'p' + i, ts: doneDay.getTime() - i * 60000, game: 'wheel', totalCents: 500, rounds: 1, status: 'ok', pay: 'credit', freq: 'once', allocations: [{ charityId: rid(i), cents: 500 }] }))
++      .concat([{ id: 'old', ts: doneDay.getTime() - 40 * 86400000, game: 'wheel', totalCents: 500, rounds: 1, status: 'ok', pay: 'credit', freq: 'once', allocations: [{ charityId: rid(9), cents: 500 }] }]);
++    const dn = await seeded({ v: 2, xp: 120, totalCents: 2000, plays: 4, history: hist }, {}, { viewport: { width: 1366, height: 900 }, fixed: doneDay });
++    await openApp(dn, '#quests');
++    await dn.waitForSelector('#view-quests .qcard');
++    const key = 'd:' + dayOf(doneDay) + ':d-rounds3';
++    const card = '#view-quests .qcard[data-key="' + key + '"]';
++    check(await dn.locator(card + '.is-done').count() === 1 && await dn.locator(card + ' a').count() === 0 && await dn.locator(card + ' [data-claim-quest]').count() === 1, 'a finished quest has its Claim button and no link', await text(dn, card));
++    await dn.click(card + ' [data-claim-quest]');
++    await dn.waitForSelector(card + '.is-claimed');
++    check(await dn.locator(card + ' a').count() === 0 && (await text(dn, card + ' .qcard__t')) === Q.quest('d-rounds3').text, 'a claimed quest has no link either, and the same words');
++    await dn.close();
++
++    // layout and accessibility: no sideways scroll from 320 px up, axe clean
++    for (const [name, vp, mobile] of [['a phone 320 px wide', { width: 320, height: 640 }, true], ['a laptop', { width: 1366, height: 800 }, false], ['a phone', { width: 390, height: 844 }, true]]) {
++      const s = await seeded(null, {}, { viewport: vp, mobile, fixed: dates[0] });
++      await openApp(s, '#quests');
++      await s.waitForSelector('#view-quests .qcard a.qcard__go');
++      check(await noSideways(s), 'on ' + name + ' the Quests page does not scroll sideways with the links');
++      const fits = await s.evaluate(() => Array.from(document.querySelectorAll('.qcard a.qcard__go')).every((a) => { const r = a.getBoundingClientRect(); const c = a.closest('.qcard').getBoundingClientRect(); return r.right <= c.right + 1 && r.left >= c.left - 1; }));
++      check(fits, 'on ' + name + ' every link stays inside its card');
++      if (name !== 'a phone 320 px wide') { await a11y(s, 'the Quests page with quest links on ' + name); }
++      await s.close();
++    }
++    check(problems.length === problems0, 'section 35b: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ------------------------------------------------------------------------------------------------------ 35c */
++  if (section('35c. The Quests page is drawn again at midnight, with one timer that is gone when the page is left')) {
++    const problems0 = problems.length;
++    const D = new Date(2026, 10, 29, 12);   // Sunday 29 November 2026: tomorrow is Monday (a new week), and the day after that is the 1st (a new season)
++    const day = core.dayKey(D);
++    const IDS = GSdata.charities.map((c) => c.id);
++    const rid = (i) => IDS[(i * 37 + 5) % IDS.length];
++    const SPOT = WK.current(GSdata.charities, D).id;
++    const T0 = new Date(2026, 10, 29, 23, 59, 20);
++    let seq = 0;
++    const rnd = (minAgo, over, daysAgo = 0) => Object.assign({ id: 'm' + (seq++), ts: T0.getTime() - minAgo * 60000 - daysAgo * 86400000, game: 'wheel', totalCents: 500, rounds: 1, status: 'ok', pay: 'credit', freq: 'once', allocations: [{ charityId: rid(seq), cents: 500 }] }, over || {});
++    // a day with lots done (so there is something to claim and the badge shows it), and an old round so this is not a brand-new player (no head start of tiers)
++    const history = [rnd(1, { game: 'derby' }), rnd(2, { game: 'slots', rounds: 3, pick: { charityId: SPOT, won: false, board: 8 } }), rnd(3, { game: 'wheel' }), rnd(4, { game: 'direct', direct: true }),
++      rnd(5, { game: 'derby', live: { pot: 1000, players: 6, stake: 500, pick: rid(3), won: false, winner: rid(4) } }), rnd(0, { game: 'plinko' }, 40)];
++    const save = { v: 2, xp: 120, totalCents: 3000, plays: history.length, history, streak: 4, bestStreak: 4, lastDay: day, daily: { day, claims: 1 }, cards: { [IDS[2]]: { n: 1, rarity: 'common', ts: T0.getTime() - 30 * 60000 } } };
++    const keys = (p, role) => p.evaluate((r) => Array.from(document.querySelectorAll('#view-quests [data-role="' + r + '"] .qcard')).map((c) => c.getAttribute('data-key')), role);
++    const badge = (p) => p.evaluate(() => { const b = document.querySelector('#quests-badge'); return { hidden: b.hidden, text: b.textContent.trim() }; });
++
++    const p = await seeded(save, {}, { viewport: { width: 1366, height: 900 }, clock: T0 });
++    await openApp(p, '#quests');
++    await p.waitForSelector('#view-quests .qtrack');
++    const before = { daily: await keys(p, 'daily'), weekly: await keys(p, 'weekly'), ends: await text(p, '.qseason__ends'), badge: await badge(p), claimable: await p.evaluate(() => GS.ui.quests.view().claimable), season: await text(p, '.qseason .sect__t') };
++    check(before.daily.length === 3 && before.daily.every((k) => k.includes(day)) && before.ends === 'Ends tomorrow night' && before.season === 'Gold November', 'at 23:59 on 29 November the page shows that day\'s quests and "Ends tomorrow night"', before);
++    check(!before.badge.hidden && Number(before.badge.text.replace(/\D/g, '')) === before.claimable && before.claimable >= 2, 'and the side-menu badge counts what can be claimed', before.badge);
++    check(await p.evaluate(() => !!(GS.ui.quests.midnightArmed && GS.ui.quests.midnightArmed())), 'a timer to midnight is armed while the page is open');
++
++    // the visitor is in the middle of the page (focus on a tier): at midnight it is still drawn again, and focus goes to the page rather than to a button that is gone
++    await p.focus('#view-quests .qtier__btn[tabindex="0"]');
++    await p.clock.fastForward('01:00');
++    await p.waitForTimeout(250);
++    const mid = { daily: await keys(p, 'daily'), weekly: await keys(p, 'weekly'), ends: await text(p, '.qseason__ends'), badge: await badge(p), claimable: await p.evaluate(() => GS.ui.quests.view().claimable),
++      active: await p.evaluate(() => document.activeElement && document.activeElement.id), toast: await p.evaluate(() => document.querySelector('#toasts').innerText) };
++    const day2 = core.dayKey(new Date(2026, 10, 30, 12));
++    check(mid.daily.length === 3 && mid.daily.every((k) => k.includes(day2)), 'after midnight the three daily quests are the new day\'s (even with the keyboard inside the page)', mid.daily);
++    check(mid.weekly.length === 3 && mid.weekly.every((k) => !before.weekly.includes(k) && k.includes(core.weekKey(new Date(2026, 10, 30, 12)))), 'and it is Monday, so the three weekly quests are the new week\'s too', mid.weekly);
++    check(mid.ends === 'Ends tonight at midnight', '"Ends tomorrow night" has become "Ends tonight at midnight"', mid.ends);
++    check(mid.claimable < before.claimable && Number(mid.badge.text.replace(/\D/g, '') || 0) === mid.claimable, 'the side-menu badge was drawn again (' + before.claimable + ' to ' + mid.claimable + ')', [before.badge, mid.badge]);
++    check(mid.active === 'main', 'focus went to the page, not to a button that was drawn away', mid.active);
++    check(/A new day has started/.test(mid.toast), 'one toast says it is a new day', mid.toast);
++    check(await p.evaluate(() => !!(GS.ui.quests.midnightArmed && GS.ui.quests.midnightArmed())), 'the timer was set again for the next midnight');
++    check(await p.locator('#view-quests .qcard a.qcard__go').count() >= 1, 'the quests drawn at midnight carry their links');
++
++    // the next midnight, with nothing focused in the page: the 1st, a new season (the week goes on)
++    await p.evaluate(() => { if (document.activeElement && document.activeElement.blur) { document.activeElement.blur(); } });
++    await p.clock.fastForward('24:00:00');
++    await p.waitForTimeout(250);
++    const mon = { daily: await keys(p, 'daily'), weekly: await keys(p, 'weekly'), ends: await text(p, '.qseason__ends'), season: await text(p, '.qseason .sect__t') };
++    check(mon.daily.every((k) => k.includes('2026-12-01') || k.includes(core.dayKey(new Date(2026, 11, 1, 12)))), 'on the 1st the daily quests are the 1st\'s', mon.daily);
++    check(JSON.stringify(mon.weekly) === JSON.stringify(mid.weekly), 'and the weekly quests are the same as on Monday (the week goes on)', mon.weekly);
++    check(mon.season === 'Winter Gala' && mon.ends === 'Ends in 31 days', 'a new season starts: "Winter Gala", "Ends in 31 days"', mon);
++    // leaving the page takes the timer away; nothing happens at the next midnight on another page
++    await go(p, '#lobby');
++    check(!(await p.evaluate(() => !!(GS.ui.quests.midnightArmed && GS.ui.quests.midnightArmed()))), 'leaving the page clears the timer');
++    await p.clock.fastForward('24:00:00');
++    await p.waitForTimeout(250);
++    check(!(await p.evaluate(() => !!(GS.ui.quests.midnightArmed && GS.ui.quests.midnightArmed()))) && !/A new day/.test(await p.evaluate(() => document.querySelector('#toasts').innerText)), 'and the next midnight, spent on the lobby, sets no timer and says nothing', await p.evaluate(() => document.querySelector('#toasts').innerText));
++    await go(p, '#quests');
++    await p.waitForSelector('#view-quests .qtrack');
++    check(await p.evaluate(() => !!(GS.ui.quests.midnightArmed && GS.ui.quests.midnightArmed())) && (await keys(p, 'daily')).every((k) => k.includes('2026-12-02')), 'coming back sets it again, and the page shows the 2nd');
++    await p.close();
++
++    // no leaks: visit and leave the Quests page ten times; while on it exactly one long timer is pending, elsewhere none, and no interval is added
++    const q = await newPage({ viewport: { width: 1366, height: 900 } });
++    await openApp(q, '#lobby');
++    await q.waitForTimeout(800);
++    await q.evaluate(() => {
++      const longs = (window.__long = new Set());
++      const ivs = (window.__ivs = new Set());
++      const st = window.setTimeout; const ct = window.clearTimeout; const si = window.setInterval; const ci = window.clearInterval;
++      window.setTimeout = function (fn, ms) {
++        const rest = Array.prototype.slice.call(arguments, 2);
++        let id = 0;
++        id = st.call(window, function () { longs.delete(id); return typeof fn === 'function' ? fn.apply(this, rest) : undefined; }, ms);
++        if (ms >= 3600000) { longs.add(id); }
++        return id;
++      };
++      window.clearTimeout = function (id) { longs.delete(id); return ct.call(window, id); };
++      window.setInterval = function () { const id = si.apply(window, arguments); ivs.add(id); return id; };
++      window.clearInterval = function (id) { ivs.delete(id); return ci.call(window, id); };
++    });
++    const longs = () => q.evaluate(() => window.__long.size);
++    const base = await longs();
++    const onPage = []; const away = [];
++    for (let i = 0; i < 10; i++) {
++      await go(q, '#quests'); onPage.push(await longs());
++      await go(q, i % 2 ? '#boards' : '#lobby'); away.push(await longs());
++    }
++    check(onPage.every((n) => n === base + 1), 'on the Quests page exactly one long timer is pending, on every one of ten visits', onPage);
++    check(away.every((n) => n === base), 'on any other page none is', away);
++    check(await q.evaluate(() => window.__ivs.size) === 0, 'and no interval was started by any of those visits');
++    await q.close();
++    check(problems.length === problems0, 'section 35c: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ------------------------------------------------------------------------------------------------------ 35d */
++  if (section('35d. "Your account" shows the chosen display name, and an email address is never shown as a name')) {
++    const problems0 = problems.length;
++    const mainSave = (account) => ({ v: 2, xp: 40000, totalCents: 150000, plays: 40, streak: 3, bestStreak: 5, account });
++    const openSettings = async (p) => {
++      await p.click('#acct [data-role="toggle"]');
++      await p.click('#acct [data-role="settings"]');
++      await p.waitForSelector('#dlg-settings[open] .acctcard');
++    };
++    const card = (p) => p.evaluate(() => ({ name: document.querySelector('#dlg-settings .acctcard b').textContent, initials: document.querySelector('#dlg-settings .acctcard .avatar').textContent, small: document.querySelector('#dlg-settings .acctcard small').textContent,
++      title: document.querySelector('#dlg-settings .modal__title').textContent, dialog: document.querySelector('#dlg-settings').innerText }));
++    const masked = 'a•••@example.com';
++
++    // 1. a name chosen on the profile page wins over the account's own
++    let p = await seeded(mainSave(ADA), { profile: { name: 'Captain Kind', frame: 'plain', title: '' } }, { viewport: { width: 1366, height: 900 } });
++    await openApp(p, '#lobby');
++    await openSettings(p);
++    let c = await card(p);
++    check(c.name === 'Captain Kind' && c.initials === 'CK' && !c.dialog.includes('Ada Lovelace'), '"Your account" shows the chosen display name, with its initials (not Ada Lovelace)', c.name + ' / ' + c.initials);
++    check(c.title === 'Your account' && c.small.includes(masked) && !c.dialog.includes('ada@example.com'), 'it still says "Your account", and shows the contact masked, never in full', c.small);
++    check(/Preview\./.test(c.dialog) && /Nothing is sent anywhere/.test(c.dialog) && /mock-up of accounts/.test(c.dialog), 'and the sign-in preview still says it is a preview (a mock-up, nothing sent)');
++    await a11y(p, 'Your account with a chosen display name');
++    await p.keyboard.press('Escape');
++    await p.click('#acct [data-role="toggle"]');
++    check(await text(p, '#acct .acct__who b') === 'Captain Kind' && /Account menu for Captain Kind/.test(await p.getAttribute('#acct [data-role="toggle"]', 'aria-label')), 'the account menu says the same name');
++    await p.close();
++
++    // 2. no name chosen: the account's own
++    p = await seeded(mainSave(ADA), {}, { viewport: { width: 1366, height: 900 } });
++    await openApp(p, '#lobby');
++    await openSettings(p);
++    c = await card(p);
++    check(c.name === 'Ada Lovelace' && c.initials === 'AL', 'with no name chosen it shows the account\'s own name', c.name);
++    await p.close();
++
++    // 3. an email address typed as the nickname is never shown as a name, anywhere the visitor reads one
++    const EMAILER = Object.assign({}, ADA, { name: 'ada@example.com' });
++    p = await seeded(mainSave(EMAILER), {}, { viewport: { width: 1366, height: 900 } });
++    await openApp(p, '#me');
++    await p.waitForSelector('#me-name-h');
++    check(await text(p, '#me-name-h') === 'Mystery Giver' && !(await p.evaluate(() => document.body.innerText)).includes('ada@example.com'), 'the profile page does not show the address as the name (a Mystery Giver, and the address appears nowhere)', await text(p, '#me-name-h'));
++    check(/stay a Mystery Giver/.test(await text(p, '#me-name-hint')) && !/account name/.test(await text(p, '#me-name-hint')), 'and its hint does not offer the address as "your account name"', await text(p, '#me-name-hint'));
++    await p.click('#acct [data-role="toggle"]');
++    check(await text(p, '#acct .acct__who b') === 'Mystery Giver' && !(await text(p, '#acct')).includes('ada@example.com'), 'the account menu says Mystery Giver, not the address');
++    await p.click('#acct [data-role="settings"]');
++    await p.waitForSelector('#dlg-settings[open] .acctcard');
++    c = await card(p);
++    check(c.name === 'Mystery Giver' && c.initials === 'MG' && !c.dialog.includes('ada@example.com') && c.small.includes(masked), '"Your account" says Mystery Giver, the masked contact is the only trace', c);
++    await a11y(p, 'Your account with an address as the account name');
++    await p.keyboard.press('Escape');
++    // choosing a name on the profile page fixes it everywhere at once
++    await go(p, '#me');
++    await p.fill('#me-name', 'Sam');
++    await p.click('[data-role="nameform"] button[type="submit"]');
++    await p.waitForFunction(() => GS.ui.displayName() === 'Sam');
++    await p.click('#acct [data-role="toggle"]');
++    await p.click('#acct [data-role="settings"]');
++    await p.waitForSelector('#dlg-settings[open] .acctcard');
++    check((await card(p)).name === 'Sam', 'once a name is chosen "Your account" shows it');
++    await p.close();
++
++    // 4. signing back in: "Welcome back" uses the same name
++    p = await seeded(mainSave(Object.assign({}, ADA, { signedIn: false })), { profile: { name: 'Captain Kind', frame: 'plain', title: '' } }, { viewport: { width: 1366, height: 900 } });
++    await openApp(p, '#lobby');
++    await p.click('#acct [data-role="login"]');
++    await p.waitForSelector('#dlg-auth[open] #au-contact');
++    check(/Preview\./.test(await text(p, '#dlg-auth')) && /Nothing is sent anywhere/.test(await text(p, '#dlg-auth')), 'the log-in dialog says it is a preview');
++    await p.fill('#au-contact', 'ada@example.com');
++    await p.fill('#au-pass', 'whatever123');
++    await p.click('#dlg-auth form button[type="submit"]');
++    await p.waitForFunction(() => /Welcome back/.test(document.querySelector('#toasts').innerText));
++    check(/Welcome back, Captain Kind!/.test(await text(p, '#toasts')), 'the welcome-back toast uses the chosen name', await text(p, '#toasts'));
++    await p.close();
++    check(problems.length === problems0, 'section 35d: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ------------------------------------------------------------------------------------------------------ 35e */
++  if (section('35e. "Back a charity": one click on the chip\'s x works straight after typing a board size')) {
++    const problems0 = problems.length;
++    for (const [name, vp, mobile, wait] of [['a laptop, at once', { width: 1366, height: 800 }, false, 0], ['a laptop, after the typed size was applied', { width: 1366, height: 800 }, false, 700], ['a phone', { width: 390, height: 844 }, true, 0]]) {
++      const p = await newPage({ viewport: vp, mobile });
++      await openApp(p, '#game-duck');
++      if (mobile) { await openOptions(p); }
++      await p.click('#pick-btn');
++      await p.waitForSelector('#dlg-charitypick[open]');
++      await p.fill('#cp-q', 'wateraid');
++      await p.locator('#dlg-charitypick .pickitem').first().click();
++      await p.waitForFunction(() => !document.querySelector('#dlg-charitypick').open);
++      check((await p.locator('#pick-chip').innerText()).includes('WaterAid'), name + ': WaterAid is backed and shows as a chip');
++      // type a size, and do not leave the box
++      await p.click('#size-custom');
++      await p.keyboard.press('Control+A');
++      await p.keyboard.type('37');
++      if (wait) { await p.waitForFunction(() => GS.store.prefs().sizes.duck === 37); await p.waitForTimeout(wait - 350 > 0 ? wait - 350 : 0); }
++      check(await p.evaluate(() => document.activeElement.id) === 'size-custom', name + ': the box still has the keyboard (nothing blurred it)');
++      const chip = p.locator('#pick-chip [data-role="clear-pick"]');
++      const node = await chip.elementHandle();
++      await chip.click({ timeout: 4000 });
++      await p.waitForTimeout(250);
++      check(!(await p.locator('#pick-chip').isVisible()), name + ': the first click on the x stopped backing the charity', await p.evaluate(() => document.querySelector('#pick-chip').innerText));
++      check(await p.evaluate(() => GS.store.prefs().sizes.duck === 37 && document.querySelector('#size-custom').value === '37'), name + ': and the typed board size of 37 was kept');
++      check(/Optional: back one charity/.test(await text(p, '#pick-hint')), name + ': the hint went back to "Optional"');
++      await node.dispose();
++      // changing the charity still redraws the chip
++      await p.click('#pick-btn');
++      await p.waitForSelector('#dlg-charitypick[open]');
++      await p.fill('#cp-q', 'oxfam');
++      await p.locator('#dlg-charitypick .pickitem').first().click();
++      await p.waitForFunction(() => !document.querySelector('#dlg-charitypick').open);
++      check(/Oxfam/i.test(await p.locator('#pick-chip').innerText()), name + ': backing another charity redraws the chip with the new name', await p.locator('#pick-chip').innerText());
++      await p.close();
++    }
++    check(problems.length === problems0, 'section 35e: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ------------------------------------------------------------------------------------------------------ 35f */
++  if (section('35f. Leaderboards, Players: "Show all 61" is a real button above the list')) {
++    const problems0 = problems.length;
++    const seedSave = { v: 2, xp: 12000, totalCents: 2500, plays: 12, streak: 2, bestStreak: 3 };
++    const rows = (p) => p.evaluate(() => ({
++      main: document.querySelectorAll('#bd-panel .bd__table tbody:not(.bd__extra) tr').length, extra: document.querySelectorAll('#bd-panel .bd__table tbody.bd__extra tr').length,
++      bots: document.querySelectorAll('#bd-panel .bd__table .botpill').length, you: document.querySelectorAll('#bd-panel .bd__table tr.is-you').length,
++      ranks: Array.from(document.querySelectorAll('#bd-panel .bd__table tbody .bd__n')).map((n) => Number(n.textContent)) }));
++    const btn = (p) => p.evaluate(() => { const b = document.querySelector('#bd-panel [data-role="players-all"]'); if (!b) { return null; } const r = b.getBoundingClientRect();
++      return { text: b.textContent.trim(), expanded: b.getAttribute('aria-expanded'), controls: b.getAttribute('aria-controls'), exists: !!document.getElementById(b.getAttribute('aria-controls')), top: Math.round(r.top + window.scrollY), tag: b.tagName, type: b.type, h: r.height,
++        focused: document.activeElement === b, status: b.parentNode.querySelector('span').textContent }; });
++    for (const [name, vp, mobile] of [['a laptop', { width: 1366, height: 900 }, false], ['a phone', { width: 390, height: 844 }, true]]) {
++      const p = await seeded(seedSave, {}, { viewport: vp, mobile });
++      await openApp(p, '#boards');
++      await p.click('#bd-tab-players');
++      await p.waitForSelector('#bd-panel .bd__table');
++      const r0 = await rows(p);
++      const b0 = await btn(p);
++      check(r0.main === 10 && r0.bots >= 10, name + ': the Players tab starts with the top 10', r0);
++      check(!!b0 && b0.tag === 'BUTTON' && b0.type === 'button' && b0.text === 'Show all 61' && b0.expanded === 'false' && b0.exists, name + ': a real button "Show all 61" with aria-expanded="false" that controls the list', b0);
++      check(b0.status === 'Showing the top 10 of 61, and your row under them.', name + ': a line says what is showing (and that your own row is under the ten)', b0.status);
++      check(b0.h >= 24, name + ': the button is at least 24 px tall', b0.h);
++      const scroll0 = await p.evaluate(() => Math.round(window.scrollY));
++      await p.focus('#bd-panel [data-role="players-all"]');
++      await p.keyboard.press('Enter');
++      await p.waitForFunction(() => document.querySelectorAll('#bd-panel .bd__table tbody:not(.bd__extra) tr').length === 61);
++      const r1 = await rows(p);
++      const b1 = await btn(p);
++      check(r1.main === 61 && r1.extra === 0 && r1.bots === 60 && r1.you === 1, name + ': Enter shows all 61: 60 bots each marked BOT, and your own row once', r1);
++      check(r1.ranks.length === 61 && r1.ranks.every((n, i) => n === i + 1), name + ': ranked 1 to 61 in order');
++      check(b1.expanded === 'true' && b1.focused && b1.text === 'Show only the top 10' && b1.status === 'Showing all 61.', name + ': the button says expanded, keeps the keyboard, and offers to go back', b1);
++      check(b1.top === b0.top && Math.round(await p.evaluate(() => window.scrollY)) === scroll0, name + ': the button did not move and the page did not scroll (no jump)', [b0.top, b1.top]);
++      check(await noSideways(p), name + ': no sideways scroll with all 61');
++      await a11y(p, 'the Players tab with all 61 on ' + name);
++      // Space puts it back; the range toggle keeps what was chosen
++      await p.keyboard.press('Space');
++      await p.waitForFunction(() => document.querySelectorAll('#bd-panel .bd__table tbody:not(.bd__extra) tr').length === 10);
++      const b2 = await btn(p);
++      check(b2.expanded === 'false' && b2.focused && b2.text === 'Show all 61' && b2.top === b0.top, name + ': Space folds it again, in the same place', b2);
++      await p.click('#bd-panel [data-role="players-all"]');
++      await p.click('[data-range="all"]');
++      await p.waitForTimeout(150);
++      const r3 = await rows(p);
++      check(r3.main === 61 && (await btn(p)).expanded === 'true', name + ': switching to All time keeps the full list', r3);
++      // leaving the page and coming back starts with the top 10 again
++      await go(p, '#lobby');
++      await go(p, '#boards');
++      await p.click('#bd-tab-players');
++      await p.waitForSelector('#bd-panel .bd__table');
++      check((await rows(p)).main === 10 && (await btn(p)).expanded === 'false', name + ': a new visit starts with the top 10');
++      // the other tabs have no such button
++      await p.click('#bd-tab-crews');
++      check(await p.locator('#bd-panel [data-role="players-all"]').count() === 0, name + ': the Crews tab has no such button');
++      await p.close();
++    }
++    // a narrow phone and a sideways phone: nothing scrolls sideways, and the visitor's row is where it should be
++    for (const [vp, label] of [[{ width: 320, height: 640 }, '320 px'], [{ width: 844, height: 390 }, 'a phone held sideways'], [{ width: 2560, height: 1300 }, '2560 px']]) {
++      const p = await seeded(seedSave, {}, { viewport: vp, mobile: vp.width < 900 });
++      await openApp(p, '#boards');
++      await p.click('#bd-tab-players');
++      await p.click('#bd-panel [data-role="players-all"]');
++      await p.waitForFunction(() => document.querySelectorAll('#bd-panel .bd__table tbody:not(.bd__extra) tr').length === 61);
++      check(await noSideways(p), label + ': all 61 do not scroll the page sideways');
++      await p.close();
++    }
++    check(problems.length === problems0, 'section 35f: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++}
+diff -ruN base/givespin/tests/weekly.test.js work/givespin/tests/weekly.test.js
+--- base/givespin/tests/weekly.test.js	2026-11-03 22:50:31.508710600 +0000
++++ work/givespin/tests/weekly.test.js	2026-11-04 19:40:02.840302252 +0000
+@@ -272,5 +272,7 @@
+   assert.deepEqual(by('charity-water'), ['Brings clean, safe drinking water to people in developing countries.', 'A gift to charity: water supports its work worldwide, through funding for other groups.']);
+   assert.equal(by('dogs-trust')[1], 'A gift to Dogs Trust supports its work in the United Kingdom and worldwide, through direct help and training.');
+   assert.equal(by('aarp-foundation')[1], 'A gift to AARP Foundation supports its work helping older adults in the United States, through direct help and advocacy.');
++  assert.equal(by('nspcc')[1], 'A gift to NSPCC supports its work helping children and families in the United Kingdom, through direct help, advocacy and work to protect people.', 'a charity that protects people is not said to protect land or wildlife');
++  assert.equal(by('wwf')[1], 'A gift to WWF supports its work in the United States and worldwide, through protection work and advocacy.');
+   assert.equal(by('cancer-research-institute')[0], 'Cancer Research Institute is a charity working on cancer and health care.', 'its own description says "leading", so the sentence is built from its causes instead');
+ });

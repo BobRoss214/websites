@@ -1,0 +1,155 @@
+/* ==========================================================================
+   Stream Mode overlay (js/ui/stream.js): the toolbar in the stage header, the pot / charity / round id above the picture, the simulated chat
+   vote bar, the compact view and the see-through ?overlay=1 page.
+   Loaded before fit.css and walk.css, so the one-screen layout rules still win where they are as strong; rules here that must beat them
+   start with `html body.is-stream` (one more element name than theirs).
+   ========================================================================== */
+
+/* nothing of this shows outside Stream Mode */
+body:not(.is-stream) .sbar, body:not(.is-stream) .shud, body:not(.is-stream) .shandle, body:not(.is-stream) .sdemo { display: none !important; }
+
+/* ------------------------------------------------------------------ the page */
+/* (the bottom padding is the page's own: nothing is under the page in Stream Mode, so no room is kept for the footer; a phone's docked panel is fixed and the picture is fitted above it) */
+html body.is-stream #main.main { padding-top: 8px; padding-bottom: 10px; padding-left: clamp(10px, 1.6vw, 40px); padding-right: clamp(10px, 1.6vw, 40px); }
+html body.is-stream .view, html body.is-stream #view-game { max-width: none; }
+html body.is-stream #view-game .gamegrid { gap: clamp(10px, 1vw, 22px); }
+html body.is-stream #view-game .stage { padding: clamp(8px, 0.8vw, 18px); gap: clamp(6px, 0.7vw, 14px); }
+html body.is-stream #view-game .stage__tag { display: none; }
+html body.is-stream #view-game .stage__title { font-size: clamp(1.05rem, 1.5vw, 2.3rem); }
+html body.is-stream #view-game .stage__head { gap: 6px 12px; }
+html body.is-stream #view-game .stage__body { padding: 4px; }
+
+/* the sentence under a game's picture is for the normal screen; the legend of a race or a wheel makes way for the picture on a short window */
+html body.is-stream #view-game .game > .game-note { display: none; }
+@media (max-height: 820px), (max-width: 900px) { html body.is-stream #view-game .game > .rlegend { display: none; } }
+
+html body.is-stream #livepanel .lt-chat { display: none; }
+
+/* credit is off the screen until "Show my credit" is pressed */
+body.is-stream:not(.stream-credit) #view-game .field__aux { display: none; }
+
+/* ------------------------------------------------- the controls (a wide screen) */
+@media (min-width: 901px) {
+  html body.is-stream #view-game:not(.is-live) .gamegrid { grid-template-columns: clamp(250px, 15vw, 380px) minmax(0, 1fr); }
+  html body.is-stream #view-game.is-live .gamegrid { grid-template-columns: clamp(300px, 19vw, 440px) minmax(0, 1fr); }
+  /* a solo game keeps the amount and Play; the rest of the gift panel is for the normal screen (leave Stream Mode to change it) */
+  html body.is-stream #view-game:not(.is-live) .bet #field-rounds,
+  html body.is-stream #view-game:not(.is-live) .bet #field-size,
+  html body.is-stream #view-game:not(.is-live) .bet #field-variants,
+  html body.is-stream #view-game:not(.is-live) .bet #field-pick,
+  html body.is-stream #view-game:not(.is-live) .bet .bet__more,
+  html body.is-stream #view-game:not(.is-live) .bet .kbd-hint { display: none; }
+  html body.is-stream #view-game:not(.is-live) .bet { position: static; max-height: none; overflow: visible; }
+  html body.is-stream #view-game:not(.is-live) .bet__act { position: static; margin: 0; padding: 4px 0 0; background: none; }
+}
+/* on a big screen the solo controls grow with it (a live table's own panel is sized by its fit rules and keeps its size) */
+@media (min-width: 1700px) { html body.is-stream #view-game:not(.is-live) .bet { zoom: 1.25; } }
+@media (min-width: 2300px) { html body.is-stream #view-game:not(.is-live) .bet { zoom: 1.6; } }
+
+/* ------------------------------------------------------------------ toolbar */
+.sbar { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px; margin-left: auto; flex: 0 1 auto; }
+.sbar .sbtn { min-height: 34px; padding: 5px 11px; gap: 6px; font-size: 0.8rem; white-space: nowrap; }
+.sbar .sbtn .ico { width: 1.1em; height: 1.1em; }
+.sbar .sbtn[aria-pressed="true"] { border-color: rgba(34, 240, 122, 0.55); color: var(--green); }
+.sbar .stream-exit { position: static; z-index: auto; background: var(--raised); }   /* (the Exit button of js/app.js rides in the toolbar; it is a fixed button only on a page with no toolbar) */
+@media (min-width: 2300px) { .sbar { zoom: 1.4; } }
+/* small windows: icons only (the words stay for a screen reader) */
+@media (max-width: 900px) {
+  .sbar .sbtn { min-width: 34px; padding: 5px 8px; }
+  .sbar .sbtn__t { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+@media (max-height: 520px) { .sbar .sbtn { min-height: 30px; min-width: 30px; padding: 3px 7px; } }
+
+.skeys { position: absolute; z-index: 75; right: 0; top: calc(100% + 8px); width: min(400px, calc(100vw - 24px)); display: grid; gap: 8px; padding: 12px 14px; border-radius: 14px; background: #162838; border: 1px solid var(--line-2); box-shadow: 0 22px 50px -16px rgba(0, 0, 0, 0.85); text-align: left; max-height: calc(100vh - 80px); overflow: auto; }
+.skeys__t { font: 800 0.9rem var(--f-display); }
+.skeys__list { display: grid; gap: 5px; margin: 0; }
+.skeys__list > div { display: grid; grid-template-columns: 8.2em minmax(0, 1fr); gap: 8px; align-items: baseline; }
+.skeys kbd { font-family: var(--f-body); font-weight: 800; }
+.skeys__list dt { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
+.skeys__list dd { margin: 0; color: var(--muted); font-size: 0.82rem; }
+.skeys__fine { color: var(--dim); font-size: 0.76rem; }
+.skeys__lbl { font: 700 0.74rem var(--f-body); letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+.skeys__row { display: flex; gap: 6px; }
+.skeys__row input { flex: 1 1 auto; min-width: 0; min-height: 34px; padding: 4px 10px; border-radius: 9px; border: 1px solid var(--line-2); background: var(--bg-2); color: var(--text); font: 500 0.78rem var(--f-mono); }
+
+/* ------------------------------------------------ the pot, the charity, the round */
+.shud { display: grid; gap: clamp(6px, 0.6vw, 12px); min-width: 0; }
+.shud__row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 6px clamp(12px, 1.6vw, 36px); padding: clamp(4px, 0.5vw, 12px) clamp(10px, 1.2vw, 26px); border-radius: 14px; background: #0b161f; border: 1px solid var(--line); }
+.shud__pot, .shud__ch, .shud__id { display: grid; gap: 3px; min-width: 0; line-height: 1.1; }
+.shud__id { text-align: right; justify-items: end; }
+.shud__k { font: 700 clamp(0.62rem, 0.72vw, 1rem)/1 var(--f-body); letter-spacing: 0.09em; text-transform: uppercase; color: var(--dim); }
+.shud__v { font: 800 clamp(1.4rem, min(2.2vw, 4vh), 4.2rem)/1.05 var(--f-display); font-variant-numeric: tabular-nums; color: var(--gold); letter-spacing: -0.02em; }
+.shud__v--id { font: 700 clamp(0.95rem, min(1.5vw, 3vh), 2.2rem)/1.1 var(--f-mono); color: var(--text); letter-spacing: 0.06em; }
+.shud__n { color: var(--muted); font-size: clamp(0.7rem, 0.82vw, 1.1rem); }
+.shud__ch { justify-items: center; text-align: center; }
+.shud__chn { display: inline-flex; align-items: center; gap: clamp(8px, 0.8vw, 16px); min-width: 0; max-width: 100%; }
+.shud__chn b { font: 800 clamp(1rem, min(1.9vw, 3.6vh), 2.8rem)/1.1 var(--f-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.shud__mark .cmono { --s: clamp(30px, min(3.2vw, 6vh), 76px) !important; }
+
+/* ------------------------------------------------------ the simulated chat vote */
+.svote { display: grid; gap: clamp(4px, 0.4vw, 10px); padding: clamp(4px, 0.5vw, 12px) clamp(10px, 1.2vw, 26px) clamp(6px, 0.6vw, 14px); border-radius: 14px; background: #120f26; border: 1px solid rgba(154, 123, 255, 0.45); min-width: 0; }
+.svote__head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px clamp(10px, 1.2vw, 24px); }
+.svote__head p { margin: 0; }
+.svote__t { display: inline-flex; align-items: center; gap: 7px; flex: 1 1 auto; min-width: 0; font: 700 clamp(0.78rem, 0.9vw, 1.25rem) var(--f-body); color: #d9ceff; }
+.svote__t small { color: var(--dim); font-weight: 600; }
+.svote__clock { font: 800 clamp(0.78rem, 0.9vw, 1.25rem) var(--f-display); font-variant-numeric: tabular-nums; color: var(--text); }
+.svote__pick { font-size: clamp(0.78rem, 0.85vw, 1.15rem); color: var(--text); }
+.svote__pick input { accent-color: var(--green); }
+.svote__x { flex: none; }
+.svote__bar { display: flex; gap: 2px; height: clamp(28px, min(3vw, 5.6vh), 62px); border-radius: 999px; overflow: hidden; background: #0b161f; }
+.svote__seg { flex: 1 1 0; min-width: 0; display: flex; align-items: center; background: var(--c); overflow: hidden; transition: flex-grow 0.5s ease; }
+.svote__seg.is-lead { box-shadow: inset 0 0 0 clamp(2px, 0.2vw, 4px) var(--gold); }
+.svote__in { display: block; width: 100%; padding: 0 clamp(8px, 0.8vw, 16px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 700 clamp(0.72rem, min(1vw, 2.2vh), 1.4rem)/1 var(--f-body); }
+.svote__in b { font-variant-numeric: tabular-nums; }
+.svote__note { color: var(--muted); font-size: clamp(0.72rem, 0.82vw, 1.08rem); }
+@media (prefers-reduced-motion: reduce) { .svote__seg { transition: none; } }
+
+/* a laptop-sized window: the sentences under the pot and the bar make way for the picture */
+@media (max-height: 1100px) { .shud__n, .svote__note { display: none; } }
+
+/* a phone held upright: the pot and the round share a row, the charity gets its own */
+@media (max-width: 700px) {
+  .shud__row { grid-template-columns: minmax(0, 1fr) auto; }
+  .shud__ch { grid-column: 1 / -1; grid-row: 2; justify-items: start; text-align: left; }
+  .shud__chn b { font-size: 0.95rem; }
+  .shud__mark .cmono { --s: 28px !important; }
+  .svote__note { display: none; }
+}
+/* a short window (a phone held sideways, a small window): one slim row for the pot, the charity and the round, a thin bar, no sentences */
+@media (max-height: 520px) {
+  .shud { gap: 4px; }
+  .shud__row { grid-template-columns: auto minmax(0, 1fr) auto; padding: 3px 10px; gap: 2px 12px; }
+  .shud__ch { grid-column: auto; grid-row: auto; justify-items: center; text-align: center; }
+  .shud__k { font-size: 0.6rem; }
+  .shud__v { font-size: 1.25rem; }
+  .shud__v--id { font-size: 0.85rem; }
+  .shud__n, .svote__note, .svote__t small { display: none; }
+  .shud__chn b { font-size: 0.85rem; }
+  .shud__mark .cmono { --s: 22px !important; }
+  .svote { padding: 3px 10px 5px; gap: 3px; }
+  .svote__head { flex-wrap: nowrap; }
+  .svote__bar { height: 20px; }
+  .svote__in { font-size: 0.66rem; padding: 0 6px; }
+  html body.is-stream #view-game .stage { padding: 6px 8px; gap: 4px; }
+}
+
+/* ------------------------------------------------ the compact view and the overlay */
+/* the controls, the toolbar and the Exit button are tucked away; a small round button at the corner brings them back (and so does the O key) */
+html body.is-compact #view-game .bet, html body.is-compact #view-game #livepanel, body.is-compact .sbar, body.is-compact .stream-exit { display: none !important; }
+html body.is-stream.is-compact #view-game:not(.is-live) .gamegrid, html body.is-stream.is-compact #view-game.is-live .gamegrid { grid-template-columns: minmax(0, 1fr); }
+html body.is-compact #main.main { padding-bottom: 10px; }
+.shandle { position: fixed; z-index: 90; left: 8px; bottom: 8px; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border-radius: 50%; border: 1px solid var(--line-2); background: #162838; color: var(--text); opacity: 0.55; }
+.shandle:hover, .shandle:focus-visible { opacity: 1; }
+.shandle .ico { width: 1.2rem; height: 1.2rem; }
+
+/* the small honest tag that stays on in a browser source */
+.sdemo { display: none; position: fixed; z-index: 95; top: 8px; left: 8px; padding: 4px 11px; border-radius: 999px; font: 800 clamp(0.7rem, 0.8vw, 1rem) var(--f-body); letter-spacing: 0.07em; color: var(--gold); background: #1c1708; border: 1px solid rgba(255, 197, 66, 0.55); }
+body.is-overlay .sdemo { display: block; }
+
+/* see-through: the page itself has no background, the cards that hold words keep a dark one (so the words can be read on any scene) */
+html:has(body.is-overlay), body.is-overlay { background: transparent !important; background-image: none !important; }
+html:has(body.is-overlay) { color-scheme: normal !important; }
+body.is-overlay .demo-strip, body.is-overlay .stream-exit, body.is-overlay .kbd-hint { display: none !important; }
+body.is-overlay .panel { background: rgba(10, 18, 26, 0.94); }
+body.is-overlay dialog.modal::backdrop { background: transparent; }
+html body.is-stream.is-overlay #main.main { padding-top: 40px; }   /* (room for the DEMO tag) */

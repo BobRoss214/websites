@@ -1,0 +1,108 @@
+/* ==========================================================================
+   Leaderboards and crew goals (js/ui/boards.js).
+   Loaded before fit.css and walk.css, so the one-screen rules still win.
+   ========================================================================== */
+
+/* ------------------------------------------------------------------ the page */
+#view-boards .simbanner { margin-bottom: 16px; }
+.bd__controls { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 18px; margin-bottom: 14px; }
+/* three equal tabs that always fit: the page never scrolls sideways, not even at 320 px (the shared .tabs box would scroll inside itself) */
+.bd__tabs { flex: 1 1 300px; max-width: 460px; min-width: 0; padding-inline: 0; overflow: visible; }
+.bd__tabs .tab { flex: 1 1 0; min-width: 0; padding: 12px 6px; text-align: center; font-size: 0.92rem; }
+.bd__range { display: flex; align-items: center; gap: 10px; }
+.bd__lbl { font: 700 0.74rem var(--f-body); letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.bd__range .seg__btn { flex-direction: row; padding-inline: 14px; }
+
+.bd__panel.panel { padding: 18px; }
+.bd__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 12px; margin-bottom: 8px; }
+.bd__head .sect__t { margin-bottom: 0; }
+.bd__head .sect__t:focus-visible { outline-offset: 4px; }
+.bd__lede, .bd__you { max-width: 78ch; color: var(--muted); font-size: 0.88rem; line-height: 1.5; margin-bottom: 10px; }
+.bd__you { color: var(--text); }
+.bd__you b, .bd__lede b { color: #fff; }
+.bd__mine { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 12px 14px; margin-bottom: 12px; border-radius: var(--r); background: rgba(34, 240, 122, 0.08); border: 1px solid rgba(34, 240, 122, 0.4); }
+.bd__mine p { color: var(--text); font-size: 0.9rem; line-height: 1.5; min-width: 0; flex: 1 1 260px; }
+.bd__mine a { color: #7dffb0; }
+.bd__act { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* ------------------------------------------------------------------ the tables */
+.bd__tablewrap { margin-top: 6px; }
+.bd__table { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0 4px; font-size: 0.9rem; }
+.bd__c1 { width: 3.1rem; }
+.bd__c3 { width: clamp(5.4rem, 22vw, 9.5rem); }
+.bd__table thead th { padding: 4px 10px; text-align: left; font: 700 0.7rem var(--f-body); letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.bd__table thead th.bd__amt { text-align: right; }
+.bd__table thead th.bd__rank { text-align: center; padding-inline: 4px; }
+.bd__row > td, .bd__row > th { padding: 8px 10px; background: var(--bg-2); border-block: 1px solid var(--line); vertical-align: middle; text-align: left; font-weight: 400; min-width: 0; }
+.bd__row > :first-child { border-left: 1px solid var(--line); border-radius: 10px 0 0 10px; }
+.bd__row > :last-child { border-right: 1px solid var(--line); border-radius: 0 10px 10px 0; }
+.bd__row.is-you > td, .bd__row.is-you > th { background: rgba(34, 240, 122, 0.1); border-color: var(--green); color: #fff; }
+.bd__row.has-you > td, .bd__row.has-you > th { border-color: rgba(34, 240, 122, 0.5); }
+.bd__rank { padding-inline: 4px !important; text-align: center !important; }
+.bd__n { display: inline-block; min-width: 1.9rem; padding: 3px 7px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--line-2); color: var(--text); font: 800 0.78rem var(--f-display); text-align: center; font-variant-numeric: tabular-nums; }
+.bd__n--1 { background: #ffc542; border-color: #ffc542; color: #2a1a00; }
+.bd__n--2 { background: #c4d6df; border-color: #c4d6df; color: #0b1620; }
+.bd__n--3 { background: #e9a56f; border-color: #e9a56f; color: #2a1200; }
+.bd__who { overflow-wrap: anywhere; }
+.bd__nm { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.bd__nm b { color: #fff; }
+.bd__nm .botpill, .bd__nm .rchip { margin: 0; }
+.bd__sub { display: block; margin-top: 2px; color: var(--muted); font-size: 0.76rem; }
+.bd__tag { display: inline-block; padding: 1px 8px; border-radius: 999px; background: rgba(34, 240, 122, 0.16); border: 1px solid rgba(34, 240, 122, 0.5); color: #7dffb0; font: 700 0.7rem var(--f-body); white-space: nowrap; }
+.bd__tags { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 4px; }
+.bd__tags .tag, .bd__tags .bd__tag { max-width: 100%; white-space: normal; }   /* a long tag wraps inside a narrow cell instead of pushing it wider */
+.bd__amt { text-align: right !important; font-variant-numeric: tabular-nums; }
+.bd__v { display: block; font: 800 0.95rem var(--f-display); color: var(--gold); overflow-wrap: anywhere; }
+.bd__amt small { display: block; margin-top: 2px; color: var(--muted); font-size: 0.7rem; font-weight: 600; }
+/* the visitor's own row, when it is further down than the list: a dashed line sets it apart from the top ten */
+.bd__extra > .bd__row:first-child > td, .bd__extra > .bd__row:first-child > th { border-top: 2px dashed var(--line-2); }
+.bd__extra::before { content: ""; display: table-row; height: 6px; }
+.bd__botname, .bd__row .botname { color: #fff; }
+.bd__ch { display: inline-flex; align-items: center; gap: 8px; max-width: 100%; margin: 0; padding: 0; border: 0; background: none; color: #fff; font: 700 0.92rem/1.25 var(--f-body); text-align: left; cursor: pointer; }
+.bd__ch span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.bd__ch:hover { color: var(--green); }
+.bd__ch .cmono { flex: none; }
+
+/* a crew's weekly goal: a bar and the words "$X of $Y" */
+.bd__goal { display: block; margin-top: 6px; }
+.bd__bar { display: block; height: 10px; border-radius: 999px; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--line); overflow: hidden; }
+.bd__bar i { display: block; height: 100%; background: linear-gradient(90deg, #17c963, #34f88c); }
+.bd__bar.is-done i { background: linear-gradient(90deg, #f0a81c, #ffe39a); }
+.bd__goalt { display: block; margin-top: 3px; color: var(--muted); font-size: 0.76rem; font-variant-numeric: tabular-nums; }
+.bd__nm .bd__join { margin: 0 0 0 4px; min-height: 28px; padding: 2px 10px; font-size: 0.8rem; }
+
+/* ------------------------------------------------------------------ the lobby block */
+.bdl.panel { padding: 14px 16px; }
+.bdl__list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.bdl__item { display: flex; align-items: flex-start; gap: 10px; min-width: 0; padding: 10px 12px; border-radius: var(--r); background: var(--bg-2); border: 1px solid var(--line); }
+.bdl__item.is-you { background: rgba(34, 240, 122, 0.08); border-color: rgba(34, 240, 122, 0.5); }
+.bdl__t { display: block; flex: 1 1 auto; min-width: 0; font-size: 0.9rem; }
+.bdl__t b { color: #fff; overflow-wrap: anywhere; }
+.bdl__t .botpill { margin-left: 2px; }
+.bdl__t .bd__bar { margin-top: 6px; }
+.bdl__t small { display: block; margin-top: 3px; color: var(--muted); font-size: 0.76rem; font-variant-numeric: tabular-nums; }
+.bdl__note { margin-top: 10px; color: var(--muted); font-size: 0.8rem; }
+@media (max-width: 760px) {
+  .bdl__list { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ------------------------------------------------------------------ small screens */
+@media (max-width: 560px) {
+  .bd__panel.panel { padding: 12px; }
+  .bd__table { font-size: 0.86rem; }
+  .bd__table thead th { padding-inline: 6px; }
+  .bd__row > td, .bd__row > th { padding: 8px 6px; }
+  .bd__c1 { width: 2.7rem; }
+  .bd__n { min-width: 1.7rem; padding: 3px 5px; }
+  .bd__range { width: 100%; }
+  .bd__range .seg { flex: 1 1 auto; }
+  .bd__range .seg__btn { flex: 1 1 0; }
+}
+@media (max-width: 360px) {
+  .bd__c3 { width: 5.6rem; }
+  .bd__table--count .bd__c3 { width: 4.6rem; }   /* a count is short: more room for the charity's name */
+  .bd__v { font-size: 0.86rem; }
+  .bd__tabs .tab { font-size: 0.86rem; padding-inline: 2px; }
+  .bd__ch { gap: 6px; font-size: 0.86rem; }
+  .bd__ch .cmono { --s: 22px !important; }   /* (the mark's size is set inline: a smaller mark leaves a long charity name room to stay in one piece) */
+}

@@ -1,0 +1,1570 @@
+diff -ruN base/givespin/README.md work/givespin/README.md
+--- base/givespin/README.md	2026-11-04 06:52:31.006596186 +0000
++++ work/givespin/README.md	2026-11-04 19:52:24.253926804 +0000
+@@ -208,7 +208,7 @@
+ Everything here is made up.**, plus a made-up title, favourite cause, favourite game, habit and "pretend streak" worked out from the name alone. The rules are in `js/profile.js`, the
+ page in `js/ui/profile.js` and `css/profile.css`.
+ 
+-**Leaderboards (`#boards`).** Crews, charities and players ranked, for **This week** and **All time**, from the Leaderboards link in the side menu (and a "This week's leaders" block on the lobby, the top three crews, in demo mode). Three tabs (a real tablist: arrow keys, Home and End) and a This week / All time toggle; each list is a real table with the top ten, then the visitor's own row at its real rank when it is further down ("You are #38 of 61"). **Everything except the visitor's own numbers is simulated and says so**: a note at the top, "simulated" in every table's label, a BOT pill beside every bot and crew, and the same rank chips as everywhere else. There is no server, so every number is a pure function of the clock (`js/boards.js`, unit-tested): the week is the ISO week in local time (Monday to Sunday) cut into 672 slots of about 15 minutes; inside a slot the numbers are fixed, through the week they only grow (each one is its final number for the week times a shared busy-evening curve raised to a small seeded power, so a lead can change hands), and on Monday a new week starts small. A bot's all-time total is one fixed made-up amount that sits inside the rank and level its chip shows (the Rank 3 Level 5 bot really has given an amount that is Rank 3 Level 5), and its week is a small share of that. **Crews**: a crew's total is exactly what its seven bot members gave (the same numbers as on the Players tab) plus the visitor's own gifts if they have joined it; each crew has a **weekly goal in dollars** (a bar and the words "$X of $Y", never under $250, worked out from what its bots will have given by Sunday), and a visitor with no crew can join one from the table (the same call as on the Crews page; leaving is on the Crews page). **Share my crew** draws a picture of the crew's week (name, rank, total, goal bar; a gold frame when the goal is reached) in the same style as the share cards, with Download PNG, Share and Copy; it carries no name of yours. **Charities** are ranked by times backed (a gift landing on a charity, in any game): a made-up count from a fixed popularity plus the times the visitor's own gifts landed on it, and the page says it is not a ranking of how good a charity is or an endorsement. The visitor's numbers come from the saved history (this week's rounds; the store keeps the latest 60, and the page says when that may be short) and the saved totals: nothing is added to the save, nothing is stored. The page is demo-friendly in real-donation mode too (it says the visitor's numbers then count what was sent to checkout) but the lobby block is demo-only, like the ticker. Help has an answer, "What are the leaderboards?" (`#help-boards`).
++**Leaderboards (`#boards`).** Crews, charities and players ranked, for **This week** and **All time**, from the Leaderboards link in the side menu (and a "This week's leaders" block on the lobby, the top three crews, in demo mode). Three tabs (a real tablist: arrow keys, Home and End) and a This week / All time toggle; each list is a real table with the top ten, then the visitor's own row at its real rank when it is further down ("You are #38 of 61"). **Everything except the visitor's own numbers is simulated and says so**: a note at the top, "simulated" in every table's label, a BOT pill beside every bot and crew, and the same rank chips as everywhere else. There is no server, so every number is a pure function of the clock (`js/boards.js`, unit-tested): the week is the ISO week in local time (Monday to Sunday) cut into 672 slots of about 15 minutes; inside a slot the numbers are fixed, through the week they only grow (each one is its final number for the week times a shared busy-evening curve raised to a small seeded power, so a lead can change hands), and on Monday a new week starts small. A bot's all-time total is one fixed made-up amount that sits inside the rank and level its chip shows (the Rank 3 Level 5 bot really has given an amount that is Rank 3 Level 5), and its week is a small share of that. **Crews**: a crew's total is exactly what its seven bot members gave (the same numbers as on the Players tab) plus the visitor's own gifts if they have joined it; each crew has a **weekly goal in dollars** (a bar and the words "$X of $Y", never under $250, worked out from what its bots will have given by Sunday), and a visitor with no crew can join one from the table (the same call as on the Crews page; leaving is on the Crews page). **Share my crew** draws a picture of the crew's week (name, rank, total, goal bar; a gold frame when the goal is reached) in the same style as the share cards, with Download PNG, Share and Copy; it carries no name of yours. **Charities** are ranked by times backed (a gift landing on a charity, in any game): a made-up count from a fixed popularity plus the times the visitor's own gifts landed on it, and the page says it is not a ranking of how good a charity is or an endorsement. The visitor's numbers come from the saved history (this week's rounds; the store keeps the latest 60, and the page says when that may be short) and the saved totals: nothing is added to the save, nothing is stored. The page is demo-friendly in real-donation mode too (it says the visitor's numbers then count what was sent to checkout) but the lobby block is demo-only, like the ticker. Help has an answer, "What are the leaderboards?" (`#help-boards`). When the visitor is in a crew that is not in the top three, the lobby block adds one slim **"Your crew: <name> #<rank>"** row under the three (with its BOT pill, "7 bot crewmates and you" and "$X of $Y weekly goal", labelled as a simulated crew like the rest), so they can see where their crew stands without opening the page.
+ 
+ **Leagues, crews and cards.** All play, no cash value, and everything with other people is simulated and labelled.
+ - **Leagues.** A weekly XP table against 14 simulated rivals (the same table for everyone that week), with promotion
+@@ -250,7 +250,7 @@
+ round every season). **Joined late?** Every day of the season gone before a new player's first day is worth 60 points (up to 720, tier 8), so tier 10 is a few days of play away; someone who played before the season, or has played more
+ rounds than the store keeps, is not new and gets nothing. The page (`js/ui/quests.js`, `css/quests.css`) has the season header and bar, the track (a strip that scrolls sideways inside itself on a laptop, a vertical list on a phone, one tab stop
+ with arrow keys, every tier a real button named "Tier 7, Marquee emblem frame. Locked. 540 points to go."), the day's and the week's quests with progress bars (`role="progressbar"`), **Claim all**, a picker for card backs and confetti
+-styles, and a short "How quests work". The side menu's **Quests** entry has a badge with the number of things to claim (`#quests-badge`, empty and hidden at zero), the lobby has a one-line block, and Help answers "What are quests?".
++styles, and a short "How quests work". The side menu's **Quests** entry has a badge with the number of things to claim (`#quests-badge`, empty and hidden at zero), the lobby has a one-line block, and Help answers "What are quests?". Once any tier of 10 or more is claimed, the season's buttons include **Share my season**, a picture of the season so far (see "Share your gift").
+ Card backs show on face-down cards (Pick a Card, and the cards still to win on your cards page); confetti styles are read by `js/confetti.js` (hearts and stars are drawn in code). What is kept: `GS.local` "quests" (claims, the
+ highest progress seen, when the visitor was first seen, the season's round counts) and "cosmetics" (what is owned and chosen); the main save is only changed by the XP. "Reset my progress" starts the quests and the season again (the
+ cosmetics are kept); "Erase my data" removes both keys. Everything is play: nothing here pays out, can be bought or has a cash value. The rules are in `js/quests.js`.
+@@ -259,9 +259,9 @@
+ of commit, draw and reveal, a glossary, a button that re-checks any past round, and (for the technically curious) a snippet
+ you can run yourself. See [How the games stay fair](#how-the-games-stay-fair) for the details.
+ 
+-**Share your gift.** After a round the receipt's **Share your gift** button opens a dialog with a picture drawn on a canvas (`js/ui/sharecard.js`; the words and the rules are in `js/share.js`): the rank emblem in its level ring and "Rank 2 · Level 6" (the XP level, drawn the same way, before the first rank), the amount, the game, the charity's logo or illustrated emblem and name, and the receipt id with a small **Verify this round** line (the first 8 characters of the round's fingerprint, the hash that was shown before the draw, plus the receipt id, and "Check it at Fair Play"; in the demo it also says the secret is made on your own device). A direct gift, or a browser without the hashing API, has no verify line: a card never claims a check it cannot back up. The dialog previews the picture as an image with a real alt text, with a clear **Portrait (1080 x 1350) / Square (1080 x 1080)** toggle (remembered). A big win gets a fancier frame (a gold border with a glow, marquee bulbs and confetti dots, all drawn in code): a Triple Threat, a rank-up, a backed charity that won, or a gift of $100 or more (`bigWin` in `js/share.js`); everything else gets the plain frame. The actions are **Download PNG**, **Share** (the Web Share sheet with the picture as a file where the browser allows it, otherwise the text and the address; the button only shows where Web Share exists) and **Copy link and text**. Pages shown inside another page (a preview) may block downloads without telling anyone, so after Download a small hint says how to save the picture by hand (press and hold it, or right-click). Privacy: the card holds only the rank and level, the gift, the game, the charity, the receipt id and 8 characters of the public fingerprint, plus the display name if, and only if, the visitor switches **Show my name on the card** on (it starts off, it cannot be turned on without a chosen name, it is remembered on this device under `GS.local` "share", an email address is never used as a name). Never the balance, an email, a phone number, a card, or the secret number. The same dialog is the **profile card** (`ui.sharecard.openProfile()`, called from the profile page's Share my profile button): the big emblem, the name if allowed, the standing, the total given, the charity given to most and the streak, worked out from the saved history so old saves work.
++**Share your gift.** After a round the receipt's **Share your gift** button opens a dialog with a picture drawn on a canvas (`js/ui/sharecard.js`; the words and the rules are in `js/share.js`): the rank emblem in its level ring and "Rank 2 · Level 6" (the XP level, drawn the same way, before the first rank), the amount, the game, the charity's logo or illustrated emblem and name, and the receipt id with a small **Verify this round** line (the first 8 characters of the round's fingerprint, the hash that was shown before the draw, plus the receipt id, and "Check it at Fair Play"; in the demo it also says the secret is made on your own device). A direct gift, or a browser without the hashing API, has no verify line: a card never claims a check it cannot back up. The dialog previews the picture as an image with a real alt text, with a clear **Portrait (1080 x 1350) / Square (1080 x 1080)** toggle (remembered). A big win gets a fancier frame (a gold border with a glow, marquee bulbs and confetti dots, all drawn in code): a Triple Threat, a rank-up, a backed charity that won, or a gift of $100 or more (`bigWin` in `js/share.js`); everything else gets the plain frame. The actions are **Download PNG**, **Share** (the Web Share sheet with the picture as a file where the browser allows it, otherwise the text and the address; the button only shows where Web Share exists) and **Copy link and text**. Pages shown inside another page (a preview) may block downloads without telling anyone, so after Download a small hint says how to save the picture by hand (press and hold it, or right-click). Privacy: the card holds only the rank and level, the gift, the game, the charity, the receipt id and 8 characters of the public fingerprint, plus the display name if, and only if, the visitor switches **Show my name on the card** on (it starts off, it cannot be turned on without a chosen name, it is remembered on this device under `GS.local` "share", an email address is never used as a name). Never the balance, an email, a phone number, a card, or the secret number. The same dialog is the **profile card** (`ui.sharecard.openProfile()`, called from the profile page's Share my profile button): the big emblem, the name if allowed, the standing, the total given, the charity given to most and the streak, worked out from the saved history so old saves work. Two more cards come from the same dialog. A **live table's result** has a **Share your gift** button next to Verify (only when the visitor had a stake; someone who only watched has nothing to share): the card is the round card with the table's game and size ("Charity Derby · Small · 10 runners"), reads **"A gift from a simulated table"** and carries the receipt's own sentence plus "Simulated table: every other player is a BOT" (a live card is always a play-money card, whatever the site mode), with the same name switch (off by default) and the same verify code (the start of the round's fingerprint and the receipt id) as a solo card. **Share my season** (a button on the Quests page's season track once any tier of 10 or more has been claimed) draws the season's name ("Gold November"), the tier reached on a 30-segment ring ("Tier 14 of 30"), how many quests were done this season (counted from the claimed quests, so an old save works) and "XP and cosmetics only, never money"; it shows no amount of money, has the DEMO pill in the demo and gets the gold frame and a "Season complete" ribbon when all 30 tiers are claimed (`seasonCard` in `js/share.js`; the drawing is `ui.sharecard.openSeason()`). The drawing pieces the cards share (colours, fonts, frames, header, ribbon, footer, text fitting) are exported as `ui.sharecard.draw`; the crew card in `js/ui/boards.js` draws with them instead of keeping its own copies.
+ 
+-**Fair play as a selling point.** A lobby block under the game tiles (`js/ui/fairshow.js`, `ui.lobby.addBlock` id `fair`, order 30) says every round can be checked and has a **Try the checker** button. It opens a checker that runs a **sample round, clearly labelled as not one of yours**, with the real `GS.fair` code in three plain steps: **Sealed first** (the fingerprint of a fresh secret), **Drawn** (the secret is revealed and the draw maths picks a winner from 8 real roster charities) and **Check it yourself** (hash the secret again and redo the pick: three ticks; **Tamper with it** changes one character of the secret and the check fails, so the point is seen). Where the browser cannot run the hashing (it needs a secure page) the block and the checker say honestly that it is not available here. Every receipt (and every live table result) with fair-play details also has a **Verify** button that opens them and scrolls them into view. The wording stays honest: in this build the secret is made on the visitor's own device, so it shows how a draw is worked out and is not an outside audit; the Fair Play page explains.
++**Fair play as a selling point.** A lobby block under the game tiles (`js/ui/fairshow.js`, `ui.lobby.addBlock` id `fair`, order 30) says every round can be checked and has a **Try the checker** button. It opens a checker that runs a **sample round, clearly labelled as not one of yours**, with the real `GS.fair` code in three plain steps: **Sealed first** (the fingerprint of a fresh secret), **Drawn** (the secret is revealed and the draw maths picks a winner from 8 real roster charities) and **Check it yourself** (hash the secret again and redo the pick: three ticks; **Tamper with it** changes one character of the secret and the check fails, so the point is seen). Where the browser cannot run the hashing (it needs a secure page) the block and the checker say honestly that it is not available here. Every receipt (and every live table result) with fair-play details also has a **Verify** button that opens them and scrolls them into view. The wording stays honest: in this build the secret is made on the visitor's own device, so it shows how a draw is worked out and is not an outside audit; the Fair Play page explains. The **Fair Play page** has the same **Try the checker** button under "The short version", so the checker is one press away from the page that explains it.
+ 
+ **Optional account (preview).** Sign up with an email or a phone number and a password (strength meter, a
+ verify-code step, a display name), log in, save a card for easy giving, set a monthly giving limit. All of it is a
+@@ -500,7 +500,7 @@
+ node --test givespin/tests/*.test.js
+ ```
+ 
+-398 unit tests: daily and weekly quests (the picks from the date alone, progress from the saved rounds on the right local day, the season's end text and the 30 tiers' arithmetic, the head start, claiming once, the cosmetics store and its damaged-storage fallbacks, run in several time zones), the leaderboards (the ISO week and its 15-minute slots, numbers that only grow, your own row at its real place, crew goals, charities by times backed), Stream Mode's simulated chat vote (seeded and repeatable, shares that add up to 100, the leader), the overlay link and the keyboard shortcuts, the message format of the live protocol (every type, who may send what, limits, odd input that must never throw), the local transport (order, `seq`, a seeded clock, no spoofing), the real live engine turned into messages that pass the commit and reveal check, the waitlist rules, the manifest and icons, the service worker's file list against `index.html` and what it does with each kind of request, when it may be registered, the reminder schedule against the real events, the settings file and money step being unchanged, the Make it real page against its checklist, and the wording rules for all of it, the brand voice in the source (no "cash out", no "Give responsibly", no visitor-facing "jackpot", the shared loading lines and house-edge strip, the style guide's shape), money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
++406 unit tests: daily and weekly quests (the picks from the date alone, progress from the saved rounds on the right local day, the season's end text and the 30 tiers' arithmetic, the head start, claiming once, the cosmetics store and its damaged-storage fallbacks, run in several time zones), the leaderboards (the ISO week and its 15-minute slots, numbers that only grow, your own row at its real place, crew goals, charities by times backed), Stream Mode's simulated chat vote (seeded and repeatable, shares that add up to 100, the leader), the overlay link and the keyboard shortcuts, the message format of the live protocol (every type, who may send what, limits, odd input that must never throw), the local transport (order, `seq`, a seeded clock, no spoofing), the real live engine turned into messages that pass the commit and reveal check, the waitlist rules, the manifest and icons, the service worker's file list against `index.html` and what it does with each kind of request, when it may be registered, the reminder schedule against the real events, the settings file and money step being unchanged, the Make it real page against its checklist, and the wording rules for all of it, the brand voice in the source (no "cash out", no "Give responsibly", no visitor-facing "jackpot", the shared loading lines and house-edge strip, the style guide's shape), money formatting and splitting, the minimum per round, the RNG and equal-odds argument, filters (OR
+ within a group, AND between), XP, levels, ranks (every boundary from $999.99 to $1,000,000.00 and beyond, a cent either
+ side, the ten levels inside each rank, the top rank, the standing never going down, labels, the simulated players' spread
+ and what a round reports about a rank-up), streaks, badges, boards of any size (fill spots evenly, always include the
+@@ -527,7 +527,7 @@
+ live (redirect) mode including rejecting non-https links, a phone-sized viewport, loading from `file://`, and a check
+ that the site never contacts another host and the console stays clean. Set `SHOTS=/some/dir` to save screenshots,
+ and `AXE=/path/to/axe.min.js` to add an axe-core accessibility scan of every page and dialog.
+-`ONLY=13zs,19z` runs just those sections. The checks for the newer features live in their own files, `tests/sections/*.mjs` (run in file-name order, each handed the helpers of `tests/e2e.mjs`), so a feature's tests never have to be edited into the big file. The axe-core version the checks were run with is 4.10.3 (a newer one, 4.14, also flags the games' tile labels and the side card as "label in name" mismatches). The files are `22-voice` (brand voice), `23-ticker` (ticker and charity of the week), `24-share` (share cards and the fair-play checker), `25-profile`, `26-quests`, `27-boards`, `28-stream`, `29-app` (Make it real, transports, install), `30-review` (regression checks for what the independent review found, plus guards for damaged saves and for pages that are revisited) and `31-walk` (phone, tablet and big-screen layout regressions: Stream Mode on narrow windows, focus not hidden under the bars, the lobby blocks under the game tiles).
++`ONLY=13zs,19z` runs just those sections. The checks for the newer features live in their own files, `tests/sections/*.mjs` (run in file-name order, each handed the helpers of `tests/e2e.mjs`), so a feature's tests never have to be edited into the big file. The axe-core version the checks were run with is 4.10.3 (a newer one, 4.14, also flags the games' tile labels and the side card as "label in name" mismatches). The files are `22-voice` (brand voice), `23-ticker` (ticker and charity of the week), `24-share` (share cards and the fair-play checker), `25-profile`, `26-quests`, `27-boards`, `28-stream`, `29-app` (Make it real, transports, install), `30-review` (regression checks for what the independent review found, plus guards for damaged saves and for pages that are revisited), `31-walk` (phone, tablet and big-screen layout regressions: Stream Mode on narrow windows, focus not hidden under the bars, the lobby blocks under the game tiles) and `34-share` (a live table's result card, the season card, the Fair Play page's checker button, the crew card's shared drawing pieces and the lobby's Your crew row).
+ 
+ Append `?fast=1` to the URL to squeeze every animation (the tests use it; it is handy for quick demos too).
+ 
+@@ -578,7 +578,7 @@
+ js/weekly.js        week keys, the charity of the week, its two sentences, the past spotlights and the XP bonus for backing it (pure logic, unit-tested in Node)
+ js/ticker.js        the ticker's numbers: "Given today" and the feed of recent gifts from simulated players, a pure function of the clock (unit-tested in Node)
+ js/share.js         share cards, the pure parts: what text goes on which card, the verify code, file names, the big-win rule and the line breaking (unit-tested in Node)
+-js/ui/sharecard.js  the share card: the picture drawn on a canvas (rank emblem, amount, charity, verify line), its dialog, Download PNG, Web Share and copy; also the profile card
++js/ui/sharecard.js  the share card: the picture drawn on a canvas (rank emblem, amount, charity, verify line), its dialog, Download PNG, Web Share and copy; also the profile, live-table and season cards, and the drawing pieces the crew card shares
+ js/ui/fairshow.js   the fair-play showcase: the lobby block, the sample-round checker and the Verify shortcut on receipts
+ js/quests.js        daily and weekly quests, the 30-tier season track, the head start for late joiners, claiming and the cosmetics store, all worked out from the saved history (pure logic, unit-tested in Node)
+ js/boards.js        leaderboards for crews, charities and players, this week and all time, with your own row always shown: simulated numbers that are a pure function of the clock, crew goals, the crew card's words (pure logic, unit-tested in Node)
+diff -ruN base/givespin/css/boards.css work/givespin/css/boards.css
+--- base/givespin/css/boards.css	2026-11-04 02:56:04.886556775 +0000
++++ work/givespin/css/boards.css	2026-11-04 19:48:51.421348935 +0000
+@@ -81,6 +81,12 @@
+ .bdl__t .botpill { margin-left: 2px; }
+ .bdl__t .bd__bar { margin-top: 6px; }
+ .bdl__t small { display: block; margin-top: 3px; color: var(--muted); font-size: 0.76rem; font-variant-numeric: tabular-nums; }
++/* the visitor's own crew when it is not in the top three: one slim row, not a fourth card (its own class, so a count of .bdl__item stays the top three) */
++.bdl__mine { margin: 10px 0 0; padding: 0; list-style: none; }
++.bdl__me { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 6px 12px; border-radius: var(--r); background: rgba(34, 240, 122, 0.08); border: 1px solid rgba(34, 240, 122, 0.5); }
++.bdl__me .bdl__t { font-size: 0.86rem; }
++.bdl__me .bdl__lbl { color: var(--muted); }
++.bdl__me .bdl__t small { display: inline; margin: 0 0 0 4px; }
+ .bdl__note { margin-top: 10px; color: var(--muted); font-size: 0.8rem; }
+ @media (max-width: 760px) {
+   .bdl__list { grid-template-columns: minmax(0, 1fr); }
+diff -ruN base/givespin/css/sharecard.css work/givespin/css/sharecard.css
+--- base/givespin/css/sharecard.css	2026-11-04 00:56:01.958125816 +0000
++++ work/givespin/css/sharecard.css	2026-11-04 19:44:47.710604004 +0000
+@@ -38,9 +38,13 @@
+ @keyframes sc-in { from { opacity: 0; } }
+ 
+ /* the result dialog's Verify shortcut and the live result's (js/ui/fairshow.js addShortcut) */
+-.fs-jump { display: flex; justify-content: center; }
++.fs-jump { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+ .fs-jump .btn { gap: 6px; }
+ 
++/* the Fair Play page: "Try the checker" under the short version (js/ui/pages.js) */
++.fp-try { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 14px; }
++.fp-try span { color: var(--muted); font-size: 0.88rem; }
++
+ /* ------------------------------------------------------------------ the lobby block */
+ .fs { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 6px 18px; padding: 18px 20px; border-radius: var(--r-lg); border: 1px solid var(--line-2); background: linear-gradient(135deg, rgba(34, 240, 122, 0.1), rgba(53, 212, 255, 0.06) 60%, transparent), var(--panel); }
+ .fs__ico { display: grid; place-items: center; width: 56px; height: 56px; border-radius: 16px; background: rgba(34, 240, 122, 0.14); color: var(--green); }
+diff -ruN base/givespin/docs/next-steps.md work/givespin/docs/next-steps.md
+--- base/givespin/docs/next-steps.md	2026-11-04 06:28:37.971584986 +0000
++++ work/givespin/docs/next-steps.md	2026-11-04 19:52:24.254358441 +0000
+@@ -48,9 +48,8 @@
+ - The receipt dialog body can pan sideways by 8 px at 360 and 390 wide, and 62 px at 320 (it did before this round, a little worse).
+ - Roster data: seven charities (NSPCC, Daniel Morcombe Foundation, Missing & Exploited Kids, STOP THE TRAFFIK, HALO Trust, IRC UK, ...) carry the how-tag `protection`, whose facet name reads "Protects land & wildlife".
+ - Back a charity chip: after typing a board size, the first click on the chip's x does nothing (the field blurs and the chip is redrawn). It was in the base.
+-- The crew share card repeats about 140 lines of drawing code from `js/ui/sharecard.js` (`js/ui/boards.js`); export those helpers once and delete the copy.
++- The crew card's dialog (the picture preview, the shape buttons, Download, Share, Copy: about 100 lines in `js/ui/boards.js`) still repeats the share dialog's code in `js/ui/sharecard.js`; the drawing pieces are shared now (`ui.sharecard.draw`), the dialog could be too.
+ - The favourites on the profile and the visitor's week on the boards come from the 60 rounds the store keeps; a longer record would need a new field in the save.
+-- A live table result has no Share button; the Fair Play page has no "Try the checker" button (`ui.fairshow.openChecker()` exists).
+ - Stream Mode: the canvas games (wheel, roulette, plinko, races) do not grow on a 2560 px screen; on a phone held sideways 8 games still scroll a few dozen px.
+ - Idle CPU with motion allowed is about 300 style recalculations per 5 s on every page, from the animated background (it was the same before this round); reduced motion drops it to about 30.
+ - First load of the lobby is 103 requests and about 2.4 MB (`data.js` 304 KB, `marble.js` 146 KB).
+diff -ruN base/givespin/js/share.js work/givespin/js/share.js
+--- base/givespin/js/share.js	2026-11-04 04:55:02.219772879 +0000
++++ work/givespin/js/share.js	2026-11-04 19:38:55.303405463 +0000
+@@ -7,6 +7,9 @@
+  *   GS.share.verifyCode(fair, id)   { hash, id, text, hint } for the "Verify this round" line, or null when the round has no draw to check
+  *   GS.share.roundCard(input)       the words on a round's card
+  *   GS.share.profileCard(input)     the words on the profile card
++ *   GS.share.seasonCard(input)      the words on the season card (the Quests page's "Share my season")
++ *   GS.share.seasonShareable(tiers) true once any tier of 10 or more has been claimed (that is when "Share my season" shows up)
++ *   GS.share.seasonQuestsDone(claimed, seasonId)   how many quests the visitor claimed in a season, from the saved claims (so an old save works)
+  *   GS.share.shareText(card, o)     the short text that travels with the picture (never anything personal)
+  *   GS.share.altText(card, size)    what a screen reader hears for the picture
+  *   GS.share.fileName(kind, id, size)  "givespin-gift-GS-7K2M9Q-portrait.png"
+@@ -16,6 +19,9 @@
+  * player into a new rank, when the charity the player backed won, or when the gift was $100 or more (BIG_GIFT_CENTS). Anything else gets the plain
+  * frame. It is worked out from the round alone, so the same round always gives the same frame.
+  *
++ * A live table's result is the same round card with `live` set: it says SIMULATED table and BOT players, and is always a play-money card (live tables
++ * are demo credit and bots only), so it never reads as real people or real money.
++ *
+  * Privacy: a card only ever holds what is listed here: the display name the visitor chose (and only when they switched "Show my name" on),
+  * their rank and level, the amount of the gift, the game, the charity, the receipt id and the first 8 characters of the round's public fingerprint.
+  * Never the balance, an email, a phone number, a card, or the secret number.
+@@ -92,9 +98,9 @@
+     return u ? u.replace(/^https?:\/\//i, '').replace(/\/+$/, '') : '';
+   }
+ 
+-  /** A safe file name: kind is 'gift' or 'profile', id the receipt id (leave out for a profile), size 'portrait' or 'square'. */
++  /** A safe file name: kind is 'gift', 'profile' or 'season', id the receipt id (or the season, "2026-11"; leave out for a profile), size 'portrait' or 'square'. */
+   function fileName(kind, id, size) {
+-    var parts = ['givespin', kind === 'profile' ? 'profile' : 'gift'];
++    var parts = ['givespin', kind === 'profile' ? 'profile' : kind === 'season' ? 'season' : 'gift'];
+     var rid = cleanId(id);
+     if (kind !== 'profile' && rid) { parts.push(rid); }
+     parts.push(sizeFor(size).id);
+@@ -127,7 +133,8 @@
+   /**
+    * The words on a round's card.
+    * input = { demo, amountText ("$25"), cents, game (name), direct, charities: [{ name, short }] (biggest share first), jackpot, pickWon, rankedUp,
+-   *           standing (core.standingFor), receiptId, fair ({ serverHash }), name (ONLY when the visitor switched it on), site (siteLabel) }
++   *           standing (core.standingFor), receiptId, fair ({ serverHash }), name (ONLY when the visitor switched it on), site (siteLabel),
++   *           live (true for a live table's result: `game` is then the table's title, "Balloon Race · Big · 100 balloons") }
+    */
+   function roundCard(input) {
+     var i = input || {};
+@@ -136,15 +143,18 @@
+     var name = cleanName(i.name);
+     var reason = bigWin({ jackpot: i.jackpot, rankedUp: i.rankedUp, pickWon: i.pickWon, cents: i.cents });
+     var verify = i.direct ? null : verifyCode(i.fair, i.receiptId);
++    var live = !!i.live;
++    var demo = !!i.demo || live;   // live tables are demo credit and bots, always: a live card is a play-money card whatever the site mode
+     return {
+       kind: 'round',
+-      demo: !!i.demo,
++      demo: demo,
++      live: live,
+       name: name,
+       big: reason,
+       ribbon: bigLabel(reason),
+-      eyebrow: name ? name + '’s gift' : 'A gift from the arcade',
++      eyebrow: live ? (name ? name + '’s gift from a simulated table' : 'A gift from a simulated table') : (name ? name + '’s gift' : 'A gift from the arcade'),
+       amount: str(i.amountText),
+-      lead: i.demo ? 'went to' : 'is for',
++      lead: demo ? 'went to' : 'is for',
+       charity: names.length === 1 ? names[0] : names.length ? names.length + ' charities' : 'a charity',
+       charityShort: shorts.length === 1 ? shorts[0] : names.length ? names.length + ' charities' : 'a charity',
+       names: names.slice(0, 3),
+@@ -155,9 +165,9 @@
+       standing: standingOf(i.standing),
+       receipt: cleanId(i.receiptId),
+       verify: verify,
+-      verifyNote: verify ? (i.demo ? 'In this demo the secret is made on your own device' : '') : '',
++      verifyNote: verify ? (demo ? 'In this demo the secret is made on your own device' : '') : '',
+       tagline: TAGLINE,
+-      note: demoNote(i.demo),
++      note: live ? demoNote(true) + '. Simulated table: every other player is a BOT' : demoNote(demo),
+       site: str(i.site)
+     };
+   }
+@@ -195,6 +205,81 @@
+     };
+   }
+ 
++
++  /* ------------------------------------------------------------------ the season card */
++
++  var SEASON_TIERS = 30;       // tiers on the season track (js/quests.js TIER_COUNT)
++  var SEASON_MIN_TIER = 10;    // "Share my season" shows once a tier of 10 or more has been claimed
++
++  /** True once any tier of 10 or more is claimed. `tiers` is the season view's list: [{ tier, status }] (status 'claimed', 'ready' or 'locked'). */
++  function seasonShareable(tiers) {
++    return (Array.isArray(tiers) ? tiers : []).some(function (t) { return !!t && t.status === 'claimed' && Number(t.tier) >= SEASON_MIN_TIER; });
++  }
++
++  function pad2(n) { return (n < 10 ? '0' : '') + n; }
++
++  /** The month ("2026-11") that holds the Thursday of ISO week `week` of `year`: the month an ISO week is counted in, as the ISO year is. */
++  function monthOfIsoWeek(year, week) {
++    var jan4 = new Date(Date.UTC(year, 0, 4));
++    var mondayOfOne = Date.UTC(year, 0, 4 - ((jan4.getUTCDay() + 6) % 7));
++    var thu = new Date(mondayOfOne + ((week - 1) * 7 + 3) * 86400000);
++    return thu.getUTCFullYear() + '-' + pad2(thu.getUTCMonth() + 1);
++  }
++
++  /**
++   * How many quests were claimed in a season ("2026-11"), counted from the claim keys the Quests page keeps ("d:2026-11-04:d-live" for a daily,
++   * "w:2026-W45:w-days4" for a weekly): a daily counts in the month of its day, a weekly in the month of its week's Thursday (so a week that straddles
++   * two months is counted once, in one of them). Odd keys and unclaimed ones count for nothing.
++   */
++  function seasonQuestsDone(claimed, seasonId) {
++    var id = str(seasonId);
++    var n = 0;
++    if (!claimed || typeof claimed !== 'object' || !/^\d{4}-\d{2}$/.test(id)) { return 0; }
++    Object.keys(claimed).forEach(function (k) {
++      if (claimed[k] !== true) { return; }
++      var d = /^d:(\d{4}-\d{2})-\d{2}:/.exec(k);
++      if (d) { if (d[1] === id) { n += 1; } return; }
++      var w = /^w:(\d{4})-W(\d{2}):/.exec(k);
++      if (w && Number(w[2]) >= 1 && Number(w[2]) <= 53 && monthOfIsoWeek(Number(w[1]), Number(w[2])) === id) { n += 1; }
++    });
++    return n;
++  }
++
++  /**
++   * The words on the season card.
++   * input = { demo, name (ONLY when switched on), season: { id ("2026-11"), name ("Gold November"), month ("November 2026") }, tier (0 to 30), questsDone, site }
++   */
++  function seasonCard(input) {
++    var i = input || {};
++    var s = i.season || {};
++    var name = cleanName(i.name);
++    var max = SEASON_TIERS;
++    var tier = Math.max(0, Math.min(max, Math.floor(Number(i.tier)) || 0));
++    var done = Math.max(0, Math.floor(Number(i.questsDone)) || 0);
++    var finished = tier >= max;
++    return {
++      kind: 'season',
++      demo: !!i.demo,
++      name: name,
++      big: finished ? 'season' : '',
++      ribbon: finished ? 'Season complete' : '',
++      eyebrow: name ? name + '’s season' : 'My season',
++      seasonId: cleanId(s.id),
++      seasonName: str(s.name) || 'Season',
++      month: str(s.month),
++      tier: tier,
++      tierCount: max,
++      tierLine: 'Tier ' + tier + ' of ' + max,
++      questsDone: done,
++      questsLine: done + (done === 1 ? ' quest' : ' quests') + ' done',
++      verify: null,
++      verifyNote: '',
++      tagline: TAGLINE,
++      note: i.demo ? 'XP and cosmetics only, never money. Play money: nothing was charged' : 'XP and cosmetics only, never money',
++      site: str(i.site)
++    };
++  }
++
+   /**
+    * The short text that travels with the picture (Web Share, or copied). It names no one unless the card does (card.name is empty when the switch is off),
+    * never holds an amount of credit or anything about the account, and in checkout mode it does not claim a gift that was not finished yet.
+@@ -202,13 +287,17 @@
+   function shareText(card, o) {
+     o = o || {};
+     var tail = ' Give it a spin:';
++    if (card.kind === 'season') {
++      return (card.name ? card.name + '’s' : 'My') + ' GiveSpin season, ' + card.seasonName + ': tier ' + card.tier + ' of ' + card.tierCount + ', ' + card.questsLine +
++        ' (XP and cosmetics only, never money).' + tail;
++    }
+     if (card.kind === 'profile') {
+       var who = card.name ? card.name + '’s' : 'My';
+       return who + ' GiveSpin profile: ' + card.standing.label + (card.total ? ', ' + card.total + ' given' + (card.demo ? ' (play money)' : '') : '') + '.' + tail;
+     }
+     var list = card.count > 3 ? card.count + ' charities' : joinNames(card.shorts.length ? card.shorts : [card.charityShort]);
+     var text = card.demo
+-      ? (card.name ? card.name + '’s' : 'My') + ' GiveSpin round landed on ' + list + ' (play money).'
++      ? (card.name ? card.name + '’s' : 'My') + ' GiveSpin ' + (card.live ? 'simulated table round (bot players)' : 'round') + ' landed on ' + list + ' (play money).'
+       : 'GiveSpin picked ' + list + ' for ' + (card.name ? card.name + '’s' : 'my') + ' ' + card.amount + ' gift.';
+     if (card.verify) { text += ' Check it yourself: ' + card.verify.hash + ' · ' + card.verify.id + '.'; }
+     return text + tail;
+@@ -218,7 +307,11 @@
+   function altText(card, size) {
+     var s = sizeFor(size);
+     var bits = ['GiveSpin share picture, ' + s.label.toLowerCase() + ' (' + s.w + ' by ' + s.h + ').'];
+-    if (card.kind === 'profile') {
++    if (card.kind === 'season') {
++      if (card.ribbon) { bits.push('Gold frame: ' + card.ribbon + '.'); }
++      bits.push((card.name ? card.name + ': ' : '') + card.seasonName + ' season' + (card.month ? ', ' + card.month : '') + '.');
++      bits.push(card.tierLine + '. ' + card.questsLine + '.');
++    } else if (card.kind === 'profile') {
+       bits.push((card.name ? card.name + ': ' : '') + card.standing.label + (card.standing.name ? ', ' + card.standing.name : '') + '.');
+       bits.push(card.totalLine + '.');
+       if (card.topLine) { bits.push(card.topLine + '.'); }
+@@ -227,7 +320,7 @@
+     } else {
+       if (card.ribbon) { bits.push('Gold frame: ' + card.ribbon + '.'); }
+       bits.push((card.name ? card.name + ': ' : '') + card.standing.label + (card.standing.name ? ', ' + card.standing.name : '') + '.');
+-      bits.push(card.amount + ' ' + card.lead + ' ' + joinNames(card.count > 3 ? [card.count + ' charities'] : card.names) + (card.game ? ', game: ' + card.game : '') + '.');
++      bits.push(card.amount + ' ' + card.lead + ' ' + joinNames(card.count > 3 ? [card.count + ' charities'] : card.names) + (card.game ? (card.live ? ', simulated table game: ' : ', game: ') + card.game : '') + '.');
+       if (card.verify) { bits.push(card.verify.text + '. ' + card.verify.hint + '.'); }
+     }
+     bits.push(card.tagline + ' ' + card.note + '.');
+@@ -332,7 +425,8 @@
+   return {
+     SIZES: SIZES, TAGLINE: TAGLINE, BIG_GIFT_CENTS: BIG_GIFT_CENTS, MAX_NAME: MAX_NAME, sizeFor: sizeFor, cleanName: cleanName,
+     bigWin: bigWin, bigLabel: bigLabel, verifyCode: verifyCode, siteUrl: siteUrl, siteLabel: siteLabel, fileName: fileName,
+-    roundCard: roundCard, profileCard: profileCard, shareText: shareText, altText: altText,
++    roundCard: roundCard, profileCard: profileCard, seasonCard: seasonCard, seasonShareable: seasonShareable, seasonQuestsDone: seasonQuestsDone,
++    SEASON_TIERS: SEASON_TIERS, SEASON_MIN_TIER: SEASON_MIN_TIER, shareText: shareText, altText: altText,
+     ellipsize: ellipsize, wrapText: wrapText, fitSize: fitSize, topCharities: topCharities, topCauses: topCauses, normPrefs: normPrefs, joinNames: joinNames
+   };
+ });
+diff -ruN base/givespin/js/ui/boards.js work/givespin/js/ui/boards.js
+--- base/givespin/js/ui/boards.js	2026-11-04 04:55:02.220131187 +0000
++++ work/givespin/js/ui/boards.js	2026-11-04 20:01:06.982603322 +0000
+@@ -6,8 +6,8 @@
+  *   - three tabs (Crews, Charities, Players: a real tablist, arrow keys, Home and End) and a This week / All time toggle (buttons with aria-pressed);
+  *   - each list is a real table (th scope), top 10, then the visitor's own row at its real rank when it is further down;
+  *   - crews show a weekly goal as a progress bar with the words "$X of $Y"; a visitor with no crew can join one from here (the same call the Crews page uses);
+- *   - "Share my crew" draws a picture on a canvas (same frame style as the share cards in js/ui/sharecard.js; the drawing code is repeated here because
+- *     that file exports no drawing helpers) and shows it in a dialog with Download, Share and Copy;
++ *   - "Share my crew" draws a picture on a canvas with the same drawing pieces as the share cards (ui.sharecard.draw in js/ui/sharecard.js: palette,
++ *     frames, header, ribbon, footer) and shows it in a dialog with Download, Share and Copy;
+  *   - a lobby block, "This week's leaders" (top three crews), through ui.lobby.addBlock.
+  *
+  *   ui.boards.render() draws the page; .openShare() the crew card; .last() / .canvas() what the card dialog shows (tests); .data(date) the three boards at a moment.
+@@ -258,11 +258,15 @@
+ 
+   /* ------------------------------------------------------------ the crew card */
+ 
+-  // the same palette as js/ui/sharecard.js (the site's own colours, see css/base.css)
+-  var C = { bg0: '#0e1b26', bg1: '#091017', ink: '#ecf5f9', muted: '#9bb3c0', dim: '#8aa3b1', green: '#22f07a', gold: '#ffc542', line: '#335468' };
+-  var DISPLAY = '"Sora", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif';
+-  var BODY = '"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+-  var HEART = 'M20 28.2c-.4 0-.7-.1-1-.4-4.1-3.6-7-6.2-7-9.6 0-2.3 1.8-4.1 4-4.1 1.6 0 3.1.8 4 2.2.9-1.4 2.4-2.2 4-2.2 2.2 0 4 1.8 4 4.1 0 3.4-2.9 6-7 9.6-.3.3-.6.4-1 .4Z';
++  // the drawing pieces (colours, fonts, frames, header, ribbon, footer) are js/ui/sharecard.js's: this card is drawn with the same ones, so the family stays alike
++  // (that file is loaded before this one)
++  var D = (ui.sharecard && ui.sharecard.draw) || {};
++  var C = D.C;
++  var BODY = D.BODY;
++  var DISPLAY = D.DISPLAY;
++  var fitText = D.fitText;
++  var roundRect = D.roundRect;
++  var glowAt = D.glowAt;
+ 
+   var TC = {
+     title: 'Share my crew',
+@@ -283,102 +287,6 @@
+   var closeHandler = null;
+   var lastMeta = null;
+ 
+-  function font(g, weight, px, family) { g.font = weight + ' ' + Math.round(px) + 'px ' + family; }
+-  function measurer(g, weight, px, family) { return function (t) { font(g, weight, px, family); return g.measureText(t).width; }; }
+-  function text(g, s, x, y, o) {
+-    g.save();
+-    font(g, o.weight || 700, o.px, o.family || BODY);
+-    g.fillStyle = o.color || C.ink;
+-    g.textAlign = o.align || 'left';
+-    g.textBaseline = 'alphabetic';
+-    if (o.glow) { g.shadowColor = o.glow; g.shadowBlur = 24; }
+-    g.fillText(s, x, y);
+-    g.restore();
+-  }
+-  function fitText(g, s, x, y, maxW, o) {
+-    var px = share.fitSize(s, maxW, function (t, p) { font(g, o.weight || 700, p, o.family || BODY); return g.measureText(t).width; }, o.px, o.min || 12);
+-    var f = measurer(g, o.weight || 700, px, o.family || BODY);
+-    var oo = {}; Object.keys(o).forEach(function (k) { oo[k] = o[k]; }); oo.px = px;
+-    text(g, f(s) > maxW ? share.ellipsize(s, maxW, f) : s, x, y, oo);
+-    return px;
+-  }
+-  function roundRect(g, x, y, w, h, r) {
+-    g.beginPath();
+-    g.moveTo(x + r, y); g.lineTo(x + w - r, y); g.quadraticCurveTo(x + w, y, x + w, y + r);
+-    g.lineTo(x + w, y + h - r); g.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+-    g.lineTo(x + r, y + h); g.quadraticCurveTo(x, y + h, x, y + h - r);
+-    g.lineTo(x, y + r); g.quadraticCurveTo(x, y, x + r, y);
+-    g.closePath();
+-  }
+-  function glowAt(g, x, y, r, rgb, alpha) {
+-    var gr = g.createRadialGradient(x, y, 0, x, y, r);
+-    gr.addColorStop(0, 'rgba(' + rgb + ',' + alpha + ')');
+-    gr.addColorStop(1, 'rgba(' + rgb + ',0)');
+-    g.fillStyle = gr;
+-    g.fillRect(x - r, y - r, r * 2, r * 2);
+-  }
+-  function fontsReady() {
+-    if (!document.fonts || !document.fonts.load) { return Promise.resolve(); }
+-    var ask = Promise.all([document.fonts.load('800 64px Sora'), document.fonts.load('700 32px Inter'), document.fonts.load('600 32px Inter')]).catch(function () { /* the fallback fonts will do */ });
+-    return Promise.race([ask, new Promise(function (r) { setTimeout(r, 1500); })]);
+-  }
+-
+-  /** The gold frame for a crew that reached its goal: border with a glow and marquee bulbs (the share cards' fancy frame, without the confetti dots). */
+-  function goldFrame(g, W, H) {
+-    var gold = g.createLinearGradient(0, 0, W, H);
+-    ['#fff1b8', '#ffc542', '#a86f05', '#ffc542', '#fff1b8'].forEach(function (c, i, a) { gold.addColorStop(i / (a.length - 1), c); });
+-    g.save();
+-    g.shadowColor = 'rgba(255,197,66,0.85)'; g.shadowBlur = 34; g.lineWidth = 14; g.strokeStyle = gold;
+-    roundRect(g, 26, 26, W - 52, H - 52, 46); g.stroke();
+-    g.restore();
+-    g.lineWidth = 3; g.strokeStyle = 'rgba(255,241,184,0.7)';
+-    roundRect(g, 50, 50, W - 100, H - 100, 30); g.stroke();
+-    g.fillStyle = '#fff1b8';
+-    var bulbs = [], x0, y0;
+-    for (x0 = 90; x0 <= W - 90; x0 += 54) { bulbs.push([x0, 38], [x0, H - 38]); }
+-    for (y0 = 90; y0 <= H - 90; y0 += 54) { bulbs.push([38, y0], [W - 38, y0]); }
+-    bulbs.forEach(function (b, k) {
+-      g.save(); g.shadowColor = '#ffc542'; g.shadowBlur = 12; g.globalAlpha = k % 2 ? 0.95 : 0.6;
+-      g.beginPath(); g.arc(b[0], b[1], 5, 0, Math.PI * 2); g.fill(); g.restore();
+-    });
+-  }
+-  function plainFrame(g, W, H) {
+-    g.lineWidth = 3; g.strokeStyle = C.line;
+-    roundRect(g, 28, 28, W - 56, H - 56, 40); g.stroke();
+-  }
+-
+-  function header(g, W, card, pad) {
+-    var y = 64;
+-    var grad = g.createLinearGradient(pad, y, pad + 64, y + 64);
+-    grad.addColorStop(0, '#22f07a'); grad.addColorStop(1, '#14b8a6');
+-    g.fillStyle = grad;
+-    roundRect(g, pad, y, 64, 64, 18); g.fill();
+-    g.save(); g.translate(pad, y); g.scale(1.6, 1.6); g.fillStyle = '#03210f'; g.fill(new Path2D(HEART)); g.restore();
+-    font(g, 800, 40, DISPLAY);
+-    var give = g.measureText('Give').width;
+-    text(g, 'Give', pad + 84, y + 34, { px: 40, weight: 800, family: DISPLAY, color: C.ink });
+-    text(g, 'Spin', pad + 84 + give, y + 34, { px: 40, weight: 800, family: DISPLAY, color: C.green });
+-    fitText(g, card.tagline, pad + 84, y + 62, W - pad * 2 - 84 - (card.demo ? 330 : 0), { px: 22, min: 14, weight: 600, family: BODY, color: C.muted });
+-    if (card.demo) {
+-      var label = 'DEMO · Play money';
+-      font(g, 800, 24, BODY);
+-      var w = g.measureText(label).width + 44;
+-      g.fillStyle = 'rgba(255,197,66,0.12)'; g.strokeStyle = 'rgba(255,197,66,0.75)'; g.lineWidth = 3;
+-      roundRect(g, W - pad - w, y + 10, w, 46, 23); g.fill(); g.stroke();
+-      text(g, label, W - pad - w / 2, y + 42, { px: 24, weight: 800, family: BODY, color: C.gold, align: 'center' });
+-    }
+-  }
+-
+-  function ribbon(g, W, label, y) {
+-    font(g, 800, 30, DISPLAY);
+-    var w = g.measureText(label).width + 96;
+-    var gr = g.createLinearGradient(W / 2 - w / 2, y, W / 2 + w / 2, y);
+-    gr.addColorStop(0, '#ffc542'); gr.addColorStop(0.5, '#fff1b8'); gr.addColorStop(1, '#ff8a3d');
+-    g.save(); g.shadowColor = 'rgba(255,197,66,0.8)'; g.shadowBlur = 26; g.fillStyle = gr;
+-    roundRect(g, W / 2 - w / 2, y, w, 58, 29); g.fill(); g.restore();
+-    text(g, label, W / 2, y + 40, { px: 30, weight: 800, family: DISPLAY, color: '#2a1a00', align: 'center' });
+-  }
+-
+   /** The goal bar: a track and a fill as wide as the share of the goal that is done. */
+   function goalBar(g, x, y, w, h, pct, done) {
+     g.fillStyle = 'rgba(255,255,255,0.12)';
+@@ -397,9 +305,9 @@
+     bg.addColorStop(0, C.bg0); bg.addColorStop(1, C.bg1);
+     g.fillStyle = bg; g.fillRect(0, 0, W, H);
+     glowAt(g, W / 2, sq ? 420 : 520, W * 0.62, big ? '255,197,66' : '34,240,122', big ? 0.2 : 0.11);
+-    if (big) { goldFrame(g, W, H); } else { plainFrame(g, W, H); }
+-    header(g, W, card, pad);
+-    if (big && card.ribbon) { ribbon(g, W, card.ribbon, sq ? 150 : 158); }
++    if (big) { D.goldFrame(g, W, H); } else { D.plainFrame(g, W, H); }
++    D.header(g, W, card, pad);
++    if (big && card.ribbon) { D.ribbon(g, W, card.ribbon, sq ? 150 : 158); }
+     var maxW = W - pad * 2;
+     var y = sq
+       ? { eyebrow: 286, name: 386, rank: 452, amount: 580, label: 662, bar: 702, goal: 788, crew: 842, foot: H - 190 }
+@@ -413,12 +321,8 @@
+     goalBar(g, pad, y.bar, maxW, bh, card.pct, card.reached);
+     fitText(g, card.goalLine, W / 2, y.goal, maxW, { px: 40, min: 22, weight: 700, family: BODY, color: C.ink, align: 'center' });
+     fitText(g, card.crewLine, W / 2, y.crew, maxW, { px: 32, min: 20, weight: 600, family: BODY, color: C.muted, align: 'center' });
+-    // footer: the address and the plain note (the same shape as the other cards)
+-    g.fillStyle = 'rgba(255,255,255,0.12)'; g.fillRect(pad, y.foot, maxW, 2);
+-    var fy = y.foot + 46;
+-    if (card.site) { fitText(g, card.site, W / 2, fy, maxW, { px: 28, min: 18, weight: 700, family: BODY, color: C.green, align: 'center' }); fy += 40; }
+-    var f = measurer(g, 600, 22, BODY);
+-    share.wrapText(card.note + '.', maxW, f, 2).lines.forEach(function (l, i) { text(g, l, W / 2, fy + i * 29, { px: 22, weight: 600, family: BODY, color: C.dim, align: 'center' }); });
++    // footer: the address and the plain note (the same one the other cards have)
++    D.footer(g, W, H, card, pad, y.foot);
+   }
+ 
+   function draw(card, sizeId) {
+@@ -426,19 +330,7 @@
+     var cv = document.createElement('canvas');
+     cv.width = S.w; cv.height = S.h;
+     var g = cv.getContext('2d');
+-    return fontsReady().then(function () { paint(g, S, card); return cv; });
+-  }
+-
+-  function toBlob(canvas) {
+-    return new Promise(function (resolve, reject) {
+-      try {
+-        if (canvas.toBlob) { canvas.toBlob(function (b) { if (b) { resolve(b); } else { reject(new Error('The picture came out empty')); } }, 'image/png'); return; }
+-        var bin = atob(canvas.toDataURL('image/png').split(',')[1]);
+-        var bytes = new Uint8Array(bin.length);
+-        for (var i = 0; i < bin.length; i++) { bytes[i] = bin.charCodeAt(i); }
+-        resolve(new Blob([bytes], { type: 'image/png' }));
+-      } catch (e) { reject(e); }
+-    });
++    return D.fontsReady().then(function () { paint(g, S, card); return cv; });
+   }
+ 
+   /** The card for the visitor's crew now, or null when they have none. */
+@@ -508,7 +400,7 @@
+     modal.$('[data-role="download"]').disabled = true;
+     modal.$('[data-role="share"]').hidden = !navigator.share;
+     draw(card, st.size).then(function (cv) {
+-      return toBlob(cv).then(function (blob) {
++      return D.toBlob(cv).then(function (blob) {
+         if (token !== st.token) { return; }
+         revoke();
+         var S = share.sizeFor(st.size);
+@@ -568,6 +460,7 @@
+ 
+   function openShare() {
+     if (!crewCardNow(new Date())) { ui.toast('Join a crew first, then you can share it.', 'info'); return; }
++    if (!D.fontsReady) { ui.toast('Sorry, this page could not draw the picture.', 'info'); return; }   // (js/ui/sharecard.js is missing: not possible in the page as shipped)
+     if (!modal) { modal = ui.modal('crewcard', { wide: true, className: 'modal--share' }); }
+     // each opening has its own 'close' listener: the dialog's close event arrives a moment after it closes (see ui/sharecard.js)
+     if (closeHandler) { modal.el.removeEventListener('close', closeHandler); closeHandler = null; }
+@@ -598,10 +491,20 @@
+ 
+   /* ----------------------------------------------------------- the lobby block */
+ 
++  /** One slim extra row under the top three for a visitor whose crew is further down: "Your crew: Name #4 BOT · 7 bot crewmates and you · $412 of $900 weekly goal". */
++  function mineRow(r) {
++    var words = m(r.cents) + ' of ' + m(r.goal);
++    return '<ol class="bdl__mine" data-role="my-crew" start="' + r.rank + '" aria-label="Your crew this week. Simulated crew: every member is a bot.">' +
++      '<li class="bdl__me"><span class="bd__n bd__n--x" aria-hidden="true">' + r.rank + '</span>' +
++      '<span class="bdl__t"><span class="bdl__lbl">Your crew:</span> <b>' + esc(r.name) + '</b> ' + botPill(T.crewBotTip) +
++      ' <small>#' + r.rank + ' · ' + r.members + ' bot crewmates and you · ' + esc(words) + ' weekly goal</small></span></li></ol>';
++  }
++
+   function lobbyHTML(now) {
+     var c = ctx(now);
+     var info = B.weekInfo(now);
+     var top = B.leaders(now, c, 3);
++    var mine = B.crews('week', now, c).you;   // the visitor's crew, wherever it is (null with no crew)
+     return '<div class="sect__head"><h2 class="sect__t">This week’s leaders</h2><a class="linkbtn" href="#boards">See the leaderboards</a></div>' +
+       '<div class="bdl panel"><ol class="bdl__list" aria-label="Top three crews this week. Simulated crews: every member is a bot.">' + top.map(function (r) {
+         var words = m(r.cents) + ' of ' + m(r.goal);
+@@ -609,7 +512,7 @@
+           '<span class="bdl__t"><b>' + esc(r.name) + '</b> ' + botPill(T.crewBotTip) + (r.member ? ' <span class="bd__tag">Your crew</span>' : '') +
+           '<span class="bd__bar' + (r.reached ? ' is-done' : '') + '" role="progressbar" aria-label="' + esc(r.name) + ' weekly goal" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + r.pct + '" aria-valuetext="' + esc(words) + '"><i style="width:' + r.pct + '%"></i></span>' +
+           '<small>' + esc(words) + ' weekly goal</small></span></li>';
+-      }).join('') + '</ol>' +
++      }).join('') + '</ol>' + (mine && mine.rank > top.length ? mineRow(mine) : '') +
+       '<p class="bdl__note">Simulated crews: every member is a bot, and the numbers are made up. This week’s boards end in ' + esc(B.timeLeft(info.msLeft)) + '.</p></div>';
+   }
+ 
+diff -ruN base/givespin/js/ui/live.js work/givespin/js/ui/live.js
+--- base/givespin/js/ui/live.js	2026-11-04 00:56:01.973886172 +0000
++++ work/givespin/js/ui/live.js	2026-11-04 19:42:09.447784653 +0000
+@@ -738,6 +738,7 @@
+         '<div class="lt-res__site">' + ui.siteMark(winner, 40) + '<div class="lt-res__site-in">' + ui.siteName(winner, 'lt-res__name') + ui.aboutBtn(winner) + '</div></div>' + fairBits + '</div>';
+     ui.hydrate(el.result);
+     if (ui.fairshow) { ui.fairshow.addShortcut(el.result, '.lt-res__t'); }   // a "Verify" shortcut that opens the fair play details
++    if (you && ui.sharecard && ui.sharecard.addLiveShare) { ui.sharecard.addLiveShare(el.result, room, r); }   // "Share your gift": a picture of this round, labelled as a simulated table with bots
+     var vb = $('[data-role="verify"]', el.result);
+     if (vb) {
+       vb.addEventListener('click', function () {
+diff -ruN base/givespin/js/ui/pages.js work/givespin/js/ui/pages.js
+--- base/givespin/js/ui/pages.js	2026-11-04 04:55:02.221431174 +0000
++++ work/givespin/js/ui/pages.js	2026-11-04 19:44:47.710144869 +0000
+@@ -272,7 +272,8 @@
+           '<li>' + ui.icon('shield-check') + '<span><b>It is locked in where you can see.</b> Before you play, the game shows you a “fingerprint” of its secret. If the secret were swapped afterwards, the fingerprint would no longer match and Verify would show it. In this preview the game and the secret both live on your device, so this is a demonstration, not an outside audit.</span></li>' +
+           '<li>' + ui.icon('scale') + '<span><b>Everyone gets the same chance.</b> In solo games every charity on the board has exactly the same odds. At live tables each charity’s chance is its share of the pot.</span></li>' +
+           '<li>' + ui.icon('circle-check') + '<span><b>You can check.</b> Press “Verify” on any past round and your browser redoes the maths and tells you whether it all adds up.</span></li>' +
+-        '</ul></section>' +
++        '</ul>' +
++        '<p class="fp-try"><button type="button" class="btn btn--green btn--sm" data-role="try-checker">' + ui.icon('shield-check') + 'Try the checker</button><span>A sample round, not one of yours, checked with the real code in three steps.</span></p></section>' +
+ 
+       '<h2 class="sect__t fp-how" id="fp-how">How it works, like a sealed envelope</h2>' +
+       '<ol class="steps3">' +
+@@ -314,6 +315,8 @@
+     ui.hydrate(root);
+     ui.fairBlock.render($('[data-role="block"]', root));
+     historyList($('[data-role="hist"]', root), { limit: 10, fairOnly: true });
++    var tryBtn = $('[data-role="try-checker"]', root);   // a sample round checked with the real code (js/ui/fairshow.js)
++    if (tryBtn) { if (ui.fairshow && ui.fairshow.openChecker) { tryBtn.addEventListener('click', function () { ui.fairshow.openChecker(); }); } else { tryBtn.hidden = true; } }
+   }
+ 
+   /* ----------------------------------------------------------------- Help */
+diff -ruN base/givespin/js/ui/quests.js work/givespin/js/ui/quests.js
+--- base/givespin/js/ui/quests.js	2026-11-04 04:55:02.221860121 +0000
++++ work/givespin/js/ui/quests.js	2026-11-04 19:42:09.446993501 +0000
+@@ -156,7 +156,8 @@
+       head +
+       '<div class="qseason__act">' +
+         (v.claimable ? '<button type="button" class="btn btn--green" data-act="claim-all">' + ui.icon('gift') + 'Claim ' + (v.claimable === 1 ? 'the 1 reward' : 'all ' + v.claimable + ' rewards') + '</button>' : '') +
+-        '<button type="button" class="btn btn--sm" data-act="jump">' + ui.icon('flag-triangle-right') + 'Go to my tier</button></div>' +
++        '<button type="button" class="btn btn--sm" data-act="jump">' + ui.icon('flag-triangle-right') + 'Go to my tier</button>' +
++        (GS.share && ui.sharecard && GS.share.seasonShareable(s.tiers) ? '<button type="button" class="btn btn--sm" data-act="share-season">' + ui.icon('share-2') + 'Share my season</button>' : '') + '</div>' +
+       '<ol class="qtrack" role="list" aria-label="Season track, 30 tiers" data-role="track">' + s.tiers.map(function (t) { return tierHTML(t, next); }).join('') + '</ol>' +
+       '<p class="qseason__note">Rounds earn ' + Q.POINTS.round + ' points each (the first ' + Q.ROUND_CAP + ' a day), a daily quest ' + Q.POINTS.daily + ' and a weekly one ' + Q.POINTS.weekly + '. Every ' + Q.TIER_POINTS + ' points opens a tier.</p>' +
+     '</section>';
+@@ -369,7 +370,8 @@
+         if (track.scrollWidth > track.clientWidth + 4) { centre(track, btn, reduced() ? 'auto' : 'smooth'); }
+         else { btn.scrollIntoView({ block: 'center', behavior: reduced() ? 'auto' : 'smooth' }); }
+         btn.focus({ preventScroll: true });
+-      } else if (what === 'try-confetti' && GS.confetti && !reduced()) { GS.confetti.burst({ count: 70, power: 800 }); }
++      } else if (what === 'share-season') { if (ui.sharecard && ui.sharecard.openSeason) { ui.sharecard.openSeason(act); } }   // a picture of the season so far (js/ui/sharecard.js)
++      else if (what === 'try-confetti' && GS.confetti && !reduced()) { GS.confetti.burst({ count: 70, power: 800 }); }
+     });
+     root.addEventListener('change', function (e) {
+       var inp = e.target;
+diff -ruN base/givespin/js/ui/sharecard.js work/givespin/js/ui/sharecard.js
+--- base/givespin/js/ui/sharecard.js	2026-11-04 00:56:01.979280792 +0000
++++ work/givespin/js/ui/sharecard.js	2026-11-04 19:55:09.916463314 +0000
+@@ -4,6 +4,10 @@
+  *
+  *   ui.sharecard.openRound({ round, pay, summary, demo })   the "Share your gift" dialog for the receipt that is showing
+  *   ui.sharecard.openProfile()                              the same dialog for the visitor's profile (the profile page calls it)
++ *   ui.sharecard.openSeason(button)                         the same dialog for the visitor's season (the Quests page's "Share my season" button)
++ *   ui.sharecard.addLiveShare(root, room, result)           puts a "Share your gift" button on a live table's result card (js/ui/live.js calls it)
++ *   ui.sharecard.draw                                       the drawing pieces (colours, fonts, frames, header, ribbon, footer, text fitting) that
++ *                                                           the other cards of the family use: the crew card in js/ui/boards.js
+  *   ui.sharecard.last()                                     what the picture on show is (kind, size, frame, words); for tests and for curious people
+  *
+  * The words, the verify code, the big-win rule and the line breaking are in js/share.js (GS.share, unit-tested). This file only draws and wires buttons.
+@@ -26,9 +30,12 @@
+   var T = {
+     titleRound: 'Share your gift',
+     titleProfile: 'Share your profile',
++    titleSeason: 'Share your season',
+     sub: 'A picture to save or send. Pick a shape, then show it off.',
+     shows: 'It shows your rank, the gift and the charity. Never your balance, email or card.',
+     showsProfile: 'It shows your rank, how much you have given and your streak. Never your balance, email or card.',
++    showsLive: 'It shows your rank, the gift, the table and the charity that won the pot. The other players are bots. Never your balance, email or card.',
++    showsSeason: 'It shows the season, your tier and the quests you did. XP and cosmetics only, never money. Never your balance, email or card.',
+     shape: 'Picture shape',
+     nameOn: 'Show my name on the card',
+     nameNone: 'You have not chosen a display name yet.',
+@@ -157,11 +164,8 @@
+     g.fillRect(x - r, y - r, r * 2, r * 2);
+   }
+ 
+-  /** The fancy frame: a gold border, a glow, marquee bulbs and confetti dots (all drawn here, no assets). */
+-  function fancyFrame(g, W, H, seed, clear) {
+-    var gold = g.createLinearGradient(0, 0, W, H);
+-    ['#fff1b8', '#ffc542', '#a86f05', '#ffc542', '#fff1b8'].forEach(function (c, i, a) { gold.addColorStop(i / (a.length - 1), c); });
+-    // confetti dots first, so the writing sits on top of them
++  /** Confetti dots over the card, kept off the places in `clear` (boxes [x, y, w, h]) so the writing stays free of them. `seed` makes the same card give the same dots. */
++  function confettiDots(g, W, H, seed, clear) {
+     var rng = core.seeded('confetti:' + seed);
+     var colours = ['#ffc542', '#22f07a', '#ff5d9e', '#35d4ff', '#9a7bff', '#ff8a3d', '#fff1b8'];
+     function blocked(x, y, r) {
+@@ -178,7 +182,12 @@
+       else { g.beginPath(); g.arc(x, y, r * 0.8, 0, Math.PI * 2); g.fill(); }
+     }
+     g.globalAlpha = 1;
+-    // the border, with a glow
++  }
++
++  /** The gold frame: a border with a glow and marquee bulbs along the inner line (no assets). */
++  function goldFrame(g, W, H) {
++    var gold = g.createLinearGradient(0, 0, W, H);
++    ['#fff1b8', '#ffc542', '#a86f05', '#ffc542', '#fff1b8'].forEach(function (c, i, a) { gold.addColorStop(i / (a.length - 1), c); });
+     g.save();
+     g.shadowColor = 'rgba(255,197,66,0.85)';
+     g.shadowBlur = 34;
+@@ -208,6 +217,12 @@
+     });
+   }
+ 
++  /** The fancy frame: confetti dots first (so the writing sits on top of them), then the gold border with its glow and bulbs. */
++  function fancyFrame(g, W, H, seed, clear) {
++    confettiDots(g, W, H, seed, clear);
++    goldFrame(g, W, H);
++  }
++
+   function plainFrame(g, W, H) {
+     g.lineWidth = 3;
+     g.strokeStyle = C.line;
+@@ -341,6 +356,7 @@
+     text(g, s, W / 2, y + 40, { px: 30, weight: 800, family: DISPLAY, color: '#2a1a00', align: 'center' });
+   }
+ 
++  /** The foot of a card: the verify code (when there is one), the address and the plain note (two lines; a live table's card says one more thing and may use three). */
+   function footer(g, W, H, card, pad, top) {
+     var maxW = W - pad * 2;
+     g.fillStyle = 'rgba(255,255,255,0.12)';
+@@ -357,12 +373,78 @@
+     }
+     var note = card.note + (card.verifyNote ? '. ' + card.verifyNote : '') + '.';
+     var f = measurer(g, 600, 22, BODY);
+-    var wrapped = share.wrapText(note, maxW, f, 2);
++    var wrapped = share.wrapText(note, maxW, f, card.live ? 3 : 2);
+     wrapped.lines.forEach(function (l, i) { text(g, l, W / 2, y + i * 29, { px: 22, weight: 600, family: BODY, color: C.dim, align: 'center' }); });
+   }
+ 
++  /** The season ring: 30 segments, lit up to the tier reached, with the tier number in the middle. */
++  function tierRing(g, cx, cy, R, tier, count) {
++    var lit = Math.max(0, Math.min(count, tier));
++    var step = 360 / count;
++    g.save();
++    g.lineCap = 'butt';
++    g.lineWidth = R * 0.16;
++    for (var i = 0; i < count; i++) {
++      var a0 = (-90 + i * step + 1.4) * Math.PI / 180;
++      var a1 = (-90 + (i + 1) * step - 1.4) * Math.PI / 180;
++      g.beginPath(); g.arc(cx, cy, R * 0.9, a0, a1);
++      g.strokeStyle = i < lit ? (lit >= count ? C.gold : C.green) : 'rgba(255,255,255,0.14)';
++      g.stroke();
++    }
++    var disk = g.createRadialGradient(cx, cy - R * 0.2, 0, cx, cy, R * 0.72);
++    disk.addColorStop(0, '#1d4a35'); disk.addColorStop(1, '#0d2418');
++    g.fillStyle = disk;
++    g.beginPath(); g.arc(cx, cy, R * 0.72, 0, Math.PI * 2); g.fill();
++    g.lineWidth = 4; g.strokeStyle = lit >= count ? 'rgba(255,197,66,0.8)' : 'rgba(34,240,122,0.7)'; g.stroke();
++    g.restore();
++    text(g, String(tier), cx, cy + R * 0.2, { px: R * 0.78, weight: 800, family: DISPLAY, color: C.ink, align: 'center' });
++    text(g, 'of ' + count, cx, cy + R * 0.5, { px: R * 0.19, weight: 700, family: BODY, color: C.muted, align: 'center' });
++  }
++
++  /** The season card: the ring, the season's name, the tier and the quests done (all words come from GS.share.seasonCard). */
++  function paintSeason(g, S, card) {
++    var W = S.w, H = S.h;
++    var sq = S.id === 'square';
++    var pad = 72;
++    var big = !!card.big;
++    var footTop = sq ? H - 270 : H - 244;
++    var bg = g.createLinearGradient(0, 0, 0, H);
++    bg.addColorStop(0, C.bg0); bg.addColorStop(1, C.bg1);
++    g.fillStyle = bg;
++    g.fillRect(0, 0, W, H);
++    glowAt(g, W / 2, sq ? 330 : 420, W * 0.62, big ? '255,197,66' : '34,240,122', big ? 0.2 : 0.11);
++    var clear = sq   // (the ring is drawn over the dots, so only the writing is kept free of them)
++      ? [[0, 40, W, 110], [W / 2 - 220, 140, 440, 80], [490, 240, W - 490, 420], [0, footTop - 10, W, 400]]
++      : [[0, 40, W, 110], [W / 2 - 220, 140, 440, 80], [90, 650, W - 180, footTop - 650], [0, footTop - 10, W, 400]];
++    if (big) { fancyFrame(g, W, H, card.seasonId || 'season', clear); } else { plainFrame(g, W, H); }
++    header(g, W, card, pad);
++    if (big && card.ribbon) { ribbon(g, W, card.ribbon, sq ? 150 : 158); }
++    var R = sq ? 186 : 176;
++    var rcx = sq ? 64 + 20 + 192 : W / 2;
++    var rcy = sq ? 450 : 440;
++    glowAt(g, rcx, rcy, R * 1.7, big ? '255,197,66' : '34,240,122', big ? 0.34 : 0.22);
++    tierRing(g, rcx, rcy, R, card.tier, card.tierCount);
++    if (sq) {
++      var tx = 520, tw = W - pad - 520;
++      fitText(g, card.eyebrow, tx, 296, tw, { px: 32, min: 18, weight: 700, family: BODY, color: C.muted });
++      fitText(g, card.seasonName, tx, 404, tw, { px: 92, min: 44, weight: 800, family: DISPLAY, color: C.gold, glow: big ? 'rgba(255,197,66,0.55)' : 0 });
++      if (card.month) { fitText(g, card.month, tx, 456, tw, { px: 32, min: 18, weight: 600, family: BODY, color: C.muted }); }
++      fitText(g, card.tierLine, tx, 560, tw, { px: 60, min: 30, weight: 800, family: BODY, color: C.ink });
++      fitText(g, card.questsLine, tx, 628, tw, { px: 40, min: 22, weight: 700, family: BODY, color: C.green });
++    } else {
++      var cw = W - pad * 2;
++      fitText(g, card.eyebrow, W / 2, 690, cw, { px: 34, min: 18, weight: 700, family: BODY, color: C.muted, align: 'center' });
++      fitText(g, card.seasonName, W / 2, 810, cw, { px: 112, min: 50, weight: 800, family: DISPLAY, color: C.gold, align: 'center', glow: big ? 'rgba(255,197,66,0.55)' : 0 });
++      if (card.month) { fitText(g, card.month, W / 2, 864, cw, { px: 34, min: 18, weight: 600, family: BODY, color: C.muted, align: 'center' }); }
++      fitText(g, card.tierLine, W / 2, 968, cw, { px: 70, min: 34, weight: 800, family: BODY, color: C.ink, align: 'center' });
++      fitText(g, card.questsLine, W / 2, 1040, cw, { px: 44, min: 22, weight: 700, family: BODY, color: C.green, align: 'center' });
++    }
++    footer(g, W, H, card, pad, footTop);
++  }
++
+   /** Paints the whole card on `g`. `vis` is what only the screen knows (the charities, the standing); `imgs` the loaded pictures. */
+   function paint(g, S, card, vis, imgs) {
++    if (card.kind === 'season') { paintSeason(g, S, card); return; }
+     var W = S.w, H = S.h;
+     var sq = S.id === 'square';
+     var pad = 72;
+@@ -441,7 +523,7 @@
+     var g = cv.getContext('2d');
+     var st0 = vis.standing;
+     var ex = emblemPx(S);
+-    var emblemSvg = st0.rank > 0 ? ui.rankRing(st0.rank, st0.level, ex, { animated: false }) : '';
++    var emblemSvg = st0 && st0.rank > 0 ? ui.rankRing(st0.rank, st0.level, ex, { animated: false }) : '';
+     return Promise.all([
+       fontsReady(),
+       svgImage(emblemSvg),
+@@ -476,11 +558,12 @@
+     var allocs = round.allocs.slice().sort(function (a, b) { return b.cents - a.cents; });
+     var chs = allocs.map(function (a) { return GS.charity(a.charityId); }).filter(Boolean);
+     var standing = summary.rankAfter || ui.myStanding();
++    var live = ctx.live || null;   // a live table's result: { title: "Balloon Race · Big · 100 balloons" }
+     return {
+-      kind: 'round', fileId: pay.receipt || '', title: T.titleRound, shows: T.shows,
++      kind: 'round', fileId: pay.receipt || '', title: T.titleRound, shows: live ? T.showsLive : T.shows,
+       build: function (withName) {
+         var card = share.roundCard({
+-          demo: isDemo, amountText: money(round.cents, true), cents: round.cents, game: round.direct ? 'Direct gift' : ui.gameName(round.game), direct: !!round.direct,
++          demo: isDemo || !!live, live: !!live, amountText: money(round.cents, true), cents: round.cents, game: live ? live.title : round.direct ? 'Direct gift' : ui.gameName(round.game), direct: !!round.direct,
+           charities: chs, jackpot: !!round.jackpot, pickWon: !!(round.pick && round.pick.won), rankedUp: !!summary.rankedUp,
+           standing: standing, receiptId: pay.receipt, fair: round.fair, name: withName ? chosenName() : '', site: share.siteLabel(window.location.href)
+         });
+@@ -510,6 +593,30 @@
+     };
+   }
+ 
++  /** The visitor's season, from the Quests page's own numbers: { season: { id, name, month, tier }, claimed } or null when there is nothing to show. */
++  function seasonNow() {
++    var v = ui.quests && ui.quests.view ? ui.quests.view() : null;
++    if (!v && ui.quests && ui.quests.sync) { ui.quests.sync(); v = ui.quests.view(); }
++    if (!v || !v.season) { return null; }
++    var raw = GS.local ? GS.local.get('quests', null) : null;
++    var claimed = GS.quests && GS.quests.normState ? GS.quests.normState(raw).claimed : {};
++    return { season: v.season, claimed: claimed };
++  }
++
++  function seasonSource(data) {
++    var s = data.season;
++    return {
++      kind: 'season', fileId: s.id, title: T.titleSeason, shows: T.showsSeason,
++      build: function (withName) {
++        var card = share.seasonCard({
++          demo: demo(), name: withName ? chosenName() : '', season: { id: s.id, name: s.name, month: s.month }, tier: s.tier,
++          questsDone: share.seasonQuestsDone(data.claimed, s.id), site: share.siteLabel(window.location.href)
++        });
++        return { card: card, vis: { standing: null, charities: [] } };
++      }
++    };
++  }
++
+   /* ---------------------------------------------------------------- the dialog */
+ 
+   function dialogHTML(src, name) {
+@@ -598,7 +705,8 @@
+       prev.setAttribute('data-ready', '1');
+       modal.$('[data-role="download"]').disabled = false;
+       lastMeta = {
+-        kind: built.card.kind, size: st.size, w: S.w, h: S.h, big: built.card.big, ribbon: built.card.ribbon, name: built.card.name, nameShown: !!built.card.name,
++        kind: built.card.kind, live: !!built.card.live, size: st.size, w: S.w, h: S.h, big: built.card.big, ribbon: built.card.ribbon, name: built.card.name, nameShown: !!built.card.name,
++        note: built.card.note, eyebrow: built.card.eyebrow, game: built.card.game || '', tierLine: built.card.tierLine || '', questsLine: built.card.questsLine || '', seasonName: built.card.seasonName || '',
+         verify: built.card.verify ? built.card.verify.text : '', text: share.shareText(built.card, {}), alt: img.alt, file: fileName(), bytes: blob.size
+       };
+     }
+@@ -619,7 +727,7 @@
+       .catch(fail);
+   }
+ 
+-  function fileName() { return share.fileName(st.src.kind === 'profile' ? 'profile' : 'gift', st.src.fileId, st.size); }
++  function fileName() { return share.fileName(st.src.kind === 'profile' ? 'profile' : st.src.kind === 'season' ? 'season' : 'gift', st.src.fileId, st.size); }
+ 
+   function onDownload() {
+     if (!st || !st.blob) { return; }
+@@ -662,7 +770,12 @@
+     ui.copyWithToast(d.both, 'Message');
+   }
+ 
+-  function open(src) {
++  /**
++   * Opens the dialog for a source. `o.trigger` is the button that was pressed (Safari does not focus a button on click, so the dialog could not know it), and
++   * `o.refocus` finds another place for the keyboard when that button has gone by the time the dialog closes (a live result that the next round took away).
++   */
++  function open(src, o) {
++    o = o || {};
+     if (!modal) { modal = ui.modal('sharecard', { wide: true, className: 'modal--share' }); }
+     // the dialog's 'close' event comes a moment after it closes, so a listener that looked at "the dialog on show" could act on the NEXT opening;
+     // each opening gets its own listener, and the old one is taken off before the new picture starts
+@@ -672,11 +785,23 @@
+     var name = chosenName();
+     st = { src: src, size: p.size, showName: p.showName, name: name, token: 0, blob: null, url: '', canvas: null, card: null };
+     var mine = st;
+-    closeHandler = function () { if (modal.el.open) { return; } mine.token++; revoke(mine); };
++    closeHandler = function () {
++      if (modal.el.open) { return; }
++      mine.token++;
++      revoke(mine);
++      // the keyboard goes back to the button that opened the dialog; if that button has been drawn away since, to the place `refocus` names
++      var back = modal.returnFocus;
++      if ((!back || !document.contains(back)) && typeof o.refocus === 'function') {
++        var el = null;
++        try { el = o.refocus(); } catch (e) { el = null; }
++        if (el && el.focus) { try { el.focus(); } catch (e2) { /* not focusable right now */ } }
++      }
++    };
+     modal.el.addEventListener('close', closeHandler);
+     modal.set(dialogHTML(src, name));
+     modal.setLocked(false);
+     modal.open();
++    if (o.trigger) { modal.returnFocus = o.trigger; }
+ 
+     var sizeBtns = modal.$$('[data-size]');
+     sizeBtns.forEach(function (b) {
+@@ -703,9 +828,59 @@
+     render();
+   }
+ 
++  /** Where the keyboard goes when a live result is gone (the next round took it away): the table's join button, else the page's title. */
++  function liveRefocus() {
++    var j = document.querySelector('#livepanel [data-role="join"]:not([disabled])');
++    if (j) { return j; }
++    var t = document.getElementById('g-title');
++    if (t) { t.setAttribute('tabindex', '-1'); }
++    return t;
++  }
++
++  /**
++   * The "Share your gift" button on a live table's result card. `root` is the result card's box, `room` the live table and `r` its result (room.result). It is
++   * put next to the Verify shortcut and only when the visitor had a stake (a visitor who only watched has no gift to share). Everything the card needs is read
++   * here, now: the table moves on to the next round while the dialog may still be open.
++   */
++  function addLiveShare(root, room, r) {
++    if (!root || !r || !r.you || root.querySelector('[data-role="live-share"]')) { return; }
++    var cents = Math.round(Number(r.you.dollars) * 100) || 0;
++    var ctx = {
++      round: { cents: cents, game: r.game, direct: false, jackpot: false, pick: { won: !!r.you.won }, fair: r.fair, allocs: [{ charityId: r.winnerId, cents: cents }] },
++      pay: { receipt: r.you.receipt }, summary: r.you.summary || {}, demo: true, live: { title: room && room.title ? room.title() : ui.gameName(r.game) }
++    };
++    var wrap = root.querySelector('.fs-jump');
++    if (!wrap) {
++      var after = root.querySelector('.lt-res__t');
++      if (!after) { return; }
++      wrap = document.createElement('p');
++      wrap.className = 'fs-jump';
++      after.parentNode.insertBefore(wrap, after.nextSibling);
++    }
++    var btn = document.createElement('button');
++    btn.type = 'button';
++    btn.className = 'btn btn--sm';
++    btn.setAttribute('data-role', 'live-share');
++    btn.innerHTML = ui.icon('share-2') + esc(T.titleRound);
++    wrap.appendChild(btn);
++    btn.addEventListener('click', function () { open(roundSource(ctx), { trigger: btn, refocus: liveRefocus }); });
++  }
++
+   ui.sharecard = {
+     openRound: function (ctx) { open(roundSource(ctx)); },
+     openProfile: function () { open(profileSource()); },
++    // the season card (the Quests page's "Share my season" button); `trigger` is that button
++    openSeason: function (trigger) {
++      var data = seasonNow();
++      if (!data) { return; }
++      open(seasonSource(data), { trigger: trigger, refocus: function () { return document.querySelector('#view-quests [data-act="share-season"]'); } });
++    },
++    addLiveShare: addLiveShare,
++    // the drawing pieces, for the other cards of the family (the crew card in js/ui/boards.js draws with these instead of keeping its own copies)
++    draw: {
++      C: C, DISPLAY: DISPLAY, BODY: BODY, MONO: MONO, font: font, measurer: measurer, text: text, fitText: fitText, roundRect: roundRect, glowAt: glowAt,
++      fontsReady: fontsReady, plainFrame: plainFrame, goldFrame: goldFrame, confettiDots: confettiDots, header: header, ribbon: ribbon, footer: footer, toBlob: toBlob
++    },
+     last: function () { return lastMeta; },
+     // the canvas on show (tests read its size and pixels)
+     canvas: function () { return st ? st.canvas : null; },
+diff -ruN base/givespin/tests/sections/34-share.mjs work/givespin/tests/sections/34-share.mjs
+--- base/givespin/tests/sections/34-share.mjs	1970-01-01 00:00:00.000000000 +0000
++++ work/givespin/tests/sections/34-share.mjs	2026-11-04 19:57:50.045675957 +0000
+@@ -0,0 +1,465 @@
++// More ways to show off a gift (wave 3): a live table's result can be shared, a season card, the Fair Play page's "Try the checker" button, the crew card drawn
++// with the share cards' own pieces, and the "Your crew" row on the lobby's leaders block. Sections 34a to 34f. Run one with ONLY=34a (whole ids, not the prefix).
++
++import fs from 'node:fs';
++import path from 'node:path';
++
++const DLG = '#dlg-sharecard';
++const BANNED = /crypto(?!graphic)|bitcoin|ethereum|blockchain|wallet|\bNFTs?\b|\btokens?\b|\bcoins?\b/i;   // the site's wording ban
++
++export default async function (h) {
++  const { check, newPage, openApp, go, a11y } = h;
++
++  const shareReady = (page) => page.waitForSelector(DLG + '[open] .sc__preview[data-ready="1"]', { timeout: 20000 });
++  const pickSize = async (page, size) => {
++    await page.click(DLG + ' [data-size="' + size + '"]');
++    await page.waitForFunction((s) => { const p = document.querySelector('#dlg-sharecard .sc__preview'); return p.getAttribute('data-shape') === s && p.getAttribute('data-ready') === '1'; }, size, { timeout: 20000 });
++  };
++  // the picture on show: its pixels (drawn back onto a canvas), its size, a sample of how many colours it has, and what the page says about it
++  const look = (page) => page.evaluate(async () => {
++    const img = document.querySelector('#dlg-sharecard [data-role="img"]');
++    await img.decode();
++    const cv = document.createElement('canvas');
++    cv.width = img.naturalWidth; cv.height = img.naturalHeight;
++    const g = cv.getContext('2d', { willReadFrequently: true });
++    g.drawImage(img, 0, 0);
++    const px = (x, y) => Array.from(g.getImageData(x, y, 1, 1).data);
++    const seen = new Set();
++    for (let y = 0; y < cv.height; y += 30) { for (let x = 0; x < cv.width; x += 30) { seen.add(px(x, y).join(',')); } }
++    let gold = 0;
++    for (let x = 14; x < 40; x++) { const [r, gr, b] = px(x, Math.round(cv.height / 2)); if (r > 200 && gr > 140 && b < 150) { gold++; } }
++    const p = document.querySelector('#dlg-sharecard .sc__preview');
++    return { w: img.naturalWidth, h: img.naturalHeight, colours: seen.size, gold, corner: px(2, 2), frame: p.getAttribute('data-frame'), alt: img.alt, last: window.GS.ui.sharecard.last() };
++  });
++  const noSideways = (page) => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1);
++
++  // puts a $20 stake on a live Charity Derby table and waits for its result card (the table's own timer is stopped in the turn that sees the result, so the card stays)
++  const liveResult = async (page, opts = {}) => {
++    await go(page, '#live-derby');
++    if (opts.stake !== false) {
++      const staked = await page.evaluate(async () => {
++        const room = window.GS.live.room('derby');
++        const until = (fn, ms) => new Promise((res) => { const t0 = Date.now(); (function w() { if (fn()) { res(true); } else if (Date.now() - t0 > ms) { res(false); } else { setTimeout(w, 15); } })(); });
++        for (let i = 0; i < 8; i++) {
++          await until(() => room.phase === 'open' && room.msLeft() > Math.min(900, room.phaseMs * 0.4), 45000);
++          if (room.join(room.field()[0].charity.id, 20).ok) { return true; }
++        }
++        return false;
++      });
++      if (!staked) { return false; }
++    }
++    return page.waitForFunction((stake) => {
++      const room = window.GS.live.room('derby');
++      if (!(room.phase === 'result' && room.result && (stake ? room.result.you : !room.result.you) && document.querySelector('#lt-result .lt-res'))) { return null; }
++      room._clearTimers();
++      return true;
++    }, opts.stake !== false, { timeout: 90000, polling: 100 }).then(() => true, () => false);
++  };
++
++  /* ======================================================================== */
++  if (h.section('34a. Share your gift from a live table\'s result: a picture that says simulated table and bot players')) {
++    const problems0 = h.problems.length;
++    const page = await newPage();
++    await openApp(page, '#live-derby');
++    check(await liveResult(page), 'a $20 stake goes onto a live table and its result card is on screen');
++    const btn = page.locator('#lt-result [data-role="live-share"]');
++    check(await btn.count() === 1 && await btn.isVisible() && (await btn.innerText()).trim() === 'Share your gift', 'the live result has a "Share your gift" button');
++    check(await page.locator('#lt-result [data-role="verify-jump"]').count() === 1, 'next to the Verify shortcut, which is still there');
++    const rec = await page.evaluate(() => {
++      const r = window.GS.live.room('derby').result;
++      return { id: r.you.receipt, hash: r.fair.serverHash, seed: r.fair.roundSeed, title: window.GS.live.room('derby').title(), winner: r.winner.name, short: r.winner.short, bal: window.GS.core.fmtMoney(window.GS.store.balance(), true), won: r.you.won, rank: r.you.summary.rankAfter.label };
++    });
++    await btn.focus();
++    await btn.click();
++    await shareReady(page);
++    check((await page.locator(DLG + ' .modal__title').innerText()) === 'Share your gift', 'it opens the same "Share your gift" dialog');
++    check(await page.evaluate(() => document.querySelector('#dlg-sharecard').getAttribute('aria-labelledby') === 'dlg-sharecard-title'), 'which is named by its title');
++    for (const [id, w, hh] of [['portrait', 1080, 1350], ['square', 1080, 1080]]) {
++      await pickSize(page, id);
++      const r = await look(page);
++      check(r.w === w && r.h === hh && r.colours > 25 && r.corner[3] === 255, id + ': a ' + w + ' x ' + hh + ' picture that is not blank (' + r.colours + ' colours)', { w: r.w, h: r.h, colours: r.colours });
++      check(r.last.kind === 'round' && r.last.live === true, id + ': it is a live card (round card with the live words)', r.last.kind);
++      check(/simulated table/i.test(r.last.eyebrow) && /Simulated round: no money moved and nothing was charged/.test(r.last.note) && /every other player is a BOT/.test(r.last.note), id + ': the picture says simulated table, no money moved, and that the other players are bots', { eyebrow: r.last.eyebrow, note: r.last.note });
++      check(r.last.game === rec.title && /Charity Derby · \w+ · \d+ runners/.test(r.last.game), id + ': it names the table\'s game and size: ' + r.last.game, r.last.game);
++      check(r.alt.includes(id) && /\$20 went to/.test(r.alt) && r.alt.includes(rec.title) && /simulated table/i.test(r.alt) && /BOT/.test(r.alt) && /nothing was charged/.test(r.alt) && r.alt.includes(rec.rank), id + ': the alt text has the amount, the table, simulated and BOT, and the rank', r.alt);
++    }
++    const info = await page.evaluate(() => window.GS.ui.sharecard.last());
++    check(info.verify === 'Verify this round: ' + rec.hash.slice(0, 8) + ' · ' + rec.id, 'the verify code on it is the live round\'s own (the start of its fingerprint and the receipt id)', info.verify);
++    check(!info.text.includes(rec.seed) && !info.alt.includes(rec.seed) && !info.text.includes(rec.bal) && !/balance|credit/i.test(info.text + info.alt), 'the secret number and the balance are nowhere on it');
++    check(/^My GiveSpin simulated table round \(bot players\) landed on .+\(play money\)\. Check it yourself: [0-9a-f]{8} · GS-[A-Z0-9]{6}\. Give it a spin:$/.test(info.text), 'the share text says simulated table and bot players, and is short', info.text);
++    check(!BANNED.test(info.text + ' ' + info.alt + ' ' + info.note + ' ' + info.eyebrow) && !/real (players|people)|provably fair/i.test(info.text + info.alt + info.note), 'no banned word, no real people, no "provably fair"');
++    check(info.file === 'givespin-gift-' + rec.id + '-square.png', 'the file name is plain: ' + info.file, info.file);
++    // the name switch: off by default, same rules as the solo card
++    const sw = page.locator(DLG + ' [data-role="show-name"]');
++    check(!(await sw.isChecked()) && await sw.isDisabled() && info.name === '' && !info.nameShown, 'the "Show my name" switch is off (and disabled until a name is chosen), no name on the card');
++    await page.evaluate(() => { window.GS.local.set('profile', { name: 'Sam' }); });
++    await page.keyboard.press('Escape');
++    await page.waitForFunction(() => !document.querySelector('#dlg-sharecard').open);
++    check(await page.evaluate(() => document.activeElement && document.activeElement.getAttribute('data-role') === 'live-share'), 'Escape closes it and puts the keyboard back on the Share button');
++    await page.keyboard.press('Enter');
++    await shareReady(page);
++    check(!(await page.locator(DLG + ' [data-role="show-name"]').isChecked()) && !(await page.evaluate(() => window.GS.ui.sharecard.last().name)), 'with a name chosen the switch is still off, and the card still has no name');
++    await page.locator(DLG + ' .sc__name').click();
++    await page.waitForFunction(() => window.GS.ui.sharecard.last().name === 'Sam' && document.querySelector('#dlg-sharecard .sc__preview').getAttribute('data-ready') === '1');
++    const named = await page.evaluate(() => window.GS.ui.sharecard.last());
++    check(named.eyebrow === 'Sam’s gift from a simulated table' && /^Sam’s GiveSpin simulated table round/.test(named.text), 'switched on, the card and its text carry the name (and still say simulated table)', { eyebrow: named.eyebrow, text: named.text });
++    await a11y(page, 'the live table\'s share dialog (laptop)');
++    await page.click(DLG + ' .modal__close');
++    await page.waitForFunction(() => !document.querySelector('#dlg-sharecard').open);
++    check(await page.evaluate(() => document.activeElement && document.activeElement.getAttribute('data-role') === 'live-share'), 'the Close button also puts the keyboard back on the Share button');
++    await a11y(page, 'the live result with its Share button');
++
++    // the table moves on to the next round while the dialog is open: the button is gone, the keyboard still lands somewhere sensible
++    await btn.focus();
++    await btn.click();
++    await shareReady(page);
++    await page.evaluate(() => { window.GS.live.room('derby').openRound(0); });
++    await page.waitForFunction(() => !document.querySelector('#lt-result [data-role="live-share"]'));
++    await page.keyboard.press('Escape');
++    await page.waitForFunction(() => !document.querySelector('#dlg-sharecard').open);
++    // (the dialog's own 'close' event, which moves the keyboard, arrives a moment after it closes, and a busy machine can make that a long moment: wait until the keyboard has left the dialog)
++    await page.waitForFunction(() => { const a = document.activeElement; return !!a && a !== document.body && !a.closest('#dlg-sharecard'); }, null, { timeout: 4000 }).catch(() => {});
++    const landed = await page.evaluate(() => { const a = document.activeElement; return { tag: a && a.tagName, role: a && a.getAttribute('data-role'), cls: a && a.className, inDialog: !!(a && a.closest('#dlg-sharecard')), inPanel: !!(a && a.closest('#livepanel')), title: !!(a && a.id === 'g-title'), body: a === document.body }; });
++    check(!landed.body && (landed.inPanel || landed.title), 'when the next round has taken the button away, closing the dialog puts the keyboard in the table\'s panel or on the page title, not nowhere', landed);
++    await page.close();
++
++    // watching only: nothing to share
++    const watch = await newPage();
++    await openApp(watch, '#live-derby');
++    check(await liveResult(watch, { stake: false }), 'a live result with no stake of mine is on screen');
++    check(await watch.locator('#lt-result [data-role="live-share"]').count() === 0 && await watch.locator('#lt-result .lt-res__t').count() === 1, 'a visitor who only watched has no gift to share, so no Share button');
++    await watch.close();
++
++    // a phone
++    const ph = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
++    await openApp(ph, '#live-derby');
++    check(await liveResult(ph), 'phone: a stake and its result card');
++    const pb = await ph.locator('#lt-result [data-role="live-share"]').boundingBox();
++    check(pb && pb.height >= 24 && pb.width >= 24, 'phone: the Share button is a real target (24 px or more)', pb);
++    await ph.locator('#lt-result [data-role="live-share"]').click();
++    await shareReady(ph);
++    const pr = await look(ph);
++    check(pr.w === 1080 && pr.last.live === true && await noSideways(ph), 'phone: the dialog draws the live card and the page does not scroll sideways');
++    const fits = await ph.evaluate(() => { const d = document.querySelector('#dlg-sharecard').getBoundingClientRect(); return d.left >= -1 && d.right <= window.innerWidth + 1; });
++    check(fits, 'phone: the dialog fits the window');
++    await a11y(ph, 'the live table\'s share dialog (phone)');
++    await ph.keyboard.press('Escape');
++    await ph.waitForFunction(() => !document.querySelector('#dlg-sharecard').open);
++    check(await noSideways(ph), 'phone: no sideways scroll with the dialog closed');
++    await ph.close();
++    check(h.problems.length === problems0, 'section 34a: no console errors, warnings or failed requests', h.problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ======================================================================== */
++  if (h.section('34b. Share my season: a card for the season track, from the first claimed tier of 10 or more')) {
++    const problems0 = h.problems.length;
++    const page = await newPage();
++    await openApp(page, '#lobby');
++    // points for 11 tiers, nothing claimed yet; two quests claimed this month and one last month
++    await page.evaluate(() => {
++      const sid = window.GS.quests.seasonId(new Date());
++      const today = window.GS.core.dayKey(new Date());
++      const prev = window.GS.core.monthKey(new Date(new Date().getFullYear(), new Date().getMonth() - 1, 15, 12));
++      const claimed = {};
++      claimed['d:' + sid + '-01:d-live'] = true;
++      claimed['d:' + today + ':d-wheel'] = true;
++      claimed['d:' + prev + '-15:d-back'] = true;
++      window.GS.local.set('quests', { v: 1, claimed, announced: {}, hi: {}, marks: {}, firstSeen: '2000-01-01', season: { id: sid, days: {}, ids: [], quest: 1000 } });
++    });
++    await go(page, '#quests');
++    await page.waitForSelector('#view-quests .qtrack');
++    check(await page.locator('#view-quests [data-act="share-season"]').count() === 0, 'nothing is claimed yet: no "Share my season" button, even with 11 tiers reached');
++    // claim the first nine tiers one by one: still no button at tier 9 ...
++    for (let t = 1; t <= 9; t++) { await page.locator('#view-quests .qtier__btn[data-tier="' + t + '"]').click(); }
++    check(await page.locator('#view-quests [data-act="share-season"]').count() === 0, 'with tiers 1 to 9 claimed there is still no button');
++    check(await page.evaluate(() => window.GS.ui.quests.view().season.tier) >= 10, 'though tier 10 is reached (reaching it is not claiming it)');
++    await page.locator('#view-quests .qtier__btn[data-tier="10"]').click();
++    const share = page.locator('#view-quests [data-act="share-season"]');
++    check(await share.count() === 1 && await share.isVisible() && (await share.innerText()).trim() === 'Share my season', 'claiming tier 10 brings the "Share my season" button');
++    check(await share.evaluate((el) => !!el.closest('.qseason__act')), 'it sits with the season\'s other buttons (Go to my tier)');
++    await page.waitForTimeout(200);
++    await share.focus();
++    await share.click();
++    await shareReady(page);
++    check((await page.locator(DLG + ' .modal__title').innerText()) === 'Share your season', 'it opens the dialog, titled "Share your season"');
++    const season = await page.evaluate(() => { const v = window.GS.ui.quests.view().season; return { name: v.name, month: v.month, id: v.id, tier: v.tier }; });
++    for (const [id, w, hh] of [['portrait', 1080, 1350], ['square', 1080, 1080]]) {
++      await pickSize(page, id);
++      const r = await look(page);
++      check(r.w === w && r.h === hh && r.colours > 25 && r.corner[3] === 255, id + ': a ' + w + ' x ' + hh + ' picture that is not blank (' + r.colours + ' colours)', { w: r.w, h: r.h, colours: r.colours });
++      check(r.last.kind === 'season' && r.last.seasonName === season.name && r.last.tierLine === 'Tier ' + season.tier + ' of 30', id + ': it names the season (' + season.name + ') and the tier reached (' + r.last.tierLine + ')', r.last);
++      check(r.last.questsLine === '2 quests done', id + ': and the quests done this season: 2 (the one from last month does not count): ' + r.last.questsLine, r.last.questsLine);
++      check(/XP and cosmetics only, never money/.test(r.last.note) && /Play money: nothing was charged/.test(r.last.note), id + ': it says XP and cosmetics only, never money (and play money in the demo)', r.last.note);
++      check(r.frame === 'plain', id + ': a season that is not finished has the plain frame', r.frame);
++      check(r.alt.includes(season.name) && r.alt.includes('Tier ' + season.tier + ' of 30') && /2 quests done/.test(r.alt) && /never money/.test(r.alt), id + ': the alt text says the season, the tier, the quests and "never money"', r.alt);
++    }
++    const info = await page.evaluate(() => window.GS.ui.sharecard.last());
++    check(!/\$/.test(info.text + info.alt + info.note), 'no amount of money anywhere on the season card, in its text or its alt text');
++    check(!BANNED.test(info.text + ' ' + info.alt + ' ' + info.note) && !/real (players|people)|provably fair|winnings|prize/i.test(info.text + info.alt + info.note), 'no banned word, no winnings, no real people');
++    check(info.file === 'givespin-season-' + season.id + '-square.png', 'the file name is plain: ' + info.file, info.file);
++    check(/^My GiveSpin season, .+: tier \d+ of 30, 2 quests done \(XP and cosmetics only, never money\)\. Give it a spin:$/.test(info.text), 'the share text is short and plain', info.text);
++    const sw = page.locator(DLG + ' [data-role="show-name"]');
++    check(!(await sw.isChecked()) && info.name === '', 'the name switch is off, and the card has no name');
++    await page.evaluate(() => { window.GS.local.set('profile', { name: 'Sam' }); });
++    await page.keyboard.press('Escape');
++    await page.waitForFunction(() => !document.querySelector('#dlg-sharecard').open);
++    check(await page.evaluate(() => document.activeElement && document.activeElement.getAttribute('data-act') === 'share-season'), 'Escape closes it and the keyboard is back on "Share my season"');
++    await page.keyboard.press('Enter');
++    await shareReady(page);
++    await page.locator(DLG + ' .sc__name').click();
++    await page.waitForFunction(() => window.GS.ui.sharecard.last().name === 'Sam' && document.querySelector('#dlg-sharecard .sc__preview').getAttribute('data-ready') === '1');
++    const named = await page.evaluate(() => window.GS.ui.sharecard.last());
++    check(named.eyebrow === 'Sam’s season' && /^Sam’s GiveSpin season/.test(named.text), 'switched on, the card and its text carry the name', { eyebrow: named.eyebrow, text: named.text });
++    await a11y(page, 'the season share dialog (laptop)');
++    await page.click(DLG + ' .modal__close');
++    await page.waitForFunction(() => !document.querySelector('#dlg-sharecard').open);
++    // a claim made while the dialog is open re-draws the page: the keyboard still goes back to the (new) button
++    await share.focus();
++    await share.click();
++    await shareReady(page);
++    await page.evaluate(() => { const b = document.querySelector('#view-quests [data-act="share-season"]'); b.replaceWith(b.cloneNode(true)); });
++    await page.keyboard.press('Escape');
++    await page.waitForFunction(() => !document.querySelector('#dlg-sharecard').open);
++    check(await page.evaluate(() => document.activeElement && document.activeElement.getAttribute('data-act') === 'share-season' && document.contains(document.activeElement)), 'if the page was drawn again meanwhile, the keyboard goes to the new button, not nowhere');
++    await a11y(page, 'the Quests page with the Share my season button');
++
++    // the whole track: tier 30 gets the gold frame and its own ribbon
++    await page.evaluate(() => {
++      const st = window.GS.local.get('quests', null);
++      st.season.quest = 3000;
++      window.GS.local.set('quests', st);
++    });
++    await go(page, '#lobby');
++    await go(page, '#quests');
++    await page.waitForSelector('#view-quests [data-act="claim-all"]');
++    await page.click('#view-quests [data-act="claim-all"]');
++    await page.waitForFunction(() => window.GS.ui.quests.view().season.tiers.every((t) => t.status === 'claimed'));
++    await page.click('#view-quests [data-act="share-season"]');
++    await shareReady(page);
++    const full = await look(page);
++    check(full.frame === 'fancy' && full.last.big === 'season' && full.last.ribbon === 'Season complete' && full.last.tierLine === 'Tier 30 of 30' && full.gold >= 8, 'all 30 tiers claimed: the gold frame and the ribbon "Season complete"', { frame: full.frame, big: full.last.big, tier: full.last.tierLine, gold: full.gold });
++    await pickSize(page, 'square');
++    const fsq = await look(page);
++    check(fsq.frame === 'fancy' && fsq.w === 1080 && fsq.h === 1080 && fsq.colours > 40, 'and in the square shape too', { frame: fsq.frame, colours: fsq.colours });
++    await page.click(DLG + ' .modal__close');
++    check(await page.evaluate(() => { const k = Object.keys(localStorage).filter((x) => /season/i.test(x)); return k.length === 0; }), 'the share card stores nothing of its own about the season');
++    await page.close();
++
++    // a phone (and the page does not scroll sideways with the extra button)
++    const ph = await newPage({ viewport: { width: 360, height: 740 }, mobile: true });
++    await openApp(ph, '#lobby');
++    await ph.evaluate(() => {
++      const sid = window.GS.quests.seasonId(new Date());
++      const claimed = {};
++      for (let i = 1; i <= 10; i++) { claimed['s:' + sid + ':' + (i < 10 ? '0' : '') + i] = true; }
++      window.GS.local.set('quests', { v: 1, claimed, announced: {}, hi: {}, marks: {}, firstSeen: '2000-01-01', season: { id: sid, days: {}, ids: [], quest: 1000 } });
++    });
++    await go(ph, '#quests');
++    await ph.waitForSelector('#view-quests [data-act="share-season"]');
++    check(await noSideways(ph), 'phone: the Quests page with the extra button does not scroll sideways');
++    const bb = await ph.locator('#view-quests [data-act="share-season"]').boundingBox();
++    check(bb && bb.height >= 24 && bb.width >= 24 && bb.x >= 0 && bb.x + bb.width <= 360, 'phone: the button is a real target and inside the window', bb);
++    await ph.locator('#view-quests [data-act="share-season"]').click();
++    await shareReady(ph);
++    const pr = await look(ph);
++    check(pr.w === 1080 && pr.last.kind === 'season' && await noSideways(ph), 'phone: the dialog draws the season card');
++    await a11y(ph, 'the season share dialog (phone)');
++    await ph.keyboard.press('Escape');
++    await ph.waitForFunction(() => !document.querySelector('#dlg-sharecard').open);
++    await ph.close();
++    check(h.problems.length === problems0, 'section 34b: no console errors, warnings or failed requests', h.problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ======================================================================== */
++  if (h.section('34c. The Fair Play page has a "Try the checker" button')) {
++    const problems0 = h.problems.length;
++    const page = await newPage();
++    await openApp(page, '#fair');
++    const btn = page.locator('#view-fair [data-role="try-checker"]');
++    check(await btn.count() === 1 && await btn.isVisible() && /Try the checker/.test(await btn.innerText()), 'the Fair Play page has a "Try the checker" button');
++    check(await btn.evaluate((el) => !!el.closest('[aria-labelledby="fp-short"]')), 'it sits in "The short version", near the top of the page');
++    const top = await btn.evaluate((el) => Math.round(el.getBoundingClientRect().top));
++    check(top < 900, 'and is on the first screen of a laptop (top at ' + top + ' px)', top);
++    const txt = await page.evaluate(() => document.querySelector('#view-fair').innerText);
++    check(!/provably fair/i.test(txt) && !BANNED.test(txt), 'the page still never says "provably fair" and has no banned word');
++    check(/A sample round, not one of yours/.test(txt), 'and says the checker runs a sample round, not one of yours');
++    await btn.focus();
++    await btn.click();
++    await page.waitForSelector('#dlg-fairdemo[open] .fsd__steps');
++    check((await page.locator('#dlg-fairdemo .modal__title').innerText()) === 'Try the fair-play checker' && await page.locator('#dlg-fairdemo .fsd__step').count() === 3, 'it opens the checker (three steps, a sample round)');
++    await a11y(page, 'the checker opened from the Fair Play page');
++    await page.keyboard.press('Escape');
++    await page.waitForFunction(() => !document.querySelector('#dlg-fairdemo').open);
++    check(await page.evaluate(() => document.activeElement && document.activeElement.getAttribute('data-role') === 'try-checker'), 'Escape closes it and the keyboard is back on the button');
++    await a11y(page, 'the Fair Play page with the checker button');
++    // without the hashing API the checker says so honestly (the lobby block does the same)
++    const nc = await newPage();
++    await nc.addInitScript(() => { Object.defineProperty(window.crypto, 'subtle', { value: undefined, configurable: true }); });
++    await openApp(nc, '#fair');
++    await nc.click('#view-fair [data-role="try-checker"]');
++    await nc.waitForSelector('#dlg-fairdemo[open] [data-role="off"]');
++    check(/not available here/i.test(await nc.locator('#dlg-fairdemo [data-role="off"]').innerText()), 'without crypto.subtle the button opens the honest "not available here" message');
++    await nc.close();
++    // narrow phone
++    const ph = await newPage({ viewport: { width: 320, height: 568 }, mobile: true });
++    await openApp(ph, '#fair');
++    const pb = await ph.locator('#view-fair [data-role="try-checker"]').boundingBox();
++    check(pb && pb.height >= 24 && pb.x >= 0 && pb.x + pb.width <= 320 && await noSideways(ph), 'phone 320: the button is a real target, inside the window, and nothing scrolls sideways', pb);
++    await ph.locator('#view-fair [data-role="try-checker"]').click();
++    await ph.waitForSelector('#dlg-fairdemo[open] .fsd__steps');
++    check(await noSideways(ph), 'phone 320: the checker dialog does not scroll the page sideways');
++    await a11y(ph, 'the checker opened from the Fair Play page (phone)');
++    await ph.close();
++    await page.close();
++    check(h.problems.length === problems0, 'section 34c: no console errors, warnings or failed requests', h.problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ======================================================================== */
++  if (h.section('34d. The crew card is drawn with the share cards\' own pieces')) {
++    const problems0 = h.problems.length;
++    const page = await newPage();
++    await openApp(page, '#boards');
++    const parts = await page.evaluate(() => { const d = window.GS.ui.sharecard.draw || {}; return Object.keys(d).sort(); });
++    check(['C', 'fitText', 'fontsReady', 'footer', 'goldFrame', 'header', 'plainFrame', 'ribbon', 'roundRect', 'toBlob'].every((k) => parts.includes(k)), 'ui.sharecard.draw hands out the drawing pieces', parts);
++    const src = fs.readFileSync(path.join(h.root, 'js', 'ui', 'boards.js'), 'utf8');
++    check(!/function (roundRect|fontsReady|toBlob|goldFrame|plainFrame|header|ribbon|glowAt|measurer|fitText)\(/.test(src) && /ui\.sharecard\.draw/.test(src), 'js/ui/boards.js holds no copy of them any more');
++    await page.evaluate(() => { window.GS.crews.join('owls'); });
++    await go(page, '#lobby');
++    await go(page, '#boards');
++    await page.waitForSelector('#view-boards [data-role="share-crew"]');
++    await page.click('#view-boards [data-role="share-crew"]');
++    await page.waitForSelector('#dlg-crewcard[open] .sc__preview[data-ready="1"]', { timeout: 20000 });
++    const crew = await page.evaluate(async () => {
++      const cv = window.GS.ui.boards.canvas();
++      const copy = document.createElement('canvas');   // (a copy to read from: the card's own canvas was not made for reading back many pixels)
++      copy.width = cv.width; copy.height = cv.height;
++      const g = copy.getContext('2d', { willReadFrequently: true });
++      g.drawImage(cv, 0, 0);
++      const seen = new Set();
++      for (let y = 0; y < cv.height; y += 30) { for (let x = 0; x < cv.width; x += 30) { seen.add(Array.from(g.getImageData(x, y, 1, 1).data).join(',')); } }
++      // the logo's green square in the header and the DEMO pill's gold are the shared header's: the same pixels as on a share card
++      const logo = Array.from(g.getImageData(80, 110, 1, 1).data);
++      return { w: cv.width, h: cv.height, colours: seen.size, logo, last: window.GS.ui.boards.last() };
++    });
++    check(crew.w === 1080 && crew.h === 1350 && crew.colours > 25 && crew.last.kind === 'crew', 'the crew card still draws (1080 x 1350, not blank)', { w: crew.w, colours: crew.colours });
++    check(crew.logo[1] > 170 && crew.logo[0] < 80, 'with the shared header (the green logo is where the share cards have it)', crew.logo);
++    await page.click('#dlg-crewcard [data-size="square"]');
++    await page.waitForFunction(() => document.querySelector('#dlg-crewcard .sc__preview').getAttribute('data-shape') === 'square' && document.querySelector('#dlg-crewcard .sc__preview').getAttribute('data-ready') === '1');
++    check(await page.evaluate(() => window.GS.ui.boards.canvas().height) === 1080, 'and the square shape too');
++    await a11y(page, 'the crew card dialog');
++    await page.keyboard.press('Escape');
++    await page.waitForFunction(() => !document.querySelector('#dlg-crewcard').open);
++    check(await page.evaluate(() => document.activeElement && document.activeElement.getAttribute('data-role') === 'share-crew'), 'Escape closes it and the keyboard is back on "Share my crew"');
++    await page.close();
++    check(h.problems.length === problems0, 'section 34d: no console errors, warnings or failed requests', h.problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ======================================================================== */
++  if (h.section('34e. "Your crew" row on the lobby\'s "This week\'s leaders" block')) {
++    const problems0 = h.problems.length;
++    const page = await newPage();
++    await openApp(page, '#lobby');
++    // reads the block and the board in one page turn, so a change of the 15-minute slot cannot come between them
++    const read = () => page.evaluate(() => {
++      const b = document.querySelector('[data-block="boards"]');
++      const crews = window.GS.ui.boards.data(new Date()).week;
++      const row = b && b.querySelector('[data-role="my-crew"]');
++      return {
++        shown: !!b && !b.hidden, items: b ? b.querySelectorAll('.bdl__item').length : 0, rows: b ? b.querySelectorAll('[data-role="my-crew"]').length : 0,
++        text: row ? row.innerText.replace(/\s+/g, ' ').trim() : '', label: row ? row.getAttribute('aria-label') : '', height: b ? Math.round(b.getBoundingClientRect().height) : 0,
++        you: crews.you ? { rank: crews.you.rank, name: crews.you.name, members: crews.you.members, cents: crews.you.cents, goal: crews.you.goal } : null,
++        pill: row ? row.querySelectorAll('.botpill').length : 0, bars: b ? b.querySelectorAll('[role="progressbar"]').length : 0
++      };
++    });
++    const none = await read();
++    check(none.shown && none.rows === 0 && none.items === 3, 'with no crew the block is the top three and nothing else');
++    const heightNone = none.height;
++    // the crew that is last this week (rank 4), then the one that is first
++    const last = await page.evaluate(() => { const rows = window.GS.ui.boards.data(new Date()).week.rows; return rows[rows.length - 1].id; });
++    await page.evaluate((id) => { window.GS.crews.join(id); }, last);
++    await go(page, '#boards');
++    await go(page, '#lobby');
++    const mine = await read();
++    check(mine.you && mine.you.rank > 3 && mine.rows === 1 && mine.items === 3, 'in a crew that is not in the top three: one extra row, the top three still three', { you: mine.you, rows: mine.rows, items: mine.items });
++    const money = await page.evaluate((c) => ({ cents: window.GS.boards.money(c.cents), goal: window.GS.boards.money(c.goal) }), mine.you);   // the boards' own amounts: cents under $1,000, whole dollars from there
++    check(mine.text.startsWith('' + mine.you.rank) && mine.text.includes('Your crew:') && mine.text.includes(mine.you.name) && mine.text.includes('#' + mine.you.rank), 'it reads "Your crew: <name> #<rank>"', mine.text);
++    check(mine.text.includes('BOT') && mine.pill === 1 && new RegExp(mine.you.members + ' bot crewmates and you').test(mine.text), 'with the BOT pill and "7 bot crewmates and you" (labelled as simulated like the rest)', mine.text);
++    check(mine.text.includes(money.cents + ' of ' + money.goal + ' weekly goal'), 'and its goal in words: ' + money.cents + ' of ' + money.goal, mine.text);
++    check(/Simulated crew: every member is a bot/.test(mine.label) && /Your crew/.test(mine.label), 'the row has a label that says simulated', mine.label);
++    check(mine.height - heightNone <= 70, 'the block grew by only ' + (mine.height - heightNone) + ' px (laptop)', { none: heightNone, mine: mine.height });
++    const txt = await page.evaluate(() => document.querySelector('[data-block="boards"]').innerText);
++    check(!BANNED.test(txt) && !/real (players|people)/i.test(txt), 'no banned word in the block');
++    await a11y(page, 'the lobby with the Your crew row');
++    // the first crew: in the top three, so no extra row
++    const first = await page.evaluate(() => window.GS.ui.boards.data(new Date()).week.rows[0].id);
++    await page.evaluate((id) => { window.GS.crews.join(id); }, first);
++    await go(page, '#boards');
++    await go(page, '#lobby');
++    const top = await read();
++    check(top.you && top.you.rank <= 3 && top.rows === 0 && top.items === 3, 'in a crew that is in the top three: no extra row (it is already one of the three)', { you: top.you, rows: top.rows });
++    await page.close();
++
++    for (const [w, hh, name] of [[390, 844, 'phone 390'], [320, 568, 'phone 320']]) {
++      const ph = await newPage({ viewport: { width: w, height: hh }, mobile: true });
++      await openApp(ph, '#lobby');
++      const none2 = await ph.evaluate(() => Math.round(document.querySelector('[data-block="boards"]').getBoundingClientRect().height));
++      const lastId = await ph.evaluate(() => { const rows = window.GS.ui.boards.data(new Date()).week.rows; return rows[rows.length - 1].id; });
++      await ph.evaluate((id) => { window.GS.crews.join(id); }, lastId);
++      await go(ph, '#boards');
++      await go(ph, '#lobby');
++      const r = await ph.evaluate(() => {
++        const b = document.querySelector('[data-block="boards"]');
++        const row = b.querySelector('[data-role="my-crew"]');
++        const rr = row ? row.getBoundingClientRect() : null;
++        return { has: !!row, height: Math.round(b.getBoundingClientRect().height), rowH: rr ? Math.round(rr.height) : 0, inside: rr ? rr.left >= 0 && rr.right <= window.innerWidth : false, sideways: document.documentElement.scrollWidth > window.innerWidth + 1 };
++      });
++      check(r.has && r.inside && !r.sideways, name + ': the row is there, inside the window, and the page does not scroll sideways', r);
++      check(r.height - none2 <= 130 && r.rowH <= 110, name + ': the block grew by ' + (r.height - none2) + ' px (the row is ' + r.rowH + ' px tall)', { none: none2, now: r.height, row: r.rowH });
++      if (w === 390) { await a11y(ph, 'the lobby with the Your crew row (phone)'); }
++      await ph.close();
++    }
++    check(h.problems.length === problems0, 'section 34e: no console errors, warnings or failed requests', h.problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ======================================================================== */
++  if (h.section('34f. The new buttons and cards: one-screen rule, keyboard and honesty')) {
++    const problems0 = h.problems.length;
++    // the live game screen: nothing was added above the fold (the result card appears only after a round, under the picture)
++    const page = await newPage({ viewport: { width: 390, height: 844 }, mobile: true });
++    await openApp(page, '#live-derby');
++    const before = await page.evaluate(() => { const p = document.querySelector('#livepanel'); const r = p ? p.getBoundingClientRect() : null; return r ? { top: Math.round(r.top), bottom: Math.round(r.bottom), vh: window.innerHeight } : null; });
++    check(before && before.bottom <= before.vh + 1, 'phone: the live table\'s panel (the stake buttons and Join) is still on the first screen', before);
++    check(await page.locator('#livepanel [data-role="live-share"]').count() === 0 && await page.locator('#view-game [data-role="live-share"]').count() === 0, 'and there is no Share button on the game screen itself, only on a result');
++    await page.close();
++    // keyboard: the live Share button is a real button reached in the tab order after Verify
++    const kb = await newPage();
++    await openApp(kb, '#live-derby');
++    check(await liveResult(kb), 'a live result for the keyboard check');
++    const order = await kb.evaluate(() => Array.from(document.querySelectorAll('#lt-result .fs-jump button')).map((b) => b.getAttribute('data-role') + ':' + b.tagName));
++    check(JSON.stringify(order) === JSON.stringify(['verify-jump:BUTTON', 'live-share:BUTTON']), 'Verify and Share your gift are two real buttons in one row, in that order', order);
++    await kb.focus('#lt-result [data-role="verify-jump"]');
++    await kb.keyboard.press('Tab');
++    check(await kb.evaluate(() => document.activeElement && document.activeElement.getAttribute('data-role')) === 'live-share', 'Tab from Verify reaches Share your gift');
++    await kb.keyboard.press('Space');
++    await shareReady(kb);
++    check(await kb.evaluate(() => document.querySelector('#dlg-sharecard').contains(document.activeElement) || document.activeElement === document.querySelector('#dlg-sharecard')), 'Space opens the dialog and the keyboard is inside it');
++    // reduced motion: nothing moves in the dialog
++    await kb.keyboard.press('Escape');
++    await kb.close();
++    const rm = await newPage({ reducedMotion: 'reduce' });
++    await openApp(rm, '#lobby');
++    await rm.evaluate(() => {
++      const sid = window.GS.quests.seasonId(new Date());
++      const claimed = {};
++      for (let i = 1; i <= 10; i++) { claimed['s:' + sid + ':' + (i < 10 ? '0' : '') + i] = true; }
++      window.GS.local.set('quests', { v: 1, claimed, announced: {}, hi: {}, marks: {}, firstSeen: '2000-01-01', season: { id: sid, days: {}, ids: [], quest: 1000 } });
++    });
++    await go(rm, '#quests');
++    await rm.click('#view-quests [data-act="share-season"]');
++    await shareReady(rm);
++    const anim = await rm.evaluate(() => { const i = document.querySelector('#dlg-sharecard .sc__img'); const s = getComputedStyle(i); return { name: s.animationName, dur: s.animationDuration }; });
++    check(anim.name === 'none' || anim.dur === '0s', 'reduced motion: the season picture does not animate in', anim);
++    await rm.close();
++    check(h.problems.length === problems0, 'section 34f: no console errors, warnings or failed requests', h.problems.slice(problems0, problems0 + 5));
++  }
++}
+diff -ruN base/givespin/tests/share.test.js work/givespin/tests/share.test.js
+--- base/givespin/tests/share.test.js	2026-11-03 23:04:08.853608278 +0000
++++ work/givespin/tests/share.test.js	2026-11-04 19:45:34.794294120 +0000
+@@ -219,3 +219,158 @@
+   assert.deepEqual(share.normPrefs({ showName: true, size: 'square' }), { showName: true, size: 'square' });
+   assert.deepEqual(share.normPrefs('junk'), { showName: false, size: 'portrait' });
+ });
++
++/* ------------------------------------------------------------------ wave 3: a live table's card, the season card, and the crew card's shared drawing pieces */
++
++const fs = require('node:fs');
++const path = require('node:path');
++const BANNED = /crypto(?!graphic)|bitcoin|ethereum|blockchain|wallet|\bNFTs?\b|\btokens?\b|\bcoins?\b/i;   // the site's own wording ban (see the end-to-end suite)
++const SEASON = { id: '2026-11', name: 'Gold November', month: 'November 2026' };
++const live = (o) => base(Object.assign({ live: true, game: 'Balloon Race · Big · 100 balloons' }, o || {}));
++
++test('a live table\'s card says it is a simulated table with bot players, and is always a play-money card', () => {
++  const card = share.roundCard(live());
++  assert.equal(card.live, true);
++  assert.match(card.eyebrow, /simulated table/);
++  assert.match(card.note, /Simulated round: no money moved and nothing was charged/, 'the receipt\'s own sentence');
++  assert.match(card.note, /Simulated table: every other player is a BOT/);
++  assert.equal(card.game, 'Balloon Race · Big · 100 balloons', 'the table\'s game and size are on the card');
++  const alt = share.altText(card, 'portrait');
++  assert.match(alt, /simulated table game: Balloon Race · Big · 100 balloons/);
++  assert.match(alt, /every other player is a BOT/);
++  assert.match(share.shareText(card), /^My GiveSpin simulated table round \(bot players\) landed on WaterAid \(play money\)\./);
++  // even when the page says it is not in demo mode, a live table is demo credit and bots: it never reads as real money
++  const checkout = share.roundCard(live({ demo: false }));
++  assert.equal(checkout.demo, true);
++  assert.equal(checkout.lead, 'went to');
++  assert.match(checkout.note, /nothing was charged/);
++  // a solo card is not changed by any of this
++  const solo = share.roundCard(base());
++  assert.equal(solo.live, false);
++  assert.equal(solo.eyebrow, 'A gift from the arcade');
++  assert.equal(solo.note, 'Simulated round: no money moved and nothing was charged');
++  assert.ok(!/simulated table/i.test(share.altText(solo, 'portrait') + share.shareText(solo)));
++});
++
++test('a live card keeps the same name rules and the same verify code as a solo one', () => {
++  assert.equal(share.roundCard(live()).name, '', 'no name unless one is passed in');
++  assert.equal(share.roundCard(live()).eyebrow, 'A gift from a simulated table');
++  const named = share.roundCard(live({ name: 'Sam' }));
++  assert.equal(named.eyebrow, 'Sam’s gift from a simulated table');
++  assert.match(share.shareText(named), /^Sam’s GiveSpin simulated table round/);
++  assert.equal(share.roundCard(live({ name: 'sam@example.com' })).name, '', 'an email is never a name');
++  const v = share.roundCard(live()).verify;
++  assert.equal(v.text, 'Verify this round: 3f9a1c07 · GS-7K2M9Q');
++  assert.equal(share.roundCard(live({ fair: null })).verify, null, 'a live round with no draw to check has no verify line');
++  assert.equal(share.roundCard(live({ pickWon: true })).ribbon, 'Called it', 'a backed charity that won is the same fancy frame as in a solo game');
++  assert.ok(!share.shareText(share.roundCard(live({ fair: { serverHash: HASH, roundSeed: 'SECRETSEED'.repeat(6) } }))).includes('SECRETSEED'));
++});
++
++test('"Share my season" shows once any tier of 10 or more has been claimed', () => {
++  const t = (tier, status) => ({ tier, status });
++  assert.equal(share.seasonShareable([]), false);
++  assert.equal(share.seasonShareable(undefined), false);
++  assert.equal(share.seasonShareable([t(1, 'claimed'), t(9, 'claimed'), t(10, 'ready'), t(11, 'locked')]), false, 'reaching tier 10 is not enough: it has to be claimed');
++  assert.equal(share.seasonShareable([t(1, 'claimed'), t(10, 'claimed')]), true);
++  assert.equal(share.seasonShareable([t(12, 'claimed'), t(10, 'ready')]), true, 'tiers can be claimed in any order');
++  assert.equal(share.seasonShareable([t(30, 'claimed')]), true);
++  assert.equal(share.seasonShareable([null, {}, t(NaN, 'claimed')]), false, 'odd input is not a claimed tier');
++  assert.equal(share.SEASON_MIN_TIER, 10);
++  assert.equal(share.SEASON_TIERS, 30);
++});
++
++test('quests done in a season are counted from the claim keys: dailies by their day, weeklies by the month of their Thursday', () => {
++  const claimed = {
++    'd:2026-11-02:d-live': true, 'd:2026-11-03:d-wheel': true, 'd:2026-10-31:d-rounds3': true,   // two in November, one in October
++    'w:2026-W45:w-days4': true,    // Mon 2 Nov to Sun 8 Nov: Thursday 5 Nov
++    'w:2026-W44:w-cup': true,      // Mon 26 Oct to Sun 1 Nov: Thursday 29 Oct, so October
++    's:2026-11:07': true,          // a tier, not a quest
++    'd:2026-11-04:d-back': false   // seen but not claimed
++  };
++  assert.equal(share.seasonQuestsDone(claimed, '2026-11'), 3);
++  assert.equal(share.seasonQuestsDone(claimed, '2026-10'), 2);
++  assert.equal(share.seasonQuestsDone(claimed, '2026-12'), 0);
++  // the ISO year edges: week 1 of 2025 starts on Monday 30 Dec 2024 but its Thursday is 2 Jan 2025; week 53 of 2026 ends on Sunday 3 Jan 2027, Thursday 31 Dec 2026
++  assert.equal(share.seasonQuestsDone({ 'w:2025-W01:w-x1': true }, '2025-01'), 1);
++  assert.equal(share.seasonQuestsDone({ 'w:2025-W01:w-x1': true }, '2024-12'), 0);
++  assert.equal(share.seasonQuestsDone({ 'w:2026-W53:w-x1': true }, '2026-12'), 1);
++  assert.equal(share.seasonQuestsDone({ 'w:2026-W53:w-x1': true }, '2027-01'), 0);
++  // odd input never throws and counts nothing
++  assert.equal(share.seasonQuestsDone(null, '2026-11'), 0);
++  assert.equal(share.seasonQuestsDone('junk', '2026-11'), 0);
++  assert.equal(share.seasonQuestsDone(claimed, 'November'), 0);
++  assert.equal(share.seasonQuestsDone(claimed, undefined), 0);
++  assert.equal(share.seasonQuestsDone({ 'w:2026-W99:x': true, 'd:2026-11-xx:y': true, __proto__: { 'd:2026-11-01:a-b': true } }, '2026-11'), 0);
++});
++
++test('the season card: the season, the tier, the quests done, and "XP and cosmetics only, never money"', () => {
++  const card = share.seasonCard({ demo: true, season: SEASON, tier: 14, questsDone: 9 });
++  assert.equal(card.kind, 'season');
++  assert.equal(card.seasonName, 'Gold November');
++  assert.equal(card.month, 'November 2026');
++  assert.equal(card.tierLine, 'Tier 14 of 30');
++  assert.equal(card.questsLine, '9 quests done');
++  assert.equal(card.eyebrow, 'My season');
++  assert.match(card.note, /^XP and cosmetics only, never money/);
++  assert.match(card.note, /Play money: nothing was charged/, 'the demo says nothing real moved');
++  assert.equal(card.demo, true);
++  assert.equal(card.big, '', 'a season that is not finished gets the plain frame');
++  assert.equal(card.verify, null);
++  assert.equal(share.seasonCard({ demo: false, season: SEASON, tier: 14, questsDone: 9 }).note, 'XP and cosmetics only, never money', 'outside the demo it still says it is never money');
++  assert.equal(share.seasonCard({ season: SEASON, tier: 12, questsDone: 1 }).questsLine, '1 quest done', 'one quest is singular');
++  assert.equal(share.seasonCard({ season: SEASON, tier: 12, questsDone: 0 }).questsLine, '0 quests done');
++  const all = share.seasonCard({ demo: true, season: SEASON, tier: 30, questsDone: 40 });
++  assert.equal(all.big, 'season');
++  assert.equal(all.ribbon, 'Season complete', 'finishing the whole track earns the gold frame');
++  assert.equal(share.seasonCard({ season: SEASON, tier: 99, questsDone: -4 }).tier, 30, 'a tier past the end is the last one');
++  assert.equal(share.seasonCard({ season: SEASON, tier: -3 }).tierLine, 'Tier 0 of 30');
++  assert.equal(share.seasonCard({}).seasonName, 'Season', 'a missing season still has a name');
++  assert.equal(share.seasonCard().tierLine, 'Tier 0 of 30');
++});
++
++test('the season card names no one unless the name switch is on, and carries no amount of money', () => {
++  const plain = share.seasonCard({ demo: true, season: SEASON, tier: 14, questsDone: 9 });
++  const named = share.seasonCard({ demo: true, season: SEASON, tier: 14, questsDone: 9, name: 'Sam' });
++  assert.equal(plain.name, '');
++  assert.equal(named.eyebrow, 'Sam’s season');
++  assert.ok(!/Sam/.test(share.shareText(plain) + share.altText(plain, 'portrait')));
++  assert.match(share.shareText(named), /^Sam’s GiveSpin season, Gold November: tier 14 of 30, 9 quests done \(XP and cosmetics only, never money\)\. Give it a spin:$/);
++  assert.equal(share.seasonCard({ season: SEASON, tier: 3, name: 'a@b.co' }).name, '', 'an email is never a name');
++  const everything = JSON.stringify(plain) + share.shareText(plain) + share.altText(plain, 'square');
++  assert.ok(!/\$/.test(everything), 'no amount of money anywhere on the season card');
++  const alt = share.altText(plain, 'square');
++  assert.match(alt, /square \(1080 by 1080\)/);
++  assert.match(alt, /Gold November season, November 2026\. Tier 14 of 30\. 9 quests done\./);
++  assert.match(alt, /XP and cosmetics only, never money/);
++  assert.match(share.altText(share.seasonCard({ season: SEASON, tier: 30 }), 'portrait'), /Gold frame: Season complete/);
++  assert.equal(share.fileName('season', '2026-11', 'square'), 'givespin-season-2026-11-square.png');
++  assert.equal(share.fileName('season', '', 'portrait'), 'givespin-season-portrait.png');
++  assert.equal(share.fileName('season', '../x', 'portrait'), 'givespin-season-portrait.png', 'an odd id is dropped');
++});
++
++test('the words of the new cards break none of the wording rules', () => {
++  const cards = [
++    share.roundCard(live({ name: 'Sam', pickWon: true })), share.roundCard(live({ demo: false })),
++    share.seasonCard({ demo: true, season: SEASON, tier: 30, questsDone: 3, name: 'Sam' }), share.seasonCard({ demo: false, season: SEASON, tier: 12, questsDone: 3 })
++  ];
++  cards.forEach((card) => {
++    const words = [JSON.stringify(card), share.shareText(card), share.altText(card, 'portrait'), share.altText(card, 'square')].join(' | ');
++    assert.ok(!BANNED.test(words), 'no banned word: ' + words.match(BANNED));
++    assert.ok(!/real (players|people)|provably fair|winnings|prize|payout|cash out/i.test(words), 'no real people, no provably fair, no winnings: ' + words);
++  });
++});
++
++test('the crew card is drawn with the share cards\' own drawing pieces, not a copy of them', () => {
++  const root = path.join(__dirname, '..', 'js', 'ui');
++  const boards = fs.readFileSync(path.join(root, 'boards.js'), 'utf8');
++  const card = fs.readFileSync(path.join(root, 'sharecard.js'), 'utf8');
++  ['roundRect', 'glowAt', 'fitText', 'measurer', 'fontsReady', 'toBlob', 'goldFrame', 'plainFrame', 'header', 'ribbon', 'text'].forEach((fn) => {
++    assert.ok(!new RegExp('function ' + fn + '\\(').test(boards), 'js/ui/boards.js has no copy of ' + fn + '()');
++    assert.ok(new RegExp('function ' + fn + '\\(').test(card), 'js/ui/sharecard.js has ' + fn + '()');
++  });
++  assert.match(card, /draw: \{[^}]*roundRect: roundRect[^}]*toBlob: toBlob/, 'and it hands them out as ui.sharecard.draw');
++  assert.ok(!/HEART\s*=/.test(boards) && !/"Sora"/.test(boards), 'no second copy of the logo heart or the fonts');
++  assert.ok(boards.indexOf('ui.sharecard.draw') > 0 && /D\.footer\(/.test(boards), 'the crew card uses them');
++  const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
++  assert.ok(html.indexOf('js/ui/sharecard.js') > 0 && html.indexOf('js/ui/sharecard.js') < html.indexOf('js/ui/boards.js'), 'sharecard.js is loaded before boards.js');
++});
