@@ -1,0 +1,533 @@
+diff -ruN base/givespin/README.md work/givespin/README.md
+--- base/givespin/README.md	2026-11-04 06:52:31.006596186 +0000
++++ work/givespin/README.md	2026-11-04 19:56:12.674564186 +0000
+@@ -289,6 +289,8 @@
+ **Polish:** synthesised sound effects (no audio files, mutable), confetti that draws above dialogs, reduced-motion
+ support, keyboard-operable everywhere, screen-reader announcements for results, a phone-friendly layout.
+ 
++**Keyboard stops and touch targets.** In a live table's feed the bot names (up to 24 buttons) are one Tab stop: the arrow keys, Home and End move between them, Enter or Space opens the bot's profile, and a mouse or a finger still reaches every name (`roveFeed` in `js/ui/live.js`, using `ui.rove`). The feed is never a live region. Links and buttons that were under 24 x 24 px (WCAG 2.5.8) are now at least that size: the charity of the week's name, the charity names in the live tables' recent results, the waitlist tick's label, a charity's web address in its profile and the bot names (their extra height is cancelled by a negative margin, so the lines are as tall as before). The small "About" marks on a shrunk game picture were already a whole tile or slot to tap; Cosmic Spin's eight reels on a 320 px phone stay 19 px wide (the machine cannot be wider than the screen), and every charity has a button of its own under the picture. The receipt dialog no longer pans sideways on a phone (its button bar had hard-coded margins, and its one column grew to fit the longest charity name), the "Demo mode" line under its buttons is no longer hidden behind them, Stream Mode's `?overlay=1` page fits a short window, and on a short window (up to 520 px tall) toasts are smaller and sit in the lower left corner, clear of the picture and the result. Checked by `tests/sections/33-a11y.mjs` (33a to 33d).
++
+ **One screen per game.** On every solo game the picture, the amount and the Play button fit on the first screen, so nobody has to scroll to
+ start a round (what is below, such as the charities in play and the tabs, is one scroll away). On a laptop or a desktop the gift panel is the left
+ column and keeps Play in view; on a phone held upright it is docked at the bottom (the amount presets and Play, with an Options button that opens
+@@ -527,7 +529,7 @@
+ live (redirect) mode including rejecting non-https links, a phone-sized viewport, loading from `file://`, and a check
+ that the site never contacts another host and the console stays clean. Set `SHOTS=/some/dir` to save screenshots,
+ and `AXE=/path/to/axe.min.js` to add an axe-core accessibility scan of every page and dialog.
+-`ONLY=13zs,19z` runs just those sections. The checks for the newer features live in their own files, `tests/sections/*.mjs` (run in file-name order, each handed the helpers of `tests/e2e.mjs`), so a feature's tests never have to be edited into the big file. The axe-core version the checks were run with is 4.10.3 (a newer one, 4.14, also flags the games' tile labels and the side card as "label in name" mismatches). The files are `22-voice` (brand voice), `23-ticker` (ticker and charity of the week), `24-share` (share cards and the fair-play checker), `25-profile`, `26-quests`, `27-boards`, `28-stream`, `29-app` (Make it real, transports, install), `30-review` (regression checks for what the independent review found, plus guards for damaged saves and for pages that are revisited) and `31-walk` (phone, tablet and big-screen layout regressions: Stream Mode on narrow windows, focus not hidden under the bars, the lobby blocks under the game tiles).
++`ONLY=13zs,19z` runs just those sections. The checks for the newer features live in their own files, `tests/sections/*.mjs` (run in file-name order, each handed the helpers of `tests/e2e.mjs`), so a feature's tests never have to be edited into the big file. The axe-core version the checks were run with is 4.10.3 (a newer one, 4.14, also flags the games' tile labels and the side card as "label in name" mismatches). The files are `22-voice` (brand voice), `23-ticker` (ticker and charity of the week), `24-share` (share cards and the fair-play checker), `25-profile`, `26-quests`, `27-boards`, `28-stream`, `29-app` (Make it real, transports, install), `30-review` (regression checks for what the independent review found, plus guards for damaged saves and for pages that are revisited) `31-walk` (phone, tablet and big-screen layout regressions: Stream Mode on narrow windows, focus not hidden under the bars, the lobby blocks under the game tiles) and `33-a11y` (the live feed as one Tab stop, touch targets of at least 24 px, the receipt not panning sideways, the overlay and the toasts on short windows).
+ 
+ Append `?fast=1` to the URL to squeeze every animation (the tests use it; it is handy for quick demos too).
+ 
+diff -ruN base/givespin/css/base.css work/givespin/css/base.css
+--- base/givespin/css/base.css	2026-11-03 22:07:10.568453418 +0000
++++ work/givespin/css/base.css	2026-11-04 19:45:07.703149669 +0000
+@@ -288,6 +288,13 @@
+ .toast .ico { color: var(--green); }
+ .toast.is-out { opacity: 0; transform: translateY(8px); transition: all 0.35s; }
+ @keyframes toast-in { from { opacity: 0; transform: translateY(10px); } }
++/* A short window (a phone held sideways): a stack of toasts in the middle of the screen covered a third of a live table's result ("Quest done", "5 badges unlocked").
++   They are smaller there and sit in the lower left corner, over the gift panel (a column of its own in a short window), so the picture and the result stay clear. */
++@media (max-height: 520px) {
++  .toasts { left: 8px; translate: 0 0; width: min(46vw, 300px); justify-items: start; gap: 4px; }
++  .toast { padding: 6px 10px; gap: 8px; border-radius: 10px; font-size: 0.78rem; }
++}
++@media (max-height: 520px) and (min-width: 721px) { .toasts { left: calc(var(--side-w) + 8px); } }   /* (a side rail, not a bottom bar) */
+ 
+ @media (max-width: 720px) {
+   .hide-sm { display: none !important; }
+diff -ruN base/givespin/css/dialogs.css work/givespin/css/dialogs.css
+--- base/givespin/css/dialogs.css	2026-11-03 22:07:10.573198055 +0000
++++ work/givespin/css/dialogs.css	2026-11-04 19:47:15.074457001 +0000
+@@ -13,6 +13,8 @@
+ .modal__close { position: absolute; right: 12px; top: 12px; z-index: 3; }
+ /* the DEMO stamp sits in the corner of the scrolling part, so it scrolls away with the text instead of staying on top of it */
+ .modal--result .modal__body { position: relative; }
++/* (the body is a grid whose one column used to be as wide as its widest child: a split round with long charity names made the whole receipt wider than the dialog and it could be panned sideways; the column may now shrink, and the rows inside it wrap) */
++.modal--result .modal__body { grid-template-columns: minmax(0, 1fr); }
+ .modal__body form { display: grid; gap: 14px; }
+ .modal__title { font-size: 1.45rem; padding-right: 40px; }
+ .modal__sub { color: var(--muted); font-size: 0.9rem; margin-top: -6px; }
+@@ -60,6 +62,7 @@
+ .facts dt { display: inline-flex; align-items: flex-start; gap: 8px; color: var(--dim); font-weight: 600; }
+ .facts dt .ico { margin-top: 2px; color: var(--green); }
+ .facts dd { margin: 0; color: var(--text); overflow-wrap: anywhere; }
++.facts dd a { display: inline-flex; align-items: center; min-height: 24px; }   /* (the web address was 16 px high, a small target for a thumb) */
+ .prof__you { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 12px; background: rgba(255, 197, 66, 0.09); border: 1px solid rgba(255, 197, 66, 0.3); color: #f8e1a6; font-size: 0.86rem; }
+ .prof__you .ico { color: var(--gold); }
+ .prof__you b { color: #fff; }
+@@ -113,7 +116,7 @@
+ .rs-eyebrow { font: 700 0.72rem var(--f-body); letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+ .rs-title { font-size: clamp(1.3rem, 4vw, 1.75rem); padding: 0; }
+ .rs-sub { color: var(--muted); font-size: 0.86rem; }
+-.alloc { display: grid; gap: 8px; }
++.alloc { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+ .alloc__item { --c: var(--green); display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; background: var(--bg-2); border: 1px solid var(--line); border-left: 4px solid var(--c); }
+ .alloc__main { display: grid; gap: 3px; flex: 1; min-width: 0; }
+ .alloc__head { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 10px; }
+diff -ruN base/givespin/css/live.css work/givespin/css/live.css
+--- base/givespin/css/live.css	2026-11-03 22:07:10.573198055 +0000
++++ work/givespin/css/live.css	2026-11-04 19:47:15.074151991 +0000
+@@ -119,7 +119,7 @@
+ .lt-res__sim { font-size: 0.76rem !important; color: #c9b8ff !important; }
+ 
+ /* ---------- live feed and charity picker ---------- */
+-.feed { display: grid; gap: 4px; max-height: 360px; overflow-y: auto; }
++.feed { display: grid; gap: 4px; max-height: 360px; overflow-y: auto; scroll-padding-block: 40px; }   /* (arrowing to a name keeps the lines around it in view) */
+ .feed__row { padding: 7px 10px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--line); font-size: 0.84rem; color: var(--muted); }
+ .feed__row b { color: #fff; }
+ .feed__row.is-you { border-color: rgba(34, 240, 122, 0.5); background: rgba(34, 240, 122, 0.08); }
+@@ -185,7 +185,7 @@
+ .pred__mark.is-wrong { color: #ff9aa6; }
+ 
+ .lt-toggles { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+-.check { display: inline-flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--muted); cursor: pointer; }
++.check { display: inline-flex; align-items: center; gap: 8px; min-height: 24px; font-size: 0.82rem; color: var(--muted); cursor: pointer; }   /* (the label is the target for its tick box: at least 24 px high) */
+ .check input { width: 1.05rem; height: 1.05rem; accent-color: var(--green); }
+ .lt-chat { display: grid; gap: 6px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(154, 123, 255, 0.4); background: rgba(154, 123, 255, 0.08); }
+ .lt-chat__t { display: flex; align-items: center; gap: 6px; font: 700 0.8rem var(--f-body); color: #d9ceff; flex-wrap: wrap; }
+@@ -330,7 +330,7 @@
+ .odd__mark:hover { box-shadow: 0 0 0 3px #fff, 0 0 12px 2px color-mix(in srgb, var(--c, #fff) 55%, transparent); }
+ .hist--ch { flex-wrap: wrap; row-gap: 6px; }
+ .hist--ch .hist__main { white-space: normal; overflow: visible; text-overflow: clip; }
+-.hist__name { font-weight: 800; color: var(--text); }
++.hist__name { align-items: center; min-height: 24px; font-weight: 800; color: var(--text); }   /* (24 px: a link under that is hard to hit on a touch screen, WCAG 2.5.8) */
+ .lt-res__site { display: flex; align-items: center; gap: 12px; padding: 8px 0 2px; }
+ .lt-res__site-in { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-width: 0; }
+ .lt-res__name { font: 800 1rem/1.2 var(--f-display); color: #fff; }
+diff -ruN base/givespin/css/profile.css work/givespin/css/profile.css
+--- base/givespin/css/profile.css	2026-11-04 00:22:52.316579731 +0000
++++ work/givespin/css/profile.css	2026-11-04 19:41:38.381066872 +0000
+@@ -123,7 +123,8 @@
+ .pickcard__lock .ico { flex: none; margin-top: 1px; }
+ 
+ /* ------------------------------------------------------------------ a simulated player's name, and its dialog */
+-.botname { margin: 0; padding: 0; border: 0; background: none; font: inherit; color: inherit; text-align: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
++/* (2 px of padding make the button 24 px high, the size of a fingertip target; the same negative margin keeps the line of text exactly as tall as it was) */
++.botname { margin: -2px 0; padding: 2px 0; border: 0; background: none; font: inherit; color: inherit; text-align: inherit; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+ .botname:hover { color: #c9b8ff; text-decoration-style: solid; }
+ dialog.modal--bot { max-width: min(480px, calc(100vw - 20px)); }
+ .bot { --rc: #7f98a7; --ra: #c4d6df; display: grid; gap: 14px; }
+diff -ruN base/givespin/css/stream.css work/givespin/css/stream.css
+--- base/givespin/css/stream.css	2026-11-04 02:53:04.070297957 +0000
++++ work/givespin/css/stream.css	2026-11-04 19:43:41.321043524 +0000
+@@ -153,3 +153,10 @@
+ body.is-overlay .panel { background: rgba(10, 18, 26, 0.94); }
+ body.is-overlay dialog.modal::backdrop { background: transparent; }
+ html body.is-stream.is-overlay #main.main { padding-top: 40px; }   /* (room for the DEMO tag) */
++/* A short window (a phone held sideways, 844 x 390: the picture ended 18 px under the bottom edge): the DEMO tag shares the title's row instead of having a row of its own above the stage,
++   which gives the picture 32 px back (the title is moved right to clear the tag). */
++@media (max-height: 520px) {
++  html body.is-stream.is-overlay #main.main { padding-top: 8px; }
++  html body.is-stream.is-overlay #view-game .stage__head { padding-left: 164px; min-height: 22px; }
++  html body.is-stream.is-overlay #view-game .stage { gap: 3px; padding-block: 4px; }   /* (and 667 x 375 needed a few px more) */
++}
+diff -ruN base/givespin/css/ticker.css work/givespin/css/ticker.css
+--- base/givespin/css/ticker.css	2026-11-04 04:56:54.114628175 +0000
++++ work/givespin/css/ticker.css	2026-11-04 19:47:15.074646576 +0000
+@@ -86,7 +86,7 @@
+ .spot__eyebrow { font: 700 0.72rem var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+ .spot__name { font-size: 1.15rem; }
+ .spot--big .spot__name { font-size: clamp(1.4rem, 3vw, 2rem); }
+-.spot__link { color: var(--text); }
++.spot__link { align-items: center; min-height: 24px; color: var(--text); }   /* (the charity's name is a link: 24 px high at least, it was 21 px) */
+ .spot__tags { display: flex; flex-wrap: wrap; gap: 6px; }
+ .spot__text { color: var(--text); font-size: 0.92rem; line-height: 1.5; max-width: 70ch; }
+ .spot__text--big { font-size: 1.02rem; }
+diff -ruN base/givespin/css/walk.css work/givespin/css/walk.css
+--- base/givespin/css/walk.css	2026-11-04 06:26:51.939686042 +0000
++++ work/givespin/css/walk.css	2026-11-04 19:40:16.271540704 +0000
+@@ -82,6 +82,12 @@
+ 
+ /* The receipt's buttons (Play again, Share, My Giving, Done) stay at the bottom of the receipt while its long body scrolls, so a visitor on a phone does not have to scroll down to find them */
+ .modal--result .rs-actions { position: sticky; bottom: -24px; z-index: 2; margin: 0 -24px -24px; padding: 12px 24px 14px; border-top: 1px solid var(--line); background: var(--panel); }
++/* The dialog's padding is 24 px, and 16 px (18 at the bottom) on a phone up to 560 px wide (css/dialogs.css): the bar's -24 px side margins pushed it 8 px out of the dialog on each side, which is what let the receipt be panned sideways on a phone.
++   The line under the buttons ("Demo mode. This receipt is not a tax document.") also sat 10 px under the bar at the end of the scroll; it now has its own room. */
++@media (max-width: 560px) {
++  .modal--result .rs-actions { bottom: -18px; margin: 0 -16px -18px; padding: 12px 16px 14px; }
++}
++.modal--result .rs-actions + .rs-fine { margin-top: 24px; }
+ .modal--result .modal__body:has(> .rs-actions) { scroll-padding-bottom: 96px; }
+ 
+ /* ==========================================================================
+diff -ruN base/givespin/docs/next-steps.md work/givespin/docs/next-steps.md
+--- base/givespin/docs/next-steps.md	2026-11-04 06:28:37.971584986 +0000
++++ work/givespin/docs/next-steps.md	2026-11-04 19:56:16.310112053 +0000
+@@ -42,10 +42,8 @@
+ - **Lobby promos**: the third welcome card ("Check every result yourself") and the fair-play block say nearly the same thing; one of them could go.
+ 
+ ## Open, small (each is a few lines)
+-- From the walkthrough, not fixed: Stream `?overlay=1` at 844 x 390 cuts the picture 18 px at the bottom; bot-name buttons are 20 to 22 px high (axe passes them); the small "About <charity>" buttons on shrunk pictures (Dice 17 x 17 at 320 x 568, Coin Flip, Cosmic Spin); six pages scroll sideways at 195 px wide (below the 320 px reflow floor); toasts cover a third of a live result at 667 x 375 for a few seconds; the charity's web-address link in its profile is 16 px high.
+-- Bot names in a live table's feed are each a tab stop (up to 24 more); a roving tabindex (`ui.rove`) would fix it.
+-- Link targets under 24 px tall: the charity-of-the-week link (21 px at 768 px and wider), the Live tables' charity links, the ticker's Pause button (26 px).
+-- The receipt dialog body can pan sideways by 8 px at 360 and 390 wide, and 62 px at 320 (it did before this round, a little worse).
++- From the walkthrough, still open: the small "About <charity>" reel buttons of Cosmic Spin on a 320 x 568 phone are 19 px wide (the machine cannot be wider than the screen; each charity also has a button of its own in the list under the picture, which WCAG 2.5.8 accepts as the equivalent); six pages scroll sideways at 195 px wide (below the 320 px reflow floor).
++- Small text links inside a sentence ("How?" in the giving-limit note, "Open Fair Play?", "How it works") are about 15 px high; WCAG 2.5.8 exempts links inside a sentence, so they were left alone.
+ - Roster data: seven charities (NSPCC, Daniel Morcombe Foundation, Missing & Exploited Kids, STOP THE TRAFFIK, HALO Trust, IRC UK, ...) carry the how-tag `protection`, whose facet name reads "Protects land & wildlife".
+ - Back a charity chip: after typing a board size, the first click on the chip's x does nothing (the field blurs and the chip is redrawn). It was in the base.
+ - The crew share card repeats about 140 lines of drawing code from `js/ui/sharecard.js` (`js/ui/boards.js`); export those helpers once and delete the copy.
+diff -ruN base/givespin/js/ui/live.js work/givespin/js/ui/live.js
+--- base/givespin/js/ui/live.js	2026-11-04 00:56:01.973886172 +0000
++++ work/givespin/js/ui/live.js	2026-11-04 19:41:19.733406647 +0000
+@@ -1102,7 +1102,11 @@
+   }
+ 
+   function feedHTML(room) {
+-    return '<p class="tabnote">Newest first. Every player marked ' + botTag() + ' is a simulated bot.</p><ol class="feed" tabindex="0" aria-label="Live feed, newest first">' + room.feed.slice(0, 24).map(function (n) {
++    // The list scrolls, so it must be reachable by keyboard. When it holds bot names they are that way in (one tab stop, arrow keys: see roveFeed); only a list with
++    // no name in it (just your own bets, or the table's own lines) is a tab stop itself.
++    var rows = room.feed.slice(0, 24);
++    var named = rows.some(function (n) { return (n.kind === 'join' || n.kind === 'cancel') ? n.who !== 'you' : n.kind === 'crew'; });
++    return '<p class="tabnote">Newest first. Every player marked ' + botTag() + ' is a simulated bot.</p><ol class="feed"' + (named ? '' : ' tabindex="0"') + ' aria-label="Live feed, newest first">' + rows.map(function (n) {
+       var ch = GS.charity(n.charityId || n.winnerId);
+       if (n.kind === 'join' || n.kind === 'cancel') {
+         var who = n.who === 'you' ? '<b>' + esc(ui.chosenName() || 'You') + '</b> ' + ui.youChip() : '<b>' + ui.botName(n.name) + '</b> ' + ui.botChip(n.name) + botTag();
+@@ -1175,6 +1179,28 @@
+     box._liveHtml = html;
+     box.innerHTML = html;
+     box._liveFirst = box.firstElementChild;
++    if (tab === 'feed') { roveFeed(box); }
++  }
++
++  /**
++   * The bot names in the feed (up to 24 buttons) are ONE tab stop: Tab reaches the first, the arrow keys, Home and End move between them, Enter or Space opens the profile
++   * (the global handler in js/ui/profile.js), and every name still works with a mouse or a finger. The listeners go on the box once (the feed inside it is written again and again);
++   * the tab stop is set again after each write. At either end of the list the feed is also scrolled to its end, so the table's own lines above the first name and below the last one can be read.
++   */
++  var FEED_NAMES = '.feed .botname';
++  function roveFeed(box) {
++    if (!box._liveRoved) {
++      box._liveRoved = true;
++      ui.rove(box, FEED_NAMES);
++      box.addEventListener('keydown', function (e) {
++        var k = e.key, feed = box.querySelector('.feed');
++        if (!feed || !e.target.matches || !e.target.matches(FEED_NAMES)) { return; }
++        var names = feed.querySelectorAll('.botname');
++        if ((k === 'Home' || k === 'ArrowUp' || k === 'ArrowLeft') && document.activeElement === names[0]) { feed.scrollTop = 0; }
++        if ((k === 'End' || k === 'ArrowDown' || k === 'ArrowRight') && document.activeElement === names[names.length - 1]) { feed.scrollTop = feed.scrollHeight; }
++      });
++    }
++    ui.roveSync(box, FEED_NAMES);
+   }
+ 
+   /* ------------------------------------------------------------- global bits */
+diff -ruN base/givespin/tests/sections/25-profile.mjs work/givespin/tests/sections/25-profile.mjs
+--- base/givespin/tests/sections/25-profile.mjs	2026-11-04 02:48:52.600239311 +0000
++++ work/givespin/tests/sections/25-profile.mjs	2026-11-04 19:55:33.918441964 +0000
+@@ -467,7 +467,7 @@
+     await p.waitForFunction(() => document.querySelectorAll('#tabp .feed__row button[data-bot]').length >= 3, null, { timeout: 30000 });
+     await p.evaluate(() => { GS.live.room('derby')._clearTimers(); });
+     const btn = await p.evaluate(() => Array.from(document.querySelectorAll('#tabp .feed__row button[data-bot]')).map((b) => ({ name: b.getAttribute('data-bot'), text: b.textContent, label: b.getAttribute('aria-label'), type: b.type, tab: b.tabIndex, inFeedRow: !!b.closest('.feed__row') })));
+-    check(btn.length >= 3 && btn.every((b) => b.type === 'button' && b.tab === 0 && b.text === b.name && b.label === b.name + ', simulated player. Open details' && b.inFeedRow), 'every bot name in the live feed is a real button (in the tab order, named "<name>, simulated player. Open details")', btn.slice(0, 3));
++    check(btn.length >= 3 && btn.every((b) => b.type === 'button' && (b.tab === 0 || b.tab === -1) && b.text === b.name && b.label === b.name + ', simulated player. Open details' && b.inFeedRow) && btn.filter((b) => b.tab === 0).length === 1, 'every bot name in the live feed is a real button (named "<name>, simulated player. Open details"); the feed is ONE tab stop, the arrow keys move between the names (section 33a)', btn.slice(0, 3));
+     const name = btn[0].name;
+     // keyboard: focus it, press Enter
+     await p.focus('#tabp .feed__row button[data-bot]');
+diff -ruN base/givespin/tests/sections/33-a11y.mjs work/givespin/tests/sections/33-a11y.mjs
+--- base/givespin/tests/sections/33-a11y.mjs	1970-01-01 00:00:00.000000000 +0000
++++ work/givespin/tests/sections/33-a11y.mjs	2026-11-04 19:53:41.405342862 +0000
+@@ -0,0 +1,304 @@
++// Keyboard stops, touch targets and overflow left over from the review and the second walk-through (sections 33a to 33d). Each section guards one thing.
++//   33a  a live table's feed: all the bot names are ONE tab stop (arrow keys, Home, End), Enter or Space opens the profile, a mouse still reaches every name, focus comes back
++//   33b  touch targets of at least 24 x 24 CSS px (WCAG 2.5.8) for the links, buttons and names the review and the walk found too small
++//   33c  the receipt dialog cannot be panned sideways on a phone (a single gift and a split one), and the line under its buttons is not hidden by them
++//   33d  Stream Mode's see-through ?overlay=1 page fits a short window; toasts on a short window do not cover the picture or the result
++// Run one with ONLY=33a (the filter takes whole ids, not the prefix).
++import fs from 'node:fs';
++
++export default async function (h) {
++  const { check, newPage, openApp, go, section, problems, waitReceipt, closeReceipt } = h;
++  const AXE = process.env.AXE && fs.existsSync(process.env.AXE) ? fs.readFileSync(process.env.AXE, 'utf8') : null;
++
++  // a save as an older version wrote it (a total given, in cents, and the XP that earns), put in place once per page
++  const saveOf = (cents) => ({ v: 2, xp: Math.floor(cents / 10), totalCents: cents, plays: 20, streak: 2, bestStreak: 4 });
++  const seeded = async (cents, opts) => {
++    const p = await newPage(opts || {});
++    await p.addInitScript((o) => { try { if (!sessionStorage.getItem('__seeded')) { localStorage.setItem('givespin:v2', JSON.stringify(o)); sessionStorage.setItem('__seeded', '1'); } } catch (e) { /* ignore */ } }, saveOf(cents));
++    return p;
++  };
++  const noSideways = (p) => p.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1);
++  // the target-size rule of axe on what is on screen now (the other sections' scans run all the rules)
++  const axeTargets = async (p) => {
++    if (!AXE) { return null; }
++    await p.addScriptTag({ content: AXE }).catch(() => {});
++    return p.evaluate(async () => { const r = await window.axe.run(document, { runOnly: { type: 'rule', values: ['target-size'] }, resultTypes: ['violations'] }); return r.violations.flatMap((v) => v.nodes.map((n) => n.target.join(' '))); });
++  };
++
++  /* ---------------------------------------------------------------- 33a */
++  if (section('33a. A live table\'s feed: the bot names are one tab stop (arrow keys), Enter or Space opens the profile, a mouse reaches every name')) {
++    const problems0 = problems.length;
++    const p = await seeded(100000, { viewport: { width: 1280, height: 720 } });
++    await openApp(p, '#live-derby');
++    await p.click('#tab-feed');
++    await p.waitForFunction(() => document.querySelectorAll('#tabp .feed .botname').length >= 4, null, { timeout: 30000 });
++    await p.evaluate(() => { GS.live.room('derby')._clearTimers(); });   // (the table holds still while the feed is read)
++    const NAMES = '#tabp .feed .botname';
++    const list = () => p.evaluate((s) => Array.from(document.querySelectorAll(s)).map((b) => ({ name: b.getAttribute('data-bot'), tab: b.tabIndex })), NAMES);
++    const active = () => p.evaluate(() => document.activeElement && document.activeElement.getAttribute('data-bot'));
++    const before = await list();
++    check(before.length >= 4 && before.filter((b) => b.tab === 0).length === 1 && before.filter((b) => b.tab === -1).length === before.length - 1, 'of the ' + before.length + ' bot names in the feed exactly one is in the tab order (the others are reached with the arrow keys)', before.slice(0, 4));
++    const feedTab = await p.evaluate(() => { const f = document.querySelector('#tabp .feed'); return { tabindex: f.getAttribute('tabindex'), label: f.getAttribute('aria-label') }; });
++    check(feedTab.tabindex === null && feedTab.label === 'Live feed, newest first', 'the list itself is not a second tab stop while it holds names (the names are the way in), and it keeps its label', feedTab);
++    // Tab from the tab strip: how many stops are inside the feed before the focus leaves the panel
++    await p.focus('#tab-feed');
++    let stopsInFeed = 0; const trail = [];
++    for (let i = 0; i < 14; i++) {
++      await p.keyboard.press('Tab');
++      const at = await p.evaluate(() => { const a = document.activeElement; return { feed: !!a.closest('#tabp .feed'), what: a.tagName.toLowerCase() + (a.id ? '#' + a.id : '') + (a.getAttribute('data-bot') ? ' ' + a.getAttribute('data-bot') : '') }; });
++      if (at.feed) { stopsInFeed++; }
++      trail.push(at.what);
++    }
++    check(stopsInFeed === 1, 'Tab goes through the feed in ONE stop (14 presses of Tab from the tab strip: ' + stopsInFeed + ' stop in the feed; it used to be one for every name)', trail);
++    // arrow keys
++    await p.focus(NAMES + '[tabindex="0"]');
++    const first = await active();
++    const names = (await list()).map((b) => b.name);   // (read again: the crowd may have put a new line on top while Tab was walking about)
++    const startAt = names.indexOf(first);
++    await p.keyboard.press('ArrowDown');
++    check(await active() === names[Math.min(names.length - 1, startAt + 1)], 'ArrowDown moves to the next name', { startAt, now: await active() });
++    const after1 = await list();
++    check(after1.filter((b) => b.tab === 0).length === 1 && after1.find((b) => b.tab === 0).name === await active(), 'the one tab stop moves with the focus');
++    await p.keyboard.press('End');
++    check(await active() === names[names.length - 1], 'End goes to the last name');
++    const endScroll = await p.evaluate(() => { const f = document.querySelector('#tabp .feed'); return { top: Math.round(f.scrollTop), max: f.scrollHeight - f.clientHeight }; });
++    check(endScroll.top >= endScroll.max - 1, 'and the feed is scrolled to its end, so the last line can be read', endScroll);
++    await p.keyboard.press('ArrowUp');
++    check(await active() === names[names.length - 2], 'ArrowUp moves back');
++    await p.keyboard.press('Home');
++    check(await active() === names[0], 'Home goes to the first name');
++    await p.keyboard.press('ArrowUp');
++    check(await active() === names[0] && await p.evaluate(() => document.querySelector('#tabp .feed').scrollTop === 0), 'ArrowUp at the first name stays there and shows the top of the feed');
++    check(await p.evaluate(() => { const d = document.querySelector('#dlg-bot'); return !d || !d.open; }), 'moving with the arrow keys opens nothing');
++    // Enter opens the profile, Escape puts focus back on the same name
++    await p.keyboard.press('ArrowDown');
++    const who = await active();
++    await p.keyboard.press('Enter');
++    await p.waitForSelector('#dlg-bot[open]');
++    check(await p.evaluate((n) => document.querySelector('#dlg-bot-title').textContent.startsWith(n) && /BOT/.test(document.querySelector('#dlg-bot-title').textContent), who), 'Enter opens that bot\'s profile (named, with the BOT pill)', who);
++    await p.keyboard.press('Escape');
++    await p.waitForFunction(() => !document.querySelector('#dlg-bot').open);
++    check(await active() === who, 'Escape closes it and focus is back on the same name', await active());
++    // Space opens it too
++    await p.keyboard.press('Space');
++    await p.waitForSelector('#dlg-bot[open]');
++    check(true, 'Space opens it as well');
++    await p.click('#dlg-bot [data-role="bot-close"]');
++    await p.waitForFunction(() => !document.querySelector('#dlg-bot').open);
++    check(await active() === who, 'the Close button puts focus back on the same name');
++    // a mouse still reaches every name, also one that is not the tab stop
++    const third = (await list())[2].name;
++    await p.locator(NAMES).nth(2).click();
++    await p.waitForSelector('#dlg-bot[open]');
++    check(await p.evaluate((n) => document.querySelector('#dlg-bot-title').textContent.startsWith(n), third), 'a click on a name that is not the tab stop opens its profile', third);
++    await p.click('#dlg-bot [data-role="bot-close"]');
++    await p.waitForFunction(() => !document.querySelector('#dlg-bot').open);
++    check(await active() === third && (await list()).find((b) => b.tab === 0).name === third, 'focus returns to it, and it is now the tab stop');
++    // nothing in the feed is announced on its own
++    const live = await p.evaluate(() => ({ inFeed: document.querySelectorAll('#tabp [aria-live], #tabp [role="status"], #tabp [role="alert"], #tabp [role="log"]').length, above: !!document.querySelector('#tabp').closest('[aria-live]') }));
++    check(live.inFeed === 0 && !live.above, 'the feed has no aria-live (it is never announced as it changes)', live);
++    check(await noSideways(p), 'no sideways scroll');
++    // a list with no bot name in it (only the table\'s own lines) is the tab stop itself, so it can still be scrolled with the keyboard
++    await p.evaluate(() => { document.activeElement.blur(); const r = GS.live.room('derby'); r.feed.length = 0; r.feed.unshift({ kind: 'lock', pot: 120 }); GS.ui.game.refreshLiveTab(); });
++    const bare = await p.evaluate(() => { const f = document.querySelector('#tabp .feed'); return { names: document.querySelectorAll('#tabp .feed .botname').length, tabindex: f && f.getAttribute('tabindex') }; });
++    check(bare.names === 0 && bare.tabindex === '0', 'a feed with no name in it is a tab stop itself (it can be scrolled by keyboard)', bare);
++    // and with names again the stop goes back to one
++    await p.evaluate(() => { const r = GS.live.room('derby'); r.feed.length = 0; ['AtlasAnt', 'BoldBasil', 'CinderCub'].forEach((n) => r.feed.push({ kind: 'join', who: 'bot', name: n, dollars: 5, charityId: 'wateraid' })); GS.ui.game.refreshLiveTab(); });
++    const again = await list();
++    check(again.length === 3 && again.filter((b) => b.tab === 0).length === 1, 'drawn again with three names: still one tab stop', again);
++    await h.a11y(p, 'live feed with the names as one tab stop');
++    await p.close();
++    // a phone: the same (touch), and a name is 24 px high to tap
++    const ph = await seeded(100000, { viewport: { width: 390, height: 844 }, mobile: true });
++    await openApp(ph, '#live-derby');
++    await ph.click('#tab-feed');
++    await ph.waitForFunction(() => document.querySelectorAll('#tabp .feed .botname').length >= 3, null, { timeout: 30000 });
++    await ph.evaluate(() => { GS.live.room('derby')._clearTimers(); });
++    const pl = await ph.evaluate(() => Array.from(document.querySelectorAll('#tabp .feed .botname')).map((b) => ({ tab: b.tabIndex, h: Math.round(b.getBoundingClientRect().height * 10) / 10 })));
++    check(pl.filter((b) => b.tab === 0).length === 1 && pl.every((b) => b.h >= 24), 'on a phone: one tab stop, and every name is at least 24 px high to tap', pl.slice(0, 3));
++    await ph.locator('#tabp .feed .botname').nth(1).tap();
++    await ph.waitForSelector('#dlg-bot[open]');
++    check(true, 'a tap on a name opens its profile');
++    await ph.keyboard.press('Escape');
++    await ph.close();
++    check(problems.length === problems0, 'section 33a: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ---------------------------------------------------------------- 33b */
++  if (section('33b. Touch targets are at least 24 x 24 px (WCAG 2.5.8): the charity of the week link, the live tables\' result links, the waitlist tick, the charity\'s web address, bot names')) {
++    const problems0 = problems.length;
++    const SIZES = [['a phone', 390, 844, true], ['a tablet', 768, 1024, true], ['a laptop', 1280, 720, false]];
++    // every visible match of `sel` and its size on screen
++    const sizes = (p, sel) => p.evaluate((s) => Array.from(document.querySelectorAll(s)).filter((e) => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && !e.closest('[hidden]'); }).map((e) => { const r = e.getBoundingClientRect(); return { w: Math.round(r.width * 10) / 10, h: Math.round(r.height * 10) / 10 }; }), sel);
++    const big = (list, minH = 24, minW = 24) => list.length > 0 && list.every((r) => r.h >= minH - 0.05 && r.w >= minW - 0.05);
++    for (const [name, w, hh, mobile] of SIZES) {
++      const p = await seeded(100000, { viewport: { width: w, height: hh }, mobile });
++      await openApp(p, '#spotlights');
++      await p.waitForSelector('a.spot__link.extlink', { timeout: 15000 });
++      const spot = await sizes(p, 'a.spot__link.extlink');
++      check(big(spot, 24, 0), name + ' (' + w + ' wide): the charity of the week\'s name link is at least 24 px high', spot);
++      await go(p, '#lobby');
++      await p.waitForFunction(() => document.querySelector('.spot--lobby a.spot__link.extlink') || document.querySelector('a.spot__link.extlink'), null, { timeout: 15000 }).catch(() => {});
++      const lobby = await sizes(p, 'a.spot__link.extlink');
++      check(big(lobby, 24, 0), name + ': ...and the one in the lobby\'s card', lobby);
++      const tick = await sizes(p, '.tick__btn');
++      check(tick.length === 0 || big(tick), name + ': the ticker\'s Pause button is at least 24 x 24', tick);
++      await go(p, '#live');
++      await p.waitForSelector('.wl-check', { timeout: 15000 });
++      const wl = await sizes(p, 'label.wl-check');
++      check(big(wl, 24, 0), name + ': the waitlist tick\'s label is at least 24 px high', wl);
++      await p.waitForSelector('a.hist__name.extlink', { timeout: 25000 }).catch(() => {});   // (the recent results come a few seconds after the page)
++      const hist = await sizes(p, 'a.hist__name.extlink');
++      check(big(hist, 24, 0), name + ': the recent-results links on the Live tables page are at least 24 px high (' + hist.length + ' of them)', hist.slice(0, 3));
++      const ax = await axeTargets(p);
++      check(ax === null || ax.length === 0, name + ': axe\'s target-size rule is clean on the Live tables page', ax);
++      // the charity's profile: its web address
++      await p.evaluate(() => GS.ui.charity.openProfile('wateraid'));
++      await p.waitForSelector('#dlg-profile[open] .facts dd a');
++      await p.waitForTimeout(300);
++      const site = await sizes(p, '#dlg-profile .facts dd a');
++      check(big(site, 24, 0), name + ': the charity\'s web address in its profile is at least 24 px high', site);
++      await p.keyboard.press('Escape');
++      await p.close();
++    }
++    // the bot names in a live feed
++    for (const [name, w, hh, mobile] of SIZES) {
++      const p = await seeded(100000, { viewport: { width: w, height: hh }, mobile });
++      await openApp(p, '#live-derby');
++      await p.click('#tab-feed');
++      await p.waitForFunction(() => document.querySelectorAll('#tabp .feed .botname').length >= 3, null, { timeout: 30000 });
++      await p.evaluate(() => { GS.live.room('derby')._clearTimers(); });
++      const names = await sizes(p, '#tabp .feed .botname');
++      check(big(names, 24, 24), name + ': every bot name in the feed is at least 24 x 24 (' + names.length + ' names)', names.slice(0, 3));
++      // the larger target costs the page nothing: every row is as tall as it is without the extra padding (it is cancelled by a negative margin)
++      const rows = () => p.evaluate(() => Array.from(document.querySelectorAll('#tabp .feed__row')).map((r) => Math.round(r.getBoundingClientRect().height * 10) / 10));
++      const withPad = await rows();
++      await p.addStyleTag({ content: '.botname { padding-block: 0 !important; margin-block: 0 !important; }' });
++      const without = await rows();
++      check(withPad.length > 3 && withPad.length === without.length && withPad.every((v, i) => Math.abs(v - without[i]) <= 0.6), name + ': the 24 px names do not make the feed any taller (' + withPad.length + ' rows, ' + withPad.reduce((a, b) => a + b, 0).toFixed(0) + ' px)', { withPad: withPad.slice(0, 5), without: without.slice(0, 5) });
++      await p.close();
++    }
++    // the little "About" marks on a game picture that was shrunk to fit a small phone: what a tap really reaches (the mark's own box is small, its slot or tile is the target)
++    const hitOf = (p, sel) => p.evaluate((s) => {
++      const out = [];
++      Array.from(document.querySelectorAll(s)).filter((b) => { const r = b.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight; }).slice(0, 8).forEach((b) => {
++        const r = b.getBoundingClientRect(); let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
++        for (let y = Math.floor(r.top) - 30; y <= r.bottom + 30; y += 1) { for (let x = Math.floor(r.left) - 30; x <= r.right + 30; x += 1) { if (x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) { continue; } const t = document.elementFromPoint(x, y); if (t && (t === b || b.contains(t))) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); } } }
++        out.push({ w: x1 < 0 ? 0 : x1 - x0 + 1, h: y1 < 0 ? 0 : y1 - y0 + 1 });
++      });
++      return out;
++    }, sel);
++    for (const [gid, sel, w, hh] of [['dice', '#panel-dice .markbtn', 320, 568], ['coin', '#panel-coin .markbtn', 320, 568], ['coin', '#panel-coin .markbtn', 844, 390], ['cosmic', '#panel-cosmic .sym--btn', 375, 667], ['cosmic', '#panel-cosmic .sym--btn', 844, 390], ['slots', '#panel-slots .sym--btn', 320, 568]]) {
++      const p = await newPage({ viewport: { width: w, height: hh }, mobile: true });
++      await openApp(p, '#game-' + gid);
++      await p.waitForSelector('#panel-' + gid + ':not([hidden]) ' + sel.split(' ').slice(1).join(' '), { timeout: 15000 });
++      await p.waitForTimeout(700);
++      const hit = await hitOf(p, sel);
++      check(hit.length >= 3 && hit.every((r) => r.w >= 24 && r.h >= 24), gid + ' at ' + w + 'x' + hh + ': a tap on a charity\'s mark reaches at least 24 x 24 px of its button (' + hit.length + ' marks)', hit.slice(0, 3));
++      await p.close();
++    }
++    // Cosmic Spin's eight reels on the smallest phone are 22 px wide and cannot be wider without making the whole machine wider than the screen. The same
++    // charity profile is one tap away from the "In play" list under the picture (each charity there is a button of its own), which WCAG 2.5.8 accepts as the equivalent.
++    {
++      const p = await newPage({ viewport: { width: 320, height: 568 }, mobile: true });
++      await openApp(p, '#game-cosmic');
++      await p.waitForSelector('#panel-cosmic:not([hidden]) .sym--btn');
++      await p.waitForTimeout(500);
++      const reel = await p.evaluate(() => { const b = document.querySelector('#panel-cosmic .sym--btn').getBoundingClientRect(); return { w: Math.round(b.width * 10) / 10, h: Math.round(b.height * 10) / 10 }; });
++      await p.click('#tab-pool').catch(() => {});
++      const chips = await sizes(p, '#tabp .chip--link[data-open-charity]');
++      check(chips.length >= 5 && chips.every((c) => c.h >= 24), 'Cosmic Spin on a 320 x 568 phone (reels ' + reel.w + ' x ' + reel.h + '): every charity also has a button of its own in the list under the picture, at least 24 px high (' + chips.length + ' of them)', { reel, chips: chips.slice(0, 3) });
++      await p.close();
++    }
++    check(problems.length === problems0, 'section 33b: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ---------------------------------------------------------------- 33c */
++  if (section('33c. The receipt cannot be panned sideways on a phone (one gift and a split one), and the line under its buttons is not hidden by them')) {
++    const problems0 = problems.length;
++    const look = (p) => p.evaluate(() => {
++      const body = document.querySelector('#dlg-result .modal__body'); const br = body.getBoundingClientRect();
++      const bar = document.querySelector('#dlg-result .rs-actions'); const ar = bar.getBoundingClientRect();
++      const wide = []; body.querySelectorAll('*').forEach((e) => { const r = e.getBoundingClientRect(); if (r.width && (r.right > br.right + 0.5 || r.left < br.left - 0.5)) { wide.push(e.tagName.toLowerCase() + '.' + String(e.className && e.className.baseVal === undefined ? e.className : '').split(' ')[0]); } });
++      body.scrollTop = body.scrollHeight;
++      const fine = body.querySelector('.rs-actions ~ .rs-fine');
++      const fr = fine ? fine.getBoundingClientRect() : null; const br2 = bar.getBoundingClientRect();
++      const mid = fr ? document.elementFromPoint(fr.left + fr.width / 2, fr.top + Math.min(8, fr.height / 2)) : null;
++      return { sw: body.scrollWidth, cw: body.clientWidth, wide: wide.slice(0, 4), barL: Math.round(ar.left - br.left), barR: Math.round(ar.right - br.right), fine: !!fine, fineBelowBar: fr ? fr.top >= br2.bottom - 0.5 : null, fineReachable: mid ? (fine === mid || fine.contains(mid)) : null, rows: document.querySelectorAll('#dlg-result .alloc__item').length };
++    });
++    for (const [w, hh] of [[320, 568], [360, 740], [390, 844], [412, 915], [768, 1024]]) {
++      const p = await seeded(100000, { viewport: { width: w, height: hh }, mobile: w < 700 });
++      await openApp(p);
++      for (const gid of ['wheel', 'cosmic']) {
++        await go(p, '#game-' + gid);
++        await p.waitForSelector('#panel-' + gid + ':not([hidden])');
++        await p.click('#btn-play');
++        await waitReceipt(p);
++        await p.waitForTimeout(400);
++        const r = await look(p);
++        const what = (gid === 'cosmic' ? 'a split round (' + r.rows + ' charities)' : 'one gift') + ' at ' + w + ' wide';
++        check(r.sw <= r.cw, 'receipt, ' + what + ': the body does not pan sideways (scrollWidth ' + r.sw + ' <= clientWidth ' + r.cw + ')', r);
++        check(r.wide.length === 0 && r.barL >= 0 && r.barR <= 0, 'receipt, ' + what + ': nothing, not even the sticky button bar, sticks out of the dialog', r);
++        check(r.fine && r.fineBelowBar && r.fineReachable, 'receipt, ' + what + ': at the end of the scroll the "Demo mode" line under the buttons is below them, not hidden', r);
++        if (w === 320 && gid === 'cosmic') { await h.a11y(p, 'the receipt of a split round on a 320 px phone'); }
++        await closeReceipt(p);
++      }
++      await p.close();
++    }
++    check(problems.length === problems0, 'section 33c: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ---------------------------------------------------------------- 33d */
++  if (section('33d. Stream Mode\'s see-through page fits a short window; toasts on a short window do not cover the picture or the result')) {
++    const problems0 = problems.length;
++    // the overlay page: the picture's box ends inside the window, the DEMO tag does not sit on the title
++    for (const [w, hh, mobile] of [[844, 390, true], [667, 375, true], [915, 412, true], [1366, 768, false]]) {
++      const p = await newPage({ viewport: { width: w, height: hh }, mobile });
++      await openApp(p, '#game-wheel', '?fast=1&stream=1&overlay=1');
++      await p.waitForSelector('#stream-hud', { state: 'attached' });
++      await p.waitForTimeout(1200);
++      const m = await p.evaluate(() => {
++        const pic = document.querySelector('#games .game:not([hidden]) > :first-child').getBoundingClientRect();
++        const tag = document.querySelector('.sdemo').getBoundingClientRect(); const ti = document.querySelector('#view-game .stage__titles').getBoundingClientRect();
++        const x = Math.max(0, Math.min(tag.right, ti.right) - Math.max(tag.left, ti.left)); const y = Math.max(0, Math.min(tag.bottom, ti.bottom) - Math.max(tag.top, ti.top));
++        return { ih: innerHeight, picBottom: Math.round(pic.bottom), picTop: Math.round(pic.top), tagOnTitle: x * y > 0, tagVisible: getComputedStyle(document.querySelector('.sdemo')).display !== 'none', sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, mainTop: getComputedStyle(document.querySelector('#main')).paddingTop };
++      });
++      check(m.picBottom <= m.ih, 'overlay at ' + w + 'x' + hh + ': the whole picture is inside the window (its bottom is at ' + m.picBottom + ' of ' + m.ih + ')', m);
++      check(m.tagVisible && !m.tagOnTitle && m.sw <= m.cw, 'overlay at ' + w + 'x' + hh + ': the DEMO tag is shown, it is not on top of the title, and the page does not scroll sideways', m);
++      if (hh > 520) { check(m.mainTop === '40px', 'overlay at ' + w + 'x' + hh + ': a tall window keeps the room above the stage for the tag (the change is for short windows only)', m.mainTop); }
++      await p.close();
++    }
++    // toasts: a stack of them is out of the way of the picture and the result on a short window; role, politeness and the number of them are as before
++    for (const [w, hh, mobile, route] of [[667, 375, true, '#live-derby'], [844, 390, true, '#live-derby'], [667, 375, true, '#game-wheel'], [915, 412, false, '#live-derby']]) {
++      const p = await seeded(100000, { viewport: { width: w, height: hh }, mobile });
++      await openApp(p, route);
++      await p.waitForSelector(route.startsWith('#live') ? '#stage .stage__body, #stage' : '#panel-wheel:not([hidden])');
++      await p.waitForTimeout(900);
++      await p.evaluate(() => { ['Quest done: Play a race game. Claim it on the Quests page.', '5 badges unlocked: First Give, Century Club, On a Roll, Live Wire, Pot of Gold', 'Quest done: Give to 3 causes', '2 badges unlocked'].forEach((t) => GS.ui.toast(t, 'award')); });
++      await p.waitForTimeout(350);
++      const m = await p.evaluate(() => {
++        const rect = (e) => { const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; };
++        const hit = (a, b) => Math.min(a.r, b.r) > Math.max(a.l, b.l) && Math.min(a.b, b.b) > Math.max(a.t, b.t);
++        const toasts = Array.from(document.querySelectorAll('#toasts .toast')).map(rect);
++        const pic = document.querySelector('#games .game:not([hidden]) > :first-child') || document.querySelector('#stage');
++        const stage = document.querySelector('#stage .stage__body') || document.querySelector('#stage');
++        const box = document.querySelector('#toasts');
++        return { n: toasts.length, overPicture: toasts.some((t) => hit(t, rect(pic))), overStage: toasts.some((t) => hit(t, rect(stage))), top: Math.round(Math.min(...toasts.map((t) => t.t))), ih: innerHeight, role: box.getAttribute('role'), live: box.getAttribute('aria-live') };
++      });
++      check(m.n === 4 && !m.overPicture && (!route.startsWith('#live') || !m.overStage) && m.top >= 0, 'toasts at ' + w + 'x' + hh + ' on ' + route + ': four of them stay clear of the picture and the result (' + (route.startsWith('#live') ? 'the stage' : 'the picture') + ') and on the screen', m);
++      check(m.role === 'status' && m.live === 'polite', 'toasts at ' + w + 'x' + hh + ': still one polite status region (role=status, aria-live=polite)', m);
++      await p.close();
++    }
++    // a tall window keeps the toasts where they were: centred along the bottom
++    {
++      const p = await seeded(100000, { viewport: { width: 1280, height: 800 } });
++      await openApp(p, '#lobby');
++      await p.evaluate(() => { GS.ui.toast('Copied to your clipboard', 'copy'); });
++      await p.waitForTimeout(350);
++      const c = await p.evaluate(() => { const r = document.querySelector('#toasts .toast').getBoundingClientRect(); return { centre: Math.round((r.left + r.right) / 2), mid: Math.round(innerWidth / 2), bottom: Math.round(innerHeight - r.bottom) }; });
++      check(Math.abs(c.centre - c.mid) <= 3 && c.bottom <= 60, 'on a tall window the toast is still centred above the bottom edge', c);
++      await p.close();
++    }
++    check(problems.length === problems0, 'section 33d: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++}

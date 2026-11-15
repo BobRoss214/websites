@@ -1,0 +1,651 @@
+diff -ruN base/givespin/README.md work/givespin/README.md
+--- base/givespin/README.md	2026-11-04 06:52:31.006596186 +0000
++++ work/givespin/README.md	2026-11-04 19:47:44.083695822 +0000
+@@ -25,7 +25,12 @@
+ ## What's in it
+ 
+ **The lobby** has promo banners, a "live now" strip of tables, category tabs (Originals, Slots, Table games, Races,
+-Instant wins), a tile for every game, quick cause chips, your latest rounds and a "Repeat last round" shortcut. A
++Instant wins), a tile for every game, quick cause chips, your latest rounds and a "Repeat last round" shortcut. The games
++come first: a game tile (its picture and name) is on the first screen from a 320 px phone to a laptop. The welcome banners
++are compact (`css/walk.css`, last section); the "live now" strip sits just under the first row of tiles (and on a phone the
++house-edge line with it); on a short window (a small phone, or a phone held sideways) the banners come down there too, and a
++phone shows the category tabs as one row you swipe. `placeExtras()` in `js/ui/lobby.js` moves the same elements (nothing is
++copied or dropped), so the reading and Tab order match the drawing. A
+ side nav leads to Slots, Live tables, Leagues, Crews, Your cards, My Giving, Charities, the Giving Club, Fair Play? and
+ Help. On a phone the side nav becomes a bottom bar with the five main places (Lobby, Live tables, My Giving, Charities
+ and Giving Club); the rest are reached from the footer links, the "More ways to play" quick links on the Live tables page,
+@@ -249,7 +254,7 @@
+ every XP number on the site includes it), six emblem frames and four profile titles (added to the profile page's own lists), four card backs and four confetti styles. A cosmetic the visitor already has pays 25 XP instead (the same track comes
+ round every season). **Joined late?** Every day of the season gone before a new player's first day is worth 60 points (up to 720, tier 8), so tier 10 is a few days of play away; someone who played before the season, or has played more
+ rounds than the store keeps, is not new and gets nothing. The page (`js/ui/quests.js`, `css/quests.css`) has the season header and bar, the track (a strip that scrolls sideways inside itself on a laptop, a vertical list on a phone, one tab stop
+-with arrow keys, every tier a real button named "Tier 7, Marquee emblem frame. Locked. 540 points to go."), the day's and the week's quests with progress bars (`role="progressbar"`), **Claim all**, a picker for card backs and confetti
++with arrow keys, every tier a real button named "Tier 7, Marquee emblem frame. Locked. 540 points to go."), the day's and the week's quests with progress bars (`role="progressbar"`; on a phone, up to 700 px wide, they come BEFORE the season and its 30-row track, `arrange()` in `js/ui/quests.js`), **Claim all**, a picker for card backs and confetti
+ styles, and a short "How quests work". The side menu's **Quests** entry has a badge with the number of things to claim (`#quests-badge`, empty and hidden at zero), the lobby has a one-line block, and Help answers "What are quests?".
+ Card backs show on face-down cards (Pick a Card, and the cards still to win on your cards page); confetti styles are read by `js/confetti.js` (hearts and stars are drawn in code). What is kept: `GS.local` "quests" (claims, the
+ highest progress seen, when the visitor was first seen, the season's round counts) and "cosmetics" (what is owned and chosen); the main save is only changed by the XP. "Reset my progress" starts the quests and the season again (the
+@@ -562,7 +567,7 @@
+ css/stream.css      Stream Mode: the toolbar, the pot, the vote bar, the compact view and the see-through ?overlay=1 page
+ css/app.css         the Make it real page, the waitlist and the install button
+ css/voice.css       the house-edge strip (lobby, Fair Play, Help) and the house line on a receipt
+-css/walk.css        small fixes found by walking every page on phones, tablets and big screens (loaded last, each rule says which window it is for)
++css/walk.css        small fixes found by walking every page on phones, tablets and big screens, and the lobby's first-screen layout (loaded last, each rule says which window it is for)
+ css/ranks.css       the rank emblems: their classes and animation
+ css/rankui.css      rank chips next to names, the rank card and ladder, the rank-up moment
+ js/config.js        mode, limits, demo credit, checkout hook
+diff -ruN base/givespin/css/walk.css work/givespin/css/walk.css
+--- base/givespin/css/walk.css	2026-11-04 06:26:51.939686042 +0000
++++ work/givespin/css/walk.css	2026-11-04 19:41:25.057624100 +0000
+@@ -115,3 +115,53 @@
+ /* ------------------------------------------------------------------ the lobby's quests line */
+ /* "Ends in 27 days. 2 rewards to claim" broke between the number and its words on a phone (the "2" ended one line, "rewards to claim" began the next). The pair stays together. */
+ .qblock__ready { white-space: nowrap; }
++
++/* ==========================================================================
++   The lobby's first screen: a game tile must show without scrolling (lobby helper, round 3)
++   After the four blocks moved under the tiles, the welcome banners (284 to 490 px tall), the house-edge strip and the Live tables strip (274 px) still stood above the tiles,
++   so on every window up to 1366 x 768 the first tile started below the first screen. Now: smaller banners, one row of category chips on a phone, and the two strips (and, on a short
++   window, the banners) under the first row of tiles (js/ui/lobby.js, placeExtras moves the same nodes; the words and links are unchanged).
++   ========================================================================== */
++
++/* the things that move into the tile grid take a whole row of it */
++.tiles > .promos, .tiles > .housestrip, .tiles > .livestrip { grid-column: 1 / -1; min-width: 0; margin: 0; }
++.tiles > .promos { padding-bottom: 0; }
++
++/* ------------------------------------------------------------------ the welcome banners, smaller (up to 1500 px wide, or on a short laptop window; a big screen keeps the roomy ones) */
++@media (max-width: 1500px), (max-height: 820px) {
++  .promo { grid-template-columns: minmax(0, 1fr); gap: 0; min-height: 0; padding: 14px 16px; border-radius: 16px; }
++  .promo__copy { gap: 6px; }
++  /* the picture sits in the top corner, beside the small heading, instead of taking a column of its own */
++  .promo__art { position: absolute; top: 12px; right: 12px; width: 58px; height: 58px; }
++  .promo__art svg { width: 100%; height: 100%; margin: 0; }
++  .promo__eyebrow, .promo__t { padding-right: 62px; }
++  .promo__t { font-size: 1.08rem; }
++  .promo__p { font-size: 0.8rem; max-width: none; }
++  .promos { gap: 12px; }
++  .promos + .housestrip { margin-top: 10px; }
++  .lobbybar { margin-top: 16px; }
++}
++
++/* ------------------------------------------------------------------ a phone: one row for the category chips, and the search box a little closer to what is under it */
++@media (max-width: 720px), (max-width: 920px) and (max-height: 520px) {
++  .lobbysearch { margin-bottom: 10px; }
++  .lobbybar { flex-wrap: nowrap; gap: 8px; margin: 12px 0 10px; }
++  /* the chips scroll sideways inside their own row (the page does not); the Filters and Repeat buttons stay at the right */
++  .cats { flex: 1 1 auto; min-width: 0; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; padding: 2px 2px 4px; }
++  .cats::-webkit-scrollbar { display: none; }
++  .cat { flex: none; }
++  .lobbybar__right { flex: none; flex-wrap: nowrap; }
++  /* "Repeat last round" is an icon here (its words stay for a screen reader and as the tooltip); it is switched off, and so hidden, until a round has been played */
++  .lobbybar__right [data-role="repeat"] { padding-inline: 10px; }
++  .lobbybar__right [data-role="repeat"] .lbl { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
++  .lobbybar__right [data-role="repeat"]:disabled { display: none; }
++}
++
++/* a phone held sideways (up to 920 x 520): the tiles are as many to a row as fit (they were two, 330 px wide and 390 px tall, so the first tile filled the whole screen) */
++@media (max-width: 920px) and (max-height: 520px) {
++  .tiles { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; }
++  .lobbysearch { margin-bottom: 8px; }
++  .lobbybar { margin: 8px 0 8px; }
++  .cats { padding-bottom: 2px; }
++  .cat { padding: 6px 14px; }
++}
+diff -ruN base/givespin/docs/next-steps.md work/givespin/docs/next-steps.md
+--- base/givespin/docs/next-steps.md	2026-11-04 06:28:37.971584986 +0000
++++ work/givespin/docs/next-steps.md	2026-11-04 19:47:44.084413247 +0000
+@@ -14,6 +14,8 @@
+ - **Real-players seam** (`js/transport.js`, `docs/live-protocol.md`): a message format, checks and a local stand-in. There are no real players and none are invented.
+ - **Installable app** (`manifest.webmanifest`, `sw.js`, `offline.html`, `js/appkit.js`, `js/ui/install.js`, `tools/make-icons.mjs`, `tools/make-precache.mjs`): installable and usable offline once served from https. The published preview cannot register a service worker; run `node tools/make-precache.mjs` after changing any script, style or icon listed in `index.html`.
+ - **Lobby layout**: the four lobby blocks (charity of the week, fair play, quests, this week's leaders) sit UNDER the game tiles, so the live tables and the first row of games are on the first laptop screen again.
++- **Games first on every screen size**: a game tile (picture and name) is on the first screen of the lobby at 1366 x 768, 1280 x 720, 1024 x 768, 768 x 1024, 390 x 844, 375 x 667, 360 x 640 and 320 x 568, and on a phone held sideways (844 x 390, 915 x 412; at 667 x 375 the picture shows and its name is under the bottom bar). The welcome banners are smaller, the Live tables strip (kept, with its four playable tables) is one row lower, under the first row of tiles, on a phone the house-edge line goes with it, and on a short window the banners too (`placeExtras` in `js/ui/lobby.js`, `css/walk.css`; test section 32). On a phone the category tabs are one row you swipe.
++- **Quests on a phone**: today's and this week's quests come before the 30-row season track on windows up to 700 px wide (`arrange` in `js/ui/quests.js`; they were about 3,400 px down, now 230 to 320 px).
+ - **An independent review** found and fixed three real bugs (the season track opened centred on the wrong tier on wide screens; "1 in over a thousand" and "over a thousand charities" when the roster is 500; an erased card back stayed on screen until reload) and some wording and spacing. A phone, tablet and big-screen walkthrough followed (15 screen sizes, five rounds upright and three sideways, resizing and turning mid-round) and fixed six CSS bugs: Stream Mode scrolling sideways on a 320 px phone, Stream Mode on an upright tablet (a 330 px column and half the screen empty) and on a phone (the docked panel floating above a hidden bottom bar), a focused control hidden under the phone's bottom bar or under the sticky top bar, and "Ends in 27 days" splitting from its number. Each has a check in `tests/sections/31-walk.mjs`.
+ - Earlier work, still in: ranks (eight emblem ranks from $1,000 to $1,000,000), one screen per game on laptops, phones upright and sideways (all 19 games), live tables that fit one screen, an accessibility scan (axe 4.10.3) with no violations on the pages checked.
+ - Tests: see the README ("Tests") for the unit-test and end-to-end counts. A few timing-based checks (13j, 13m, 13c, 13za, 13zp, 13zr, 13zu, 25f, 25h) can fail once under heavy machine load; each passes alone.
+@@ -30,8 +32,6 @@
+ - Leaderboards, Live tables, Leagues and Crews say the other players are "bots standing in for a real person" or "real people" (`js/ui/boards.js`, `js/ui/leagues.js`, `js/ui/live.js`). A quick reader can take that as a real person behind each name. Recommendation: use the bot profile's wording, "Every other name here is a bot, and its numbers are made up." The old lines are older than this round and are pinned by existing tests, so I did not change them without asking.
+ 
+ **Numbers and design**
+-- **Games first.** The four lobby blocks now sit under the game tiles, but no game tile is on the first screen of the lobby in a window up to 1366 x 768 (the banners, the house-edge strip and the Live tables strip, which has playable tables, come first); the first tile is 52 px below the first screen at 1366 x 768, 135 px at 1024 x 768, 326 px at 390 x 844 and 526 px at 375 x 667. Before this round the first tile started at 730 px at 1366 x 768, so its top edge was just on screen. Recommendation: on phones move the house-edge strip and the Live tables strip under the tiles and make the welcome banner about 200 px tall; I did not prototype it.
+-- **Quests on a phone**: today's quests start about 3,400 px down the page, under the 30-row season track. Folding claimed tiers into one row, or showing today's quests first, needs a small change in `js/ui/quests.js` and test 26b (it requires a vertical list).
+ - **XP sizes**: the charity of the week gives 25 bonus XP; the season track pays 875 XP a month in all (about $88 of giving at 10 XP per $1) plus 25 XP for a cosmetic already owned; each round is 10 quest points, the first 10 a day, so a $1 round counts like a $1,000 one. Right sizes? (`js/weekly.js`, `js/quests.js` `ROUND_CAP`.)
+ - **Seasons**: every month's track has the same 30 rewards. A theme per month needs new frames and card backs (the names are already in `SEASON_NAMES`).
+ - **Two crew goals**: the Crews page shows an XP goal, the leaderboards a dollar goal. Keep both, or show dollars on both (a small change in `js/ui/leagues.js`)? A crew's board total adds all of the visitor's gifts of the week (the save has no join date).
+@@ -42,6 +42,7 @@
+ - **Lobby promos**: the third welcome card ("Check every result yourself") and the fair-play block say nearly the same thing; one of them could go.
+ 
+ ## Open, small (each is a few lines)
++- Lobby on the smallest screens: a 568 x 320 phone held sideways still starts its first tile 215 px down (the picture is mostly under the fold); at 667 x 375 the phone's bottom bar covers the lower part of the first tile. On a phone the "Repeat last round" button is an icon (its words are still its name for a screen reader and its tooltip) and is hidden until a round has been played.
+ - From the walkthrough, not fixed: Stream `?overlay=1` at 844 x 390 cuts the picture 18 px at the bottom; bot-name buttons are 20 to 22 px high (axe passes them); the small "About <charity>" buttons on shrunk pictures (Dice 17 x 17 at 320 x 568, Coin Flip, Cosmic Spin); six pages scroll sideways at 195 px wide (below the 320 px reflow floor); toasts cover a third of a live result at 667 x 375 for a few seconds; the charity's web-address link in its profile is 16 px high.
+ - Bot names in a live table's feed are each a tab stop (up to 24 more); a roving tabindex (`ui.rove`) would fix it.
+ - Link targets under 24 px tall: the charity-of-the-week link (21 px at 768 px and wider), the Live tables' charity links, the ticker's Pause button (26 px).
+diff -ruN base/givespin/js/ui/lobby.js work/givespin/js/ui/lobby.js
+--- base/givespin/js/ui/lobby.js	2026-11-04 04:56:19.841703638 +0000
++++ work/givespin/js/ui/lobby.js	2026-11-04 20:17:47.862963315 +0000
+@@ -1,5 +1,7 @@
+ /*
+  * The lobby: promo banners, category tabs, the game tiles, a cause strip and your latest gifts.
++ * The games come first: on a small window the house-edge strip and the Live tables strip (and, on a short one, the welcome banners) sit under the first row of tiles
++ * (placeExtras below), so a game tile is on the first screen.
+  */
+ (function () {
+   'use strict';
+@@ -128,6 +130,58 @@
+     blocks.forEach(function (b) { var el = host.querySelector('[data-block="' + b.id + '"]'); if (el) { host.appendChild(el); } });   // keep them in `order`
+   }
+ 
++  /*
++   * Where the strips sit. In the page's order they come before the category chips (welcome banners, house-edge strip, Live tables strip), which on a phone or a small laptop
++   * pushes every game tile below the first screen. So they are moved (one DOM move, the same nodes, so every link and handler keeps working, and the reading and Tab order
++   * match what is drawn) to just under the first row of tiles:
++   *   - a window of any size up to a laptop: the Live tables strip goes under the first row of tiles (the strip stays; it is only one row lower);
++   *   - a phone (up to 720 px wide): the house-edge strip goes there too;
++   *   - a short window (a phone held sideways or a small phone: GAMES_FIRST): the welcome banners go there as well, so the games are what the first screen shows.
++   * Tall windows (a laptop, a tablet, a tall phone) keep the banner row on top, made smaller by css/walk.css, because the first row of tiles fits under it.
++   */
++  var PHONE = '(max-width: 720px)';
++  var GAMES_FIRST = '(max-width: 920px) and (max-height: 759px), (max-height: 520px)';
++  var placedAs = '';
++  var placedWidth = 0;
++  var resizeTimer = 0;
++
++  function matches(q) { return !!(window.matchMedia && window.matchMedia(q).matches); }
++
++  function placeExtras() {
++    var grid = root && $('[data-role="tiles"]', root);
++    if (!grid || !grid.offsetWidth) { return; }   // the lobby is not on screen: the columns cannot be counted
++    var promos = $('.promos', root), house = $('.housestrip', root), live = $('[data-role="livestrip"]', root), bar = $('.lobbybar', root);
++    if (!promos || !house || !live || !bar) { return; }
++    var cols = (getComputedStyle(grid).gridTemplateColumns || '').split(' ').filter(function (c) { return /\d/.test(c); }).length || 1;
++    var shown = Array.prototype.filter.call(grid.querySelectorAll('.tile'), function (t) { return !t.hidden; });
++    var anchor = shown[Math.min(cols, shown.length) - 1];
++    var first = matches(GAMES_FIRST), phone = matches(PHONE);
++    placedWidth = window.innerWidth;
++    var moved = [];
++    if (first) { moved.push(promos); }
++    if (first || phone) { moved.push(house); }
++    moved.push(live);
++    var sig = moved.length + ':' + (anchor ? anchor.getAttribute('data-game') : '');
++    if (sig === placedAs) { return; }
++    placedAs = sig;
++    var active = document.activeElement;
++    // everything that moves is lifted out first (in order), so the place under the first row is found without them in the way; the ones that stay or go back go home (their usual
++    // place before the category chips, in their usual order); then the ones that move are put under the first row in one go
++    var lift = document.createDocumentFragment();
++    moved.forEach(function (n) { lift.appendChild(n); });
++    [promos, house, live].forEach(function (n) { if (moved.indexOf(n) < 0) { root.insertBefore(n, bar); } });
++    if (anchor) { grid.insertBefore(lift, anchor.nextSibling); } else { root.insertBefore(lift, bar); }
++    if (active && active !== document.body && active !== document.activeElement && moved.some(function (n) { return n.contains(active); })) { active.focus({ preventScroll: true }); }
++  }
++
++  function onResize() {
++    // a phone's address bar sliding away changes the window's height while the visitor scrolls: that must never make the page rearrange itself under their thumb, so on a
++    // touch screen only a change of WIDTH (turning the phone) moves the strips (a visit to the lobby still looks at the height afresh, see render)
++    if (matches('(pointer: coarse)') && window.innerWidth === placedWidth) { return; }
++    if (resizeTimer) { return; }
++    resizeTimer = window.setTimeout(function () { resizeTimer = 0; placeExtras(); }, 120);
++  }
++
+   function build() {
+     root.innerHTML = '<h1 class="sr-only">GiveSpin lobby: casino-style games that give to charity</h1>' +
+       '<div class="lobbysearch" data-role="lobbysearch"></div>' + promos() + ui.voice.houseStrip() +
+@@ -135,7 +189,7 @@
+       '<div class="lobbybar"><nav class="cats" aria-label="Game categories">' + CATS.map(function (c) {
+         return '<a class="cat" href="#' + c[2] + '" data-cat="' + c[0] + '">' + esc(c[1]) + '</a>';
+       }).join('') + '</nav>' +
+-      '<div class="lobbybar__right"><button type="button" class="btn btn--sm" data-role="repeat">' + ui.icon('rotate-cw') + 'Repeat last round</button>' +
++      '<div class="lobbybar__right"><button type="button" class="btn btn--sm" data-role="repeat" title="Repeat last round">' + ui.icon('rotate-cw') + '<span class="lbl">Repeat last round</span></button>' +
+       '<button type="button" class="btn btn--sm" data-open-filters title="Choose which charities can come up in games">' + ui.icon('list-filter') + 'Filters <span class="count" data-role="fcount" hidden></span></button></div></div>' +
+       '<div class="tiles" data-role="tiles">' + tiles() + '</div>' +
+       '<div class="lobbyblocks" data-role="blocks"></div>' +
+@@ -149,6 +203,7 @@
+     $('[data-role="repeat"]', root).addEventListener('click', function () { ui.game.repeatLast(); });
+     GS.bus.on('pool', refreshBits);
+     GS.bus.on('progress', function () { recent(); refreshBits(); });
++    window.addEventListener('resize', onResize);
+   }
+ 
+   function refreshBits() {
+@@ -176,6 +231,7 @@
+     });
+     drawBlocks();
+     refreshBits();
++    placeExtras();   // (a category hides tiles, so the first row can change; a visit also picks up a window that was resized while another page was shown)
+   }
+ 
+   ui.lobby = { render: render, tileHTML: tileHTML, addBlock: addBlock };
+diff -ruN base/givespin/js/ui/quests.js work/givespin/js/ui/quests.js
+--- base/givespin/js/ui/quests.js	2026-11-04 04:55:02.221860121 +0000
++++ work/givespin/js/ui/quests.js	2026-11-04 19:42:20.854765572 +0000
+@@ -227,6 +227,28 @@
+   var wiredRoot = null;
+ 
+   /**
++   * On a phone (up to 700 px wide) today's and this week's quests come before the season section: its track is 30 rows long, and the to-do list used to start about
++   * 3,400 px down. This moves the same node (so its ids and the page's click handler keep working, and the reading and Tab order match what is drawn); a wide window
++   * keeps the usual order (the season, with its strip, on top and the two lists side by side under it). Runs after every draw and when the window is resized.
++   */
++  var PHONE_Q = '(max-width: 700px)';
++  function arrange() {
++    var root = $('#view-quests');
++    var season = root && root.querySelector('.qseason');
++    var lists = root && root.querySelector('.qquests');
++    if (!season || !lists) { return; }
++    var phone = !!(window.matchMedia && window.matchMedia(PHONE_Q).matches);
++    var before = (lists.compareDocumentPosition(season) & 4) !== 0;   // 4: the season follows the lists, so the lists are already first
++    if (phone && !before) { root.insertBefore(lists, season); }
++    else if (!phone && before) { root.insertBefore(lists, season.nextSibling); }
++  }
++  var arrangeTimer = 0;
++  window.addEventListener('resize', function () {
++    if (arrangeTimer) { return; }
++    arrangeTimer = window.setTimeout(function () { arrangeTimer = 0; arrange(); }, 120);
++  });
++
++  /**
+    * Draws the page. `focus` is a selector to put keyboard focus on afterwards, `keep` true when this is a re-draw of the page the visitor is already on (after a claim,
+    * or because something changed in the background): the strip then stays exactly where it was, so the tier under the pointer does not slide away between two clicks.
+    * On the first draw of a visit the strip is centred on the visitor's tier (unless they asked for reduced motion).
+@@ -238,6 +260,7 @@
+     var old = keep ? $('[data-role="track"]', root) : null;
+     var left = old ? old.scrollLeft : 0;
+     root.innerHTML = pageHTML(last);
++    arrange();
+     var track = $('[data-role="track"]', root);
+     if (track) {
+       ui.rove(track, '.qtier__btn');
+diff -ruN base/givespin/tests/sections/32-lobby.mjs work/givespin/tests/sections/32-lobby.mjs
+--- base/givespin/tests/sections/32-lobby.mjs	1970-01-01 00:00:00.000000000 +0000
++++ work/givespin/tests/sections/32-lobby.mjs	2026-11-04 20:17:58.499894383 +0000
+@@ -0,0 +1,391 @@
++// The lobby's first screen and the Quests page on a phone (sections 32a to 32h).
++//   32a  a game tile is on the first screen of the lobby at 7 window sizes (and as much as fits on a small phone and on phones held sideways)
++//   32b  the Live tables strip is still there, one row lower: four cards that are links to real tables, and "All tables"
++//   32c  the welcome banners and the house-edge strip keep every sentence and every link (shown in full, not clipped), wherever they are drawn
++//   32d  the strips follow the window: turn a phone (or resize) and they move; the reading order matches the drawn order
++//   32e  a category chosen, a ranked save, reduced motion: still a tile on the first screen, the blocks still under the tiles
++//   32f  no sideways scroll on the lobby at ten window sizes, and Stream Mode
++//   32g  the Quests page on a phone: today's and this week's quests come before the 30-row season track; a wide window keeps its order; "Go to my tier" works
++//   32h  axe on the lobby at three sizes
++//
++// What the numbers mean (window = the first screen, scroll at 0):
++//   "a tile on the first screen" = the top of the first game tile + 150 px (its picture) is above the bottom of the window, and, on a phone, above the fixed bottom bar.
++//   "the whole tile" (picture and name) is asked for where it is reachable (all the sizes in WHOLE below). A phone held sideways at 667 x 375 shows the picture and most of the name;
++//   a 320 x 568 phone shows the whole tile; 568 x 320 (a very small phone held sideways) is not asked for (the first tile starts at about 215 px of 320).
++export default async function (h) {
++  const { check, newPage, openApp, go, section, problems, a11y } = h;
++
++  const MAIN = 'givespin:v2';
++  const seeded = async (cents, opts = {}) => {
++    const p = await newPage(opts);
++    if (cents) {
++      const sv = { v: 2, xp: Math.floor(cents / 10), totalCents: cents, plays: 20, streak: 2, bestStreak: 4 };
++      await p.addInitScript(([o, key]) => { try { if (!sessionStorage.getItem('__seeded')) { localStorage.setItem(key, JSON.stringify(o)); sessionStorage.setItem('__seeded', '1'); } } catch (e) { /* ignore */ } }, [sv, MAIN]);
++    }
++    return p;
++  };
++  const phoneLike = (w) => w <= 720;
++  const lobby = async (w, hh, opts = {}) => {
++    const p = await seeded(opts.cents, { viewport: { width: w, height: hh }, mobile: phoneLike(w) || (opts.mobile === true), reducedMotion: opts.reduced ? 'reduce' : 'no-preference' });
++    await openApp(p, opts.hash || '#lobby');
++    await p.waitForSelector('#view-lobby .tile:not([hidden])');
++    await p.waitForTimeout(250);
++    return p;
++  };
++  // where things are on the first screen (page at scroll 0), and how much of the window the fixed bottom bar leaves
++  const look = (p) => p.evaluate(() => {
++    const q = (s) => document.querySelector('#view-lobby ' + s);
++    const box = (e) => { if (!e || e.hidden || !e.getClientRects().length) { return null; } const r = e.getBoundingClientRect(); return { top: Math.round(r.top + scrollY), bottom: Math.round(r.bottom + scrollY), left: Math.round(r.left), right: Math.round(r.right), h: Math.round(r.height) }; };
++    const side = document.querySelector('.side');
++    const sideBox = side ? side.getBoundingClientRect() : null;
++    const barTop = side && getComputedStyle(side).position === 'fixed' && sideBox.top > window.innerHeight / 2 ? Math.round(sideBox.top) : window.innerHeight;
++    const tiles = Array.from(document.querySelectorAll('#view-lobby .tile')).filter((t) => !t.hidden);
++    return {
++      iw: window.innerWidth, ih: window.innerHeight, barTop, scrollY: Math.round(window.scrollY),
++      tile: box(tiles[0]), tiles: tiles.length, promos: box(q('.promos')), house: box(q('.housestrip')), live: box(q('[data-role="livestrip"]')), bar: box(q('.lobbybar')),
++      blocks: box(q('[data-role="blocks"]')), causes: box(q('#lb-causes')), lastTile: box(tiles[tiles.length - 1]),
++      sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1
++    };
++  });
++
++  /* the sizes the brief names; WHOLE = where the first tile's picture AND name fit on the first screen */
++  const SIZES = [[1366, 768], [1280, 720], [1024, 768], [768, 1024], [390, 844], [375, 667], [360, 640]];
++  const SMALL = [[320, 568], [844, 390], [667, 375], [915, 412]];
++  const WHOLE = new Set(['1366x768', '1280x720', '1024x768', '768x1024', '390x844', '375x667', '360x640', '320x568', '844x390', '915x412']);
++
++  /* ---------------------------------------------------------------- 32a */
++  if (section('32a. The lobby\'s first screen shows a game tile (picture and name) at the usual window sizes')) {
++    const problems0 = problems.length;
++    for (const [w, hh] of SIZES.concat(SMALL)) {
++      const p = await lobby(w, hh);
++      const m = await look(p);
++      const id = w + 'x' + hh;
++      const room = m.barTop;
++      // the brief's rule: the picture (the tile's top 150 px) is above the bottom of the window ...
++      check(!!m.tile && m.scrollY === 0 && m.tile.top + 150 <= m.ih, id + ': the first game tile\'s picture is on the first screen (tile top ' + (m.tile && m.tile.top) + ' + 150 <= ' + m.ih + ')', m);
++      // ... and the stricter one: above the fixed bottom bar of a phone too (667 x 375, a phone on its side, has a bar that is 63 px of its 375: 100 px of the picture show)
++      check(!!m.tile && m.tile.top + (id === '667x375' ? 100 : 150) <= room, id + ': and it is above the phone\'s bottom bar, if there is one (tile top ' + (m.tile && m.tile.top) + ' + ' + (id === '667x375' ? 100 : 150) + ' <= ' + room + ')', m);
++      if (WHOLE.has(id)) { check(!!m.tile && m.tile.bottom <= room, id + ': the whole first tile, picture and name, is on the first screen (tile bottom ' + (m.tile && m.tile.bottom) + ' <= ' + room + ')', m); }
++      check(!!m.tile && m.tile.left >= 0 && m.tile.right <= m.iw, id + ': it is not cut off at the sides', m.tile);
++      await p.close();
++    }
++    check(problems.length === problems0, 'section 32a: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ---------------------------------------------------------------- 32b */
++  if (section('32b. The Live tables strip is still on the lobby: right under the first row of tiles, four cards that are links to real tables')) {
++    const problems0 = problems.length;
++    for (const [w, hh] of [[1366, 768], [1024, 768], [768, 1024], [390, 844], [375, 667], [844, 390]]) {
++      const p = await lobby(w, hh);
++      const id = w + 'x' + hh;
++      const m = await look(p);
++      check(!!m.live && m.live.top >= m.tile.bottom - 1, id + ': the strip is there, under the first row of game tiles', { tile: m.tile, live: m.live });
++      // right under the first row: nothing but tiles of the first row above it, and no more than one tile row between (the second row of tiles starts below it)
++      const rows = await p.evaluate(() => {
++        const live = document.querySelector('#view-lobby [data-role="livestrip"]');
++        const before = []; let n = live.previousElementSibling;
++        while (n) { if (n.classList.contains('tile') && !n.hidden) { before.push(Math.round(n.getBoundingClientRect().top)); } n = n.previousElementSibling; }
++        const tops = Array.from(new Set(before));
++        const next = live.nextElementSibling;
++        return { rowsAbove: tops.length, nextIsTile: !!next && next.classList.contains('tile'), nextTop: next ? Math.round(next.getBoundingClientRect().top) : null, liveBottom: Math.round(live.getBoundingClientRect().bottom), inGrid: live.parentElement.getAttribute('data-role') };
++      });
++      check(rows.rowsAbove === 1 && rows.nextIsTile && rows.nextTop >= rows.liveBottom - 1 && rows.inGrid === 'tiles', id + ': exactly one row of tiles is above it, and the rest of the tiles follow under it', rows);
++      const strip = await p.evaluate(() => {
++        const s = document.querySelector('#view-lobby [data-role="livestrip"]');
++        const cards = Array.from(s.querySelectorAll('.lcard'));
++        return { n: cards.length, tags: cards.map((c) => c.tagName + ':' + c.getAttribute('href')), head: (s.querySelector('h2') || {}).textContent, all: (s.querySelector('a.linkbtn') || {}).getAttribute && s.querySelector('a.linkbtn').getAttribute('href'), text: s.innerText, hidden: s.hidden };
++      });
++      check(strip.n === 4 && strip.tags.every((t) => /^A:#live-/.test(t)) && /Live tables/.test(strip.head) && strip.all === '#live' && /bots/.test(strip.text) && !strip.hidden, id + ': four table cards that link to a live table, the "All tables" link, and the words about bots', strip);
++      if (id === '375x667' || id === '1366x768') {
++        await p.locator('#view-lobby .livestrip .lcard').first().scrollIntoViewIfNeeded();
++        const href = await p.locator('#view-lobby .livestrip .lcard').first().getAttribute('href');
++        await p.locator('#view-lobby .livestrip .lcard').first().click();
++        await p.waitForFunction((hr) => window.location.hash === hr, href);
++        await p.waitForSelector('#livepanel:not([hidden])');
++        check(await p.evaluate(() => GS.app.state.route.indexOf('live') === 0 || /^#live-/.test(window.location.hash)), id + ': pressing the first card opens that live table (' + href + ')');
++        await go(p, '#lobby');
++        await p.waitForSelector('#view-lobby [data-role="livestrip"] .lcard');
++        await p.locator('#view-lobby .livestrip a.linkbtn').scrollIntoViewIfNeeded();
++        await p.locator('#view-lobby .livestrip a.linkbtn').click();
++        await p.waitForFunction(() => window.location.hash === '#live');
++        await p.waitForSelector('#view-live .tile');
++        check(await p.locator('#view-live .tile').count() > 0, id + ': "All tables" opens the Live tables page');
++      }
++      await p.close();
++    }
++    check(problems.length === problems0, 'section 32b: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ---------------------------------------------------------------- 32c */
++  if (section('32c. The banners and the house-edge strip keep every sentence and every link, shown in full (nothing clipped or hidden to make them smaller)')) {
++    const problems0 = problems.length;
++    const WORDS = ['Welcome to the giving casino', 'Every round is a win for someone.', 'Pick an amount, play any game, and see which charity your gift lands on.', 'Right now it is all play-money: nothing is charged.',
++      'Giving Club', 'The VIP lounge is open.', 'The only way in is giving.', 'Every $1 you give earns 10 XP.', 'Fair play you can check', 'Check every result yourself.',
++      'Each winner is drawn from a sealed secret before the animation starts, and you can recompute it.', 'In this preview the secret is made on your own device.'];
++    for (const [w, hh] of [[1366, 768], [1024, 768], [768, 1024], [390, 844], [375, 667], [320, 568], [844, 390]]) {
++      const p = await lobby(w, hh);
++      const id = w + 'x' + hh;
++      const r = await p.evaluate(() => {
++        const flat = (t) => String(t).replace(/\s+/g, ' ').trim().toLowerCase();
++        const promos = document.querySelector('#view-lobby .promos');
++        const house = document.querySelector('#view-lobby .housestrip');
++        const texts = Array.from(promos.querySelectorAll('.promo__eyebrow, .promo__t, .promo__p, .btn')).map((e) => {
++          const cs = getComputedStyle(e);
++          return { text: flat(e.textContent), shown: e.getClientRects().length > 0 && cs.display !== 'none' && cs.visibility !== 'hidden', clipped: e.scrollHeight > e.clientHeight + 1 || e.scrollWidth > e.clientWidth + 1, overflowHidden: cs.webkitLineClamp !== 'none' && cs.webkitLineClamp !== '' };
++        });
++        const links = Array.from(promos.querySelectorAll('a.btn')).map((a) => a.getAttribute('href'));
++        const hs = house.getClientRects().length > 0;
++        return { all: flat(promos.innerText), texts, links, houseText: flat(house.innerText), houseShown: hs, houseLink: (house.querySelector('a') || {}).getAttribute && house.querySelector('a').getAttribute('href'), cards: promos.querySelectorAll('.promo').length };
++      });
++      const missing = WORDS.filter((x) => r.all.indexOf(x.toLowerCase()) < 0);
++      check(r.cards === 3 && missing.length === 0, id + ': the three banners still say every sentence they said (' + missing.length + ' missing)', missing);
++      check(r.texts.length === 12 && r.texts.every((t) => t.shown && !t.clipped && !t.overflowHidden), id + ': every banner heading, sentence and button is shown in full (no line clamp, nothing cut off)', r.texts.filter((t) => !t.shown || t.clipped || t.overflowHidden));
++      check(JSON.stringify(r.links) === JSON.stringify(['#game-wheel', '#club', '#fair']), id + ': the banners\' buttons still go to the wheel, the Giving Club and Fair Play', r.links);
++      check(r.houseShown && /house edge: 0%\. the house is a charity\./.test(r.houseText) && r.houseLink === '#help-money', id + ': the house-edge strip is shown with its sentence and its link to "How we make money"', r.houseText);
++      if (id === '375x667' || id === '1366x768') {
++        for (const [sel, route] of [['a[href="#game-wheel"]', 'game-wheel'], ['a[href="#club"]', 'club'], ['a[href="#fair"]', 'fair']]) {
++          await go(p, '#lobby');
++          await p.locator('#view-lobby .promos ' + sel).scrollIntoViewIfNeeded();
++          await p.locator('#view-lobby .promos ' + sel).click();
++          await p.waitForFunction((rt) => window.location.hash === '#' + rt, route);
++          check(true, id + ': the banner button for #' + route + ' works');
++        }
++        await go(p, '#lobby');
++        await p.locator('#view-lobby .housestrip a').scrollIntoViewIfNeeded();
++        await p.locator('#view-lobby .housestrip a').click();
++        await p.waitForFunction(() => /^#help-money/.test(window.location.hash));
++        check(true, id + ': the house-edge strip\'s link opens "How we make money"');
++      }
++      await p.close();
++    }
++    check(problems.length === problems0, 'section 32c: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ---------------------------------------------------------------- 32d */
++  if (section('32d. The strips follow the window: turning a phone or resizing moves them, and the reading order matches what is drawn')) {
++    const problems0 = problems.length;
++    const order = (p) => p.evaluate(() => {
++      const root = document.querySelector('#view-lobby');
++      const name = (n) => n.classList.contains('promos') ? 'promos' : n.classList.contains('housestrip') ? 'house' : n.getAttribute('data-role') === 'livestrip' ? 'live' : n.classList.contains('tile') ? 'tile' : n.classList.contains('lobbybar') ? 'bar' : n.getAttribute('data-role') === 'blocks' ? 'blocks' : '';
++      const seq = []; const walk = (el) => Array.from(el.children).forEach((c) => { const nm = name(c); if (nm) { seq.push(nm); } if (c.getAttribute('data-role') === 'tiles') { walk(c); } });
++      walk(root);
++      // drawn order: sort what is in the sequence by position (top, then left)
++      const nodes = []; const walk2 = (el) => Array.from(el.children).forEach((c) => { if (name(c)) { nodes.push(c); } if (c.getAttribute('data-role') === 'tiles') { walk2(c); } });
++      walk2(root);
++      const pos = nodes.map((n) => { const r = n.getBoundingClientRect(); return { n: name(n), t: Math.round(r.top + scrollY), l: Math.round(r.left) }; });
++      // a tile in the same row as another has the same top: compare tops with a tolerance of 2 px, then left
++      let ok = true; for (let i = 1; i < pos.length; i++) { const a = pos[i - 1], b = pos[i]; if (b.t < a.t - 2 || (Math.abs(b.t - a.t) <= 2 && b.l < a.l)) { ok = false; } }
++      const compact = []; seq.forEach((s) => { if (s !== 'tile' || compact[compact.length - 1] !== 'tile') { compact.push(s); } });
++      return { seq: compact.join(' > '), drawnInOrder: ok };
++    });
++    // a phone upright (tall): the banners on top, the live strip under the first row
++    const p = await lobby(390, 844);
++    const a = await order(p);
++    check(a.seq === 'promos > bar > tile > house > live > tile > blocks', '390 x 844 (a tall phone): the banners are on top; the house-edge strip and the Live strip follow the first row of tiles', a.seq);
++    check(a.drawnInOrder, '390 x 844: the elements are in the page in the same order as they are drawn (reading and Tab order match)', a);
++    // turned on its side (a short window): the banners come down to the first row too
++    await p.setViewportSize({ width: 844, height: 390 });
++    await p.waitForTimeout(450);
++    const b = await order(p);
++    check(b.seq === 'bar > tile > promos > house > live > tile > blocks', '844 x 390 (the same phone on its side): the banners, the house-edge strip and the Live strip all follow the first row', b.seq);
++    check(b.drawnInOrder, '844 x 390: reading order = drawn order', b);
++    const mb = await look(p);
++    check(mb.tile.top + 150 <= mb.ih, '844 x 390: and a game tile is on the first screen (' + mb.tile.top + ' + 150 <= ' + mb.ih + ')', mb.tile);
++    // and back
++    await p.setViewportSize({ width: 390, height: 844 });
++    await p.waitForTimeout(450);
++    const c = await order(p);
++    check(c.seq === a.seq && c.drawnInOrder, 'back to 390 x 844 it is as it was', c);
++    // a laptop: the live strip only
++    await p.setViewportSize({ width: 1366, height: 768 });
++    await p.waitForTimeout(450);
++    const d = await order(p);
++    check(d.seq === 'promos > house > bar > tile > live > tile > blocks' && d.drawnInOrder, '1366 x 768 (a laptop): banners and house-edge strip on top, only the Live strip is under the first row', d.seq);
++    const ml = await look(p);
++    check(ml.tile.top + 150 <= ml.ih, '1366 x 768: a game tile is on the first screen after the resize (' + ml.tile.top + ' + 150 <= ' + ml.ih + ')', ml.tile);
++    // focus: a link inside a strip that moves keeps the keyboard where it was
++    await p.setViewportSize({ width: 390, height: 844 });
++    await p.waitForTimeout(450);
++    await p.locator('#view-lobby .housestrip a').focus();
++    await p.setViewportSize({ width: 844, height: 390 });
++    await p.waitForTimeout(450);
++    check(await p.evaluate(() => !!document.activeElement && !!document.activeElement.closest('.housestrip')), 'a link focused inside a strip that moves is still focused afterwards');
++    await p.close();
++    // a desktop window (a mouse, so every resize counts) crossing between the three layouts WITHOUT the number of tiles in a row changing: the order of the strips is right each time
++    {
++      const d = await newPage({ viewport: { width: 900, height: 1000 } });
++      await openApp(d, '#lobby');
++      await d.waitForSelector('#view-lobby .tile:not([hidden])');
++      await d.waitForTimeout(250);
++      const one = await order(d);
++      check(one.seq === 'promos > house > bar > tile > live > tile > blocks' && one.drawnInOrder, '900 x 1000 (a desktop window): banners and house strip on top, the Live strip under the first row', one.seq);
++      await d.setViewportSize({ width: 900, height: 700 });
++      await d.waitForTimeout(450);
++      const two = await order(d);
++      check(two.seq === 'bar > tile > promos > house > live > tile > blocks' && two.drawnInOrder, '900 x 700 (the same window made shorter): the banners and the house strip join the Live strip under the first row, in that order (' + two.seq + ')', two);
++      await d.setViewportSize({ width: 900, height: 1000 });
++      await d.waitForTimeout(450);
++      const three = await order(d);
++      check(three.seq === one.seq && three.drawnInOrder, 'and made tall again it is as it was', three);
++      await d.close();
++    }
++    // a phone: the address bar sliding away changes only the height; the page must not rearrange itself while it is scrolled (turning the phone, which changes the width, does)
++    {
++      const t = await lobby(390, 844);
++      const before = await order(t);
++      await t.setViewportSize({ width: 390, height: 640 });
++      await t.waitForTimeout(450);
++      const after = await order(t);
++      check(after.seq === before.seq, '390 wide, 844 -> 640 high on a touch screen (an address bar): the strips stay where they were (' + after.seq + ')', { before: before.seq, after: after.seq });
++      // ... and a fresh visit to the lobby looks at the height again (same number of tiles in a row, so this is the order-of-strips case)
++      await go(t, '#help');
++      await go(t, '#lobby');
++      await t.waitForTimeout(300);
++      const visit = await order(t);
++      check(visit.seq === 'bar > tile > promos > house > live > tile > blocks' && visit.drawnInOrder, '390 x 640 on a new visit to the lobby: the banners, the house strip and the Live strip are under the first row, in that order', visit);
++      await t.close();
++    }
++    check(problems.length === problems0, 'section 32d: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ---------------------------------------------------------------- 32e */
++  if (section('32e. A ranked save, a chosen category and reduced motion: still a tile on the first screen, and the four blocks stay under the tiles')) {
++    const problems0 = problems.length;
++    for (const [w, hh] of [[1366, 768], [390, 844], [375, 667], [844, 390]]) {
++      const id = w + 'x' + hh;
++      for (const [what, opts] of [['a ranked save ($1,000 given)', { cents: 100000 }], ['reduced motion', { reduced: true }], ['Slots chosen', { hash: '#lobby-slots' }], ['Table games chosen on a ranked save', { cents: 100000, hash: '#lobby-table' }]]) {
++        const p = await lobby(w, hh, opts);
++        const m = await look(p);
++        check(!!m.tile && m.tile.top + 150 <= m.barTop, id + ', ' + what + ': a game tile is on the first screen (tile top ' + (m.tile && m.tile.top) + ' + 150 <= ' + m.barTop + ')', m);
++        check(!!m.blocks && m.blocks.top >= m.lastTile.bottom - 1 && m.blocks.bottom <= m.causes.top + 1, id + ', ' + what + ': the blocks (' + (m.blocks && m.blocks.h) + ' px) sit under the last tile and above "Pick a cause first"', m);
++        check(!m.sideways, id + ', ' + what + ': no sideways scroll');
++        if (opts.hash) {
++          const n = await p.evaluate(() => Array.from(document.querySelectorAll('#view-lobby .tile')).filter((t) => !t.hidden).length);
++          check(n === (opts.hash === '#lobby-slots' ? 5 : 4) && m.live && m.live.top >= m.tile.bottom - 1, id + ', ' + what + ': only that category\'s tiles show (' + n + '), and the Live strip is still under the first row', { n, live: m.live });
++        }
++        await p.close();
++      }
++    }
++    check(problems.length === problems0, 'section 32e: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ---------------------------------------------------------------- 32f */
++  if (section('32f. No sideways scroll on the lobby at ten window sizes (the chip row scrolls inside itself), and in Stream Mode')) {
++    const problems0 = problems.length;
++    for (const [w, hh] of [[320, 568], [360, 640], [375, 667], [390, 844], [412, 915], [667, 375], [844, 390], [768, 1024], [1366, 768], [2560, 1440]]) {
++      const p = await lobby(w, hh, { cents: w % 2 ? 100000 : 0 });
++      const m = await p.evaluate(() => {
++        const cats = document.querySelector('#view-lobby .cats'); const bar = document.querySelector('#view-lobby .lobbybar'); const right = document.querySelector('#view-lobby .lobbybar__right');
++        const out = Array.from(document.querySelectorAll('#view-lobby .promos, #view-lobby .housestrip, #view-lobby [data-role="livestrip"], #view-lobby .lobbybar, #view-lobby .tiles')).filter((e) => { const r = e.getBoundingClientRect(); return e.getClientRects().length && (r.left < -1 || r.right > document.documentElement.clientWidth + 1); }).map((e) => e.className || e.getAttribute('data-role'));
++        const br = bar.getBoundingClientRect(); const rr = right.getBoundingClientRect();
++        return { sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, out, barRight: Math.round(br.right), rightRight: Math.round(rr.right), catsScrolls: cats.scrollWidth > cats.clientWidth + 1, filters: !!document.querySelector('#view-lobby [data-open-filters]') && document.querySelector('#view-lobby [data-open-filters]').getBoundingClientRect().right <= document.documentElement.clientWidth + 1 };
++      });
++      check(m.sw <= m.cw && m.out.length === 0 && m.rightRight <= m.cw && m.filters, w + 'x' + hh + ': the page does not scroll sideways, nothing in the lobby sticks out, and the Filters button is on the screen', m);
++      await p.close();
++    }
++    // the chips: on a small phone they scroll inside their own row and every one of them can be reached (focus scrolls them into view)
++    {
++      const p = await lobby(320, 568);
++      await p.locator('#view-lobby .cat').last().focus();
++      const m = await p.evaluate(() => { const c = document.querySelector('#view-lobby .cats'); const last = c.querySelector('.cat:last-child').getBoundingClientRect(); const cr = c.getBoundingClientRect(); return { scrolls: c.scrollWidth > c.clientWidth + 1, lastVisible: last.right <= cr.right + 1 && last.left >= cr.left - 1, pageSideways: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1 }; });
++      check(m.scrolls && m.lastVisible && !m.pageSideways, '320 x 568: the category chips scroll inside their row, the last one can be reached with the keyboard, and the page stays put', m);
++      await p.close();
++    }
++    // the Repeat button: icon only on a phone but it keeps its words for a screen reader and is hidden while there is nothing to repeat
++    {
++      const p = await lobby(375, 667);
++      check(await p.evaluate(() => { const b = document.querySelector('#view-lobby [data-role="repeat"]'); return b.disabled && getComputedStyle(b).display === 'none'; }), '375 x 667, new visitor: "Repeat last round" is switched off and not drawn (nothing to repeat yet)');
++      await p.evaluate(() => { GS.store.get().history.unshift({ id: 'GS-AAAAAA', ts: Date.now(), game: 'wheel', totalCents: 1000, status: 'demo', pay: 'credit', rounds: 1, freq: 'once', allocations: [{ charityId: 'unicef', cents: 1000 }] }); GS.bus.emit('progress'); });
++      const r = await p.evaluate(() => { const b = document.querySelector('#view-lobby [data-role="repeat"]'); const r = b.getBoundingClientRect(); return { disabled: b.disabled, w: Math.round(r.width), h: Math.round(r.height), name: b.textContent.replace(/\s+/g, ' ').trim(), title: b.getAttribute('title') }; });
++      check(!r.disabled && r.w >= 24 && r.h >= 24 && r.name === 'Repeat last round' && r.title === 'Repeat last round', '375 x 667, after a round: the Repeat button is an icon ' + r.w + 'x' + r.h + ' px with the name "Repeat last round" for a screen reader', r);
++      await p.close();
++    }
++    // Stream Mode: the lobby is not shown (it goes to a game), and if it is asked for the page still does not scroll sideways
++    for (const [w, hh] of [[1366, 768], [390, 844]]) {
++      const p = await newPage({ viewport: { width: w, height: hh }, mobile: w < 700 });
++      await openApp(p, '#lobby', '?fast=1&stream=1');
++      await p.waitForTimeout(700);
++      const m = await p.evaluate(() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, stream: document.body.classList.contains('is-stream'), lobbyShown: !document.querySelector('#view-lobby').hidden, blocks: !!document.querySelector('#view-lobby [data-role="blocks"]') && document.querySelector('#view-lobby [data-role="blocks"]').getClientRects().length > 0 }));
++      check(m.stream && m.sw <= m.cw && !m.blocks, 'Stream Mode at ' + w + 'x' + hh + ': no sideways scroll and the lobby blocks are not on screen (lobby shown: ' + m.lobbyShown + ')', m);
++      await p.close();
++    }
++    check(problems.length === problems0, 'section 32f: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ---------------------------------------------------------------- 32g */
++  if (section('32g. The Quests page on a phone: today\'s and this week\'s quests come before the 30-row season track; a wide window keeps its order')) {
++    const problems0 = problems.length;
++    const open = async (w, hh, cents) => { const p = await seeded(cents || 100000, { viewport: { width: w, height: hh }, mobile: w <= 720 }); await openApp(p, '#quests'); await p.waitForSelector('#view-quests .qtrack'); await p.waitForTimeout(300); return p; };
++    const pos = (p) => p.evaluate(() => {
++      const top = (s) => { const e = document.querySelector(s); return e ? Math.round(e.getBoundingClientRect().top + scrollY) : null; };
++      const root = document.querySelector('#view-quests');
++      const kids = Array.from(root.children).map((c) => c.classList.contains('qquests') ? 'qquests' : c.classList.contains('qseason') ? 'qseason' : c.className.split(' ')[0] || c.tagName);
++      return { day: top('#q-day-h'), week: top('#q-week-h'), season: top('.qseason'), track: top('.qtrack'), track1: top('.qtrack > li'), cos: top('#q-cos-h'), kids, sideways: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1, ih: innerHeight };
++    });
++    for (const [w, hh] of [[390, 844], [375, 667], [320, 568], [700, 900], [667, 375]]) {
++      const p = await open(w, hh);
++      const m = await pos(p);
++      check(m.day < m.week && m.week < m.season && m.week < m.track && m.kids.indexOf('qquests') < m.kids.indexOf('qseason'), w + 'x' + hh + ': today\'s quests, then this week\'s, come before the season and its track (tops ' + m.day + ', ' + m.week + ', then the season at ' + m.season + ')', m);
++      check(m.day < 2.2 * m.ih && !m.sideways, w + 'x' + hh + ': today\'s quests start ' + m.day + ' px down (the old page: about 3,400) and nothing scrolls sideways', m);
++      check(await p.locator('#view-quests .qtrack > li').count() === 30 && await p.locator('#view-quests [data-role="daily"] .qcard').count() === 3 && await p.locator('#view-quests [data-role="weekly"] .qcard').count() === 3, w + 'x' + hh + ': still 3 quests a day, 3 a week and 30 tiers');
++      await p.close();
++    }
++    // a wide window: as before (the season with its strip on top, the two lists side by side under it)
++    for (const [w, hh] of [[701, 900], [1024, 768], [1366, 800], [2560, 1440]]) {
++      const p = await open(w, hh);
++      const m = await pos(p);
++      check(m.season < m.day && m.kids.indexOf('qseason') < m.kids.indexOf('qquests'), w + 'x' + hh + ': a wide window keeps the season on top and the quests under it', m);
++      await p.close();
++    }
++    // resizing moves them with the window
++    {
++      const p = await open(1366, 800);
++      await p.setViewportSize({ width: 390, height: 844 });
++      await p.waitForTimeout(450);
++      let m = await pos(p);
++      check(m.kids.indexOf('qquests') < m.kids.indexOf('qseason') && m.day < m.season, 'resized from a laptop to a phone width the quests move above the season track', m);
++      await p.setViewportSize({ width: 1366, height: 800 });
++      await p.waitForTimeout(450);
++      m = await pos(p);
++      check(m.kids.indexOf('qseason') < m.kids.indexOf('qquests') && m.season < m.day, 'and back to the laptop width they move back under it', m);
++      await p.close();
++    }
++    // "Go to my tier" on a phone and the strip's centring on a wide window still work
++    {
++      const p = await open(390, 844, 100000);
++      await p.locator('#view-quests [data-act="jump"]').scrollIntoViewIfNeeded();
++      await p.locator('#view-quests [data-act="jump"]').click();
++      await p.waitForTimeout(700);
++      const m = await p.evaluate(() => { const b = document.activeElement; const r = b.getBoundingClientRect(); return { cls: b.className, tier: b.getAttribute('data-tier'), inView: r.top >= 0 && r.bottom <= innerHeight, track: !!b.closest('.qtrack') }; });
++      check(/qtier__btn/.test(m.cls) && m.track && m.inView, '390 x 844: "Go to my tier" puts the focus on a tier button and scrolls it into view (tier ' + m.tier + ')', m);
++      await p.close();
++      const w = await open(1366, 800, 100000);
++      const c = await w.evaluate(() => { const t = document.querySelector('.qtrack'); const tr = t.getBoundingClientRect(); const mid = tr.left + tr.width / 2; const b = document.querySelector('.qtier.is-ready .qtier__btn, .qtier.is-next .qtier__btn').getBoundingClientRect(); return { scrolls: t.scrollWidth > t.clientWidth + 20, off: Math.round(Math.abs((b.left + b.width / 2) - mid)), tier: document.querySelector('.qtier.is-ready .qtier__btn, .qtier.is-next .qtier__btn').getAttribute('data-tier') }; });
++      check(c.scrolls, '1366 x 800: the season track is still a strip you scroll sideways on a wide window (its centring on your tier is checked by 26e/26f; tier ' + c.tier + ' is ' + c.off + ' px from the middle here)', c);
++      await w.locator('#view-quests [data-act="jump"]').click();
++      await w.waitForTimeout(900);
++      const c2 = await w.evaluate(() => ({ focus: document.activeElement.getAttribute('data-tier'), cls: document.activeElement.className }));
++      check(/qtier__btn/.test(c2.cls), '1366 x 800: "Go to my tier" still lands on a tier button', c2);
++      await w.close();
++    }
++    check(problems.length === problems0, 'section 32g: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++
++  /* ---------------------------------------------------------------- 32h */
++  if (section('32h. axe on the lobby at three sizes (a laptop, a phone, a phone held sideways)')) {
++    const problems0 = problems.length;
++    for (const [w, hh] of [[1366, 768], [390, 844], [844, 390]]) {
++      const p = await lobby(w, hh, { cents: 100000 });
++      await a11y(p, 'the lobby at ' + w + 'x' + hh + ' (strips moved under the first row)');
++      await p.close();
++    }
++    {
++      const p = await seeded(100000, { viewport: { width: 390, height: 844 }, mobile: true });
++      await openApp(p, '#quests');
++      await p.waitForSelector('#view-quests .qtrack');
++      await a11y(p, 'the Quests page at 390x844 (quests before the track)');
++      await p.close();
++    }
++    check(problems.length === problems0, 'section 32h: no console errors, warnings or failed requests', problems.slice(problems0, problems0 + 5));
++  }
++}
